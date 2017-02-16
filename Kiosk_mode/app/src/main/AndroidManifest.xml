@@ -14,7 +14,9 @@
             android:theme="@android:style/Theme.Wallpaper.NoTitleBar.Fullscreen"
             android:launchMode="singleTask"
             android:stateNotNeeded="true"
+            android:screenOrientation="userPortrait"
             >
+            <!-- TODO: Fiks orientasjon, slik at vi faktisk bare viser en orientasjon slik som resten av tangoen gjør. -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.HOME"/>

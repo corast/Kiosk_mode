@@ -6,9 +6,9 @@
     tools:context=".HomeActivity">
 
     <Button
+        android:id="@+id/apps_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/apps_button"
         android:layout_alignParentTop="true"
         android:layout_marginLeft="10dp"
         android:layout_marginTop="10dp"
@@ -16,6 +16,7 @@
         android:onClick="showApps"
         android:layout_centerHorizontal="true"/>
     <TextView
+        android:id="@+id/velkomstTekst"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Hello, this is a custom Laucher app, Home screen!"
