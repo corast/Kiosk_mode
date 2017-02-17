@@ -25,10 +25,5 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name="com.sondreweb.kiosk_mode_alpha.AppListActivity"
-            android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
-            >
-        </activity>
     </application>
 </manifest>

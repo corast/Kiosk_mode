@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -12,7 +13,7 @@ import android.widget.Toast;
 /**
  * Created by sondre on 16-Feb-17.
  */
-public class HomeActivity extends Activity {
+public class HomeActivity extends FragmentActivity {
 
     public final static String TAG = HomeActivity.class.getSimpleName();
     private final static String APP = "com.sondreweb.geofencingalpha";
@@ -28,8 +29,6 @@ public class HomeActivity extends Activity {
     }
 
     public void showApps(View v) {
-        Intent intent = new Intent(this, AppListActivity.class);
-        //startActivity(intent);
 
         if(checkIfAppInstalled(this,APP)){
             Toast.makeText(this, "Appen GeofencingAlpga er innstallert", Toast.LENGTH_SHORT).show();
