@@ -31,6 +31,11 @@
         android:layout_height="match_parent"
         android:layout_below="@id/home_text"
         android:name="com.sondreweb.kiosk_mode_alpha.AppsFragment"
-        />
+        >
+        <TextView
+            android:text="Testing"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </fragment>
 
 </RelativeLayout>

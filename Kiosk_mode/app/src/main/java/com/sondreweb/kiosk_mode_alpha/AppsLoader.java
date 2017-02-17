@@ -53,7 +53,6 @@ public class AppsLoader extends AsyncTaskLoader<ArrayList<AppModel>> {
                     //Flagget som sendes med PacketMangger har verdi 0, som er alle apper som har gitt tilatelse for å installeres.
         Log.d(TAG,"Permisson Granted: "+PackageManager.PERMISSION_GRANTED);
         List<ApplicationInfo> apps = packageManager.getInstalledApplications(PackageManager.PERMISSION_GRANTED);
-
         if( apps == null ){
             apps = new ArrayList<ApplicationInfo>();
         }
@@ -68,21 +67,31 @@ public class AppsLoader extends AsyncTaskLoader<ArrayList<AppModel>> {
         for(int i = 0; i < apps.size(); i++){
 
             String packageName = apps.get(i).packageName;
+
+            Log.d(TAG,"PackageName: " +packageName);
             //kunn de som er lauchable/kjørbare vi er interresert i
             if(packageManager.getLaunchIntentForPackage(packageName) != null){
+                    //tester med 3 apper som vi vill kanskje ha.
 
-                AppModel app = new AppModel(context, apps.get(i));
-                app.loadLabel(context);
-                Log.d(TAG,"App som vi kan kjøre: "+app);
-                items.add(app);
+                if( packageName.equalsIgnoreCase("com.android.settings") || packageName.equalsIgnoreCase("com.sondreweb.geofencingalpha") ){
+                    Log.d(TAG,"Legg til app: "+ packageName);
+                    AppModel app = new AppModel(context, apps.get(i));
+                    app.loadLabel(context);
+                    Log.d(TAG,"App som vi kan kjøre: "+app);
+                    items.add(app);
+                }
+
             }
         }
+
+        //ArrayList<AppModel> allowedItems = new ArrayList<AppModel>();
 
         //sorterer listen med applikasjoner.
         Collections.sort(items,AppModel.ALPHA_COMPARATOR);
 
         return items;
     }
+
 
 
     /**

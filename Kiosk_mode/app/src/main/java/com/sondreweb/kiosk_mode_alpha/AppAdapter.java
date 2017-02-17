@@ -27,7 +27,7 @@ public class AppAdapter extends ArrayAdapter<AppModel> {
 
     public AppAdapter(Context context)
     {
-        super(context, android.R.layout.simple_list_item_2);
+        super(context, android.R.layout.two_line_list_item);
 
         inflater = LayoutInflater.from(context);
 
@@ -81,7 +81,7 @@ public class AppAdapter extends ArrayAdapter<AppModel> {
         AppModel item = getItem(position);
 
         viewHolder.icon.setImageDrawable(item.getIcon());
-        viewHolder.label.setText(item.getAppLabel());
+        viewHolder.label.setText(item.getAppName());
 
         //return super.getView(position, convertView, parent);
         return convertView;

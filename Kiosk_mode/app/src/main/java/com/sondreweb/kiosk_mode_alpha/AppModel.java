@@ -22,6 +22,9 @@ public class AppModel {
     private final ApplicationInfo info;
 
     private String appLabel;
+
+    private String appName;
+
     private Drawable icon;
 
     private boolean mounted;
@@ -30,7 +33,8 @@ public class AppModel {
     public AppModel(Context context, ApplicationInfo info){
         this.context = context;
         this.info = info;
-
+        //testing på å få tak i navnet på applikajonen.
+        this.appName = context.getPackageManager().getApplicationLabel(info).toString();
         apkFile = new File(info.sourceDir);
     }
 
@@ -44,6 +48,10 @@ public class AppModel {
 
     public String getApplicationPackageName(){
         return getAppInfo().packageName;
+    }
+
+    public String getAppName(){
+        return appName;
     }
 
     public Drawable getIcon(){
