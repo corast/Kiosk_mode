@@ -1,6 +1,10 @@
 package com.sondreweb.kiosk_mode_alpha;
 
 import android.app.Activity;
+import android.app.ActivityManager;
+import android.app.admin.DeviceAdminReceiver;
+import android.app.admin.DevicePolicyManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -15,17 +19,28 @@ import android.widget.Toast;
  */
 public class HomeActivity extends FragmentActivity {
 
+
     public final static String TAG = HomeActivity.class.getSimpleName();
     private final static String APP = "com.sondreweb.geofencingalpha";
 
+
     private PackageManager packageManager;
+    private Context context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
-
+        context = this;
+        startAccessibilityService();
         //checkIfAppInstalled(this, "testing");
+    }
+
+    public void startAccessibilityService(){
+        Log.d(TAG,"startAccessibilityService");
+        Intent accessibilityServiceIntent = new Intent(this,TestAccessiblityService.class);
+        startService(accessibilityServiceIntent);
     }
 
     public void showApps(View v) {
@@ -54,5 +69,13 @@ public class HomeActivity extends FragmentActivity {
             return false;
         }
     }
+
+    public Context getContext(){
+        if(context != null)
+            return context;
+        else
+            return this.getApplicationContext();
+    }
+
 }
 

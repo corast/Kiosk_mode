@@ -1,6 +1,7 @@
 package com.sondreweb.kiosk_mode_alpha;
 
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ListFragment;
@@ -21,6 +22,8 @@ public class AppsFragment extends ListFragment implements LoaderManager.LoaderCa
     // This is the Adapter being used to display the list's data.
     AppAdapter adapter;
 
+    PackageManager packageManager;
+
     public static final String TAG = AppsFragment.class.getSimpleName();
 
     public AppsFragment(){super();
@@ -31,7 +34,7 @@ public class AppsFragment extends ListFragment implements LoaderManager.LoaderCa
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-
+        packageManager = getActivity().getPackageManager();
         // Give some text to display if there is no data.
         setEmptyText("No Applications");
 
@@ -72,12 +75,14 @@ public class AppsFragment extends ListFragment implements LoaderManager.LoaderCa
         return new AppsLoader(getActivity());
     }
 
+
+    //When loader is finished loading, in our case adding applications that are allowed to run.
     @Override
     public void onLoadFinished(Loader<ArrayList<AppModel>> loader, ArrayList<AppModel> data) {
         Log.d(TAG,"onLoadFinished()");
         //setter data inn i adapteret.
         adapter.setData(data);
-
+        StartActivity("com.sondreweb.geofencingalpha");
         //listen burde vises
         if(isResumed()){
             setListShown(true);
@@ -87,6 +92,15 @@ public class AppsFragment extends ListFragment implements LoaderManager.LoaderCa
         }
 
 
+    }
+        //TODO: Bruke en App object istedet, litt tryggere på errors.
+    public void StartActivity(String packageName){
+        Log.d(TAG,"StartActivity: "+packageName);
+        Intent intent = getActivity().getPackageManager().getLaunchIntentForPackage(packageName);
+
+        if(intent != null ){
+            startActivity(intent);
+        }
     }
 
     @Override

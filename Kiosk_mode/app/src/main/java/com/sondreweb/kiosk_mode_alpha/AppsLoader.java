@@ -16,7 +16,7 @@ import java.util.List;
 
 /**
  * Created by sondre on 17-Feb-17.
- * Custom loader, som loader alle innstalerte applikasjoner.
+ * Custom loader, som loader alle innstallerte applikasjoner i en bakgrunnstråd, slik at UI(Main) tråden er ledig til andre ting.
  * TODO: Kunn legg til de vi ønsker at bruken kan ha tilgang til, som Monumentvandrings appen, og (kanskje) settings?
  *
  * source https://developer.android.com/reference/android/content/AsyncTaskLoader.html Under AppListLoader
@@ -50,8 +50,7 @@ public class AppsLoader extends AsyncTaskLoader<ArrayList<AppModel>> {
     public ArrayList<AppModel> loadInBackground() {
         //Retriev listen over installerte aplikasjoner.
         Log.d(TAG, "loadInBackground()");
-                    //Flagget som sendes med PacketMangger har verdi 0, som er alle apper som har gitt tilatelse for å installeres.
-        Log.d(TAG,"Permisson Granted: "+PackageManager.PERMISSION_GRANTED);
+                    //Flagget som sendes med PacketMangger har verdi 0, som er alle apper som har gitt tillatelse for å installeres.
         List<ApplicationInfo> apps = packageManager.getInstalledApplications(PackageManager.PERMISSION_GRANTED);
         if( apps == null ){
             apps = new ArrayList<ApplicationInfo>();
@@ -68,8 +67,8 @@ public class AppsLoader extends AsyncTaskLoader<ArrayList<AppModel>> {
 
             String packageName = apps.get(i).packageName;
 
-            Log.d(TAG,"PackageName: " +packageName);
-            //kunn de som er lauchable/kjørbare vi er interresert i
+            //Log.d(TAG,"PackageName: " +packageName);
+            //kunn de som er lauchable/kjørbare intents vi er interresert i
             if(packageManager.getLaunchIntentForPackage(packageName) != null){
                     //tester med 3 apper som vi vill kanskje ha.
 
@@ -80,7 +79,6 @@ public class AppsLoader extends AsyncTaskLoader<ArrayList<AppModel>> {
                     Log.d(TAG,"App som vi kan kjøre: "+app);
                     items.add(app);
                 }
-
             }
         }
 
