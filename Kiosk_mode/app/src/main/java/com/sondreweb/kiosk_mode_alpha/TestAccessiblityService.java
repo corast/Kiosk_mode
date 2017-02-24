@@ -57,16 +57,14 @@ public class TestAccessiblityService extends AccessibilityService {
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
-        Log.d(TAG,"Event: "+event.toString());
-        Log.d(TAG,"PackageName: " +event.getPackageName());
         if( event != null && event.getPackageName()!= null ){
-        Log.d(TAG,event.getPackageName()+" != "+WhiteList);
+
         //TODO check Whitelist
         if(checkIfWhiteListed(event.getPackageName())){
             Log.d(TAG,"Denne appen er grei");
         }else {
             if(PreferenceUtils.isKioskModeActivated(this)){
-                Toast.makeText(this.getApplicationContext(), "Want to kill activity", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this.getApplicationContext(), "Ikke monumentVandring", Toast.LENGTH_SHORT).show();
 
                 if(event.getPackageName().toString().equalsIgnoreCase(Settings)){
                     //Log.d(TAG,"ActivityManager "+getActivityManager().toString());

@@ -14,6 +14,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.sondreweb.kiosk_mode_alpha.DeviceAdministator.DeviceAdminKiosk;
+
 /**
  * Created by sondre on 16-Feb-17.
  *
@@ -30,11 +32,34 @@ public class HomeActivity extends FragmentActivity {
     private PackageManager packageManager;
     private Context context;
 
+    private DevicePolicyManager devicePolicyManager;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
+        //Lager en ny Component Indentifier fra en classe. Men hvorfor?
+            //TODO: finn ut hva dette faktisk gjør.
+        ComponentName deviceAdmin = new ComponentName(this, DeviceAdminKiosk.class);
+
+        devicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
+        if(!devicePolicyManager.isAdminActive(deviceAdmin)){
+            Toast.makeText(this,"ikke Admin",Toast.LENGTH_SHORT);
+        }else
+        {
+            Log.d(TAG,"vi er admin");
+        }
+
+        if(devicePolicyManager.isDeviceOwnerApp(getPackageName())){
+           Log.d(TAG, "Vi er Device owner");
+        }
+        else
+        {
+            Toast.makeText(this,"Not device owner",Toast.LENGTH_SHORT);
+        }
+
         context = this;
         startAccessibilityService();
         //checkIfAppInstalled(this, "testing");

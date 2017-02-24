@@ -1,6 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.sondreweb.kiosk_mode_alpha">
-<uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES"/>
+
+    <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.DISABLE_KEYGUARD"/>
 
     <application
         android:allowBackup="true"
@@ -33,5 +36,27 @@
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
         </service>
+        <receiver android:name=".DeviceAdministator.DeviceAdminKiosk"
+            android:label="Device Administartor Permisisons"
+
+            android:permission="android.permission.BIND_DEVICE_ADMIN">
+            <!-- is a permission that a DeviceAdminReceiver subclass must have,
+            to ensure that only the system can interact with the receiver
+            (no application can be granted this permission). This prevents other applications from abusing your device admin app. -->
+
+            <!-- declares the security policies used in metadata.
+            The metadata provides additional information specific to the device administrator,
+            as parsed by the DeviceAdminInfo class. -->
+            <meta-data android:name="android.app.device_admin"
+                android:resource="@xml/device_admin"/>
+
+        <intent-filter>
+            <!-- is the primary action that a DeviceAdminReceiver subclass must handle to be allowed to manage a device.
+            This is set to the receiver when the user enables the device admin app. Your code typically handles this in onEnabled() -->
+            <action android:name="android.app.action.DEVICE_ADMIN_ENABLED"/>
+        </intent-filter>
+
+        </receiver>
+
     </application>
 </manifest>
