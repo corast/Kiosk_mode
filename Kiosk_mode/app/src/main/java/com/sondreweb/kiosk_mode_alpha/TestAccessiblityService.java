@@ -10,6 +10,7 @@ import android.view.accessibility.AccessibilityEvent;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Created by sondre on 23-Feb-17.
@@ -26,7 +27,7 @@ public class TestAccessiblityService extends AccessibilityService {
 
 
     //WHITELIST LIST
-    ArrayList<String> WhiteList = new ArrayList<String>();
+    ArrayList<String> WhiteList = new ArrayList<String>(Arrays.asList(GeofencingApp, LauncherApp)); //populate med appene vi tilater i kiosk mode.
 
     private static final String TAG = TestAccessiblityService.class.getSimpleName();
 
@@ -50,6 +51,7 @@ public class TestAccessiblityService extends AccessibilityService {
 
         setServiceInfo(info);
         //super.onServiceConnected();
+
     }
 
 
@@ -63,7 +65,8 @@ public class TestAccessiblityService extends AccessibilityService {
         if(checkIfWhiteListed(event.getPackageName())){
             Log.d(TAG,"Denne appen er grei");
         }else {
-            Toast.makeText(this.getApplicationContext(), "Want to kill activity", Toast.LENGTH_SHORT).show();
+            if(PreferenceUtils.isKioskModeActivated(this)){
+                Toast.makeText(this.getApplicationContext(), "Want to kill activity", Toast.LENGTH_SHORT).show();
 
                 if(event.getPackageName().toString().equalsIgnoreCase(Settings)){
                     //Log.d(TAG,"ActivityManager "+getActivityManager().toString());
@@ -71,6 +74,8 @@ public class TestAccessiblityService extends AccessibilityService {
                     //getActivityManager().killBackgroundProcesses(event.getPackageName().toString());
                     //HomeActivity.KillProcess(event.getPackageName().toString());
                     //TODO: Finn ut hvordan vi forhinder noen aktiviter å starte. Muligens vi bare kontrollerer menuen med passord innlogging for å starte blackListed Aplications.
+
+                    }
                 }
             }
         }

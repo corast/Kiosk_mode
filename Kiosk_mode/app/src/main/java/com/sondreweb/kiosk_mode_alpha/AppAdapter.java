@@ -51,7 +51,7 @@ public class AppAdapter extends ArrayAdapter<AppModel> {
         //sjekker om platformen støtter addAll. Ble lagt til i HoneyComb
         if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ){
             super.addAll(items);
-        }else{
+        }else{//ellers må vi gå gjennom alle.
             for(AppModel item : items){
                 super.add(item);
             }
@@ -73,7 +73,8 @@ public class AppAdapter extends ArrayAdapter<AppModel> {
 
             convertView.setTag(viewHolder);
 
-        }else
+        }
+        else
         {
             viewHolder = (ViewHolder) convertView.getTag();
         }

@@ -16,6 +16,9 @@ import android.widget.Toast;
 
 /**
  * Created by sondre on 16-Feb-17.
+ *
+ * Home screen appen, denne har ansvar for å vise  tilgjengelige applikasjoner.
+ * TODO: Lag en knapp som starter Kiosk mode(altså starter opp monumentvandringen, vi har ikke lov å gå ut av denne.
  */
 public class HomeActivity extends FragmentActivity {
 
@@ -56,7 +59,7 @@ public class HomeActivity extends FragmentActivity {
     @Override
     public void onBackPressed() {
         Log.d(TAG,"onBackPressed()");
-        //super.onBackPressed(); //Siden vi er Root Appen så er det ikke vits i å trykke onBack, så den gjør heller ikke noe her ifra.
+        //super.onBackPressed(); //Siden vi er Bunnen av aplikasjons stacken, så er det ikke vits i å trykke onBack, den gjør heller ikke noe her ifra.
     }
 
     /*Sjekekr om appen er innstalert, vi må altså sjekke om Monumentvandrings appen er installert, ellers så får ikke brukeren gjordt noe.*/
@@ -77,5 +80,20 @@ public class HomeActivity extends FragmentActivity {
             return this.getApplicationContext();
     }
 
+    public void startMonumentVandring(View view) {
+       //vi starter MonumentVandringen
+        PreferenceUtils.setKioskModeActive(true, this);
+        StartActivity(APP);
+    }
+
+    //TODO: Bruke en App object istedet, litt tryggere på errors.
+    public void StartActivity(String packageName){
+        Log.d(TAG,"StartActivity: "+ packageName);
+        Intent intent = this.getPackageManager().getLaunchIntentForPackage(packageName);
+
+        if(intent != null ){
+            startActivity(intent);
+        }
+    }
 }
 

@@ -82,7 +82,7 @@ public class AppsFragment extends ListFragment implements LoaderManager.LoaderCa
         Log.d(TAG,"onLoadFinished()");
         //setter data inn i adapteret.
         adapter.setData(data);
-        StartActivity("com.sondreweb.geofencingalpha");
+        //StartActivity("com.sondreweb.geofencingalpha");
         //listen burde vises
         if(isResumed()){
             setListShown(true);
