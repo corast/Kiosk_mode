@@ -51,7 +51,6 @@ public class TestAccessiblityService extends AccessibilityService {
 
         setServiceInfo(info);
         //super.onServiceConnected();
-
     }
 
 

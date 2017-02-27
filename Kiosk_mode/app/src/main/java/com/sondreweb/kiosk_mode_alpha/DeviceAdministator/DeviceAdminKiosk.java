@@ -17,7 +17,7 @@ public class DeviceAdminKiosk extends DeviceAdminReceiver{
         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
     }
 
-    @Override
+    @Override   //Callback for når vi er Device Administrator
     public void onEnabled(Context context, Intent intent) {
         showToast(context,"onEnabled i DeviceAdmin");
         super.onEnabled(context, intent);
@@ -28,7 +28,7 @@ public class DeviceAdminKiosk extends DeviceAdminReceiver{
         return super.onDisableRequested(context, intent);
     }
 
-    @Override
+    @Override //Callback for når vi ikke er Device Administrator
     public void onDisabled(Context context, Intent intent) {
         showToast(context,"onDisabled i DeviceAdmin");
         super.onDisabled(context, intent);

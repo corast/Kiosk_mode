@@ -44,12 +44,17 @@ public class HomeActivity extends FragmentActivity {
             //TODO: finn ut hva dette faktisk gjør.
         ComponentName deviceAdmin = new ComponentName(this, DeviceAdminKiosk.class);
 
+        //Henter DevicePolicMangar, brukes for å sjekke om vi er admin osl.
         devicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
-        if(!devicePolicyManager.isAdminActive(deviceAdmin)){
+
+        if(devicePolicyManager.isAdminActive(deviceAdmin)){
+            PreferenceUtils.setPrefAdminDevice(true, this); //dersom vi er admin, så kan vi sette at vi faktisk er det i instillingene:
             Toast.makeText(this,"ikke Admin",Toast.LENGTH_SHORT);
-        }else
+        }
+        else
         {
-            Log.d(TAG,"vi er admin");
+            PreferenceUtils.setPrefAdminDevice(false,this); //dersom vi ikk er admin, så lagrer vi dette til senere bruk.
+            Log.d(TAG,"vi er ikke admin");
         }
 
         if(devicePolicyManager.isDeviceOwnerApp(getPackageName())){
