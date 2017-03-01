@@ -12,15 +12,14 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-
-
         <activity
+            android:excludeFromRecents="true"
             android:name="com.sondreweb.kiosk_mode_alpha.HomeActivity"
             android:label="Simple Launcher Activity"
             android:theme="@android:style/Theme.Wallpaper.NoTitleBar.Fullscreen"
             android:launchMode="singleTask"
             android:stateNotNeeded="true"
-            android:screenOrientation="userPortrait"
+            android:screenOrientation="userLandscape"
             >
             <!-- TODO: Fiks orientasjon, slik at vi faktisk bare viser en orientasjon slik som resten av tangoen gjør. -->
             <intent-filter>
@@ -37,13 +36,12 @@
             </intent-filter>
         </service>
         <receiver android:name=".DeviceAdministator.DeviceAdminKiosk"
-            android:label="Device Administartor Permisisons"
+            android:label="Monument Vandring Administrator"
 
             android:permission="android.permission.BIND_DEVICE_ADMIN">
             <!-- is a permission that a DeviceAdminReceiver subclass must have,
             to ensure that only the system can interact with the receiver
             (no application can be granted this permission). This prevents other applications from abusing your device admin app. -->
-
             <!-- declares the security policies used in metadata.
             The metadata provides additional information specific to the device administrator,
             as parsed by the DeviceAdminInfo class. -->
