@@ -33,12 +33,21 @@
         android:layout_below="@id/home_text"
         android:text="Start MonumentVandring"
         android:onClick="startMonumentVandring"/>
+    <Button
+        android:id="@+id/button_innlogging_admin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/button_start_vandring"
+        android:layout_centerHorizontal="true"
+        android:text="Log in Admin"
+        android:onClick="startAdminLogin"
+        />
 
     <fragment
         android:id="@+id/apps_grid"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/button_start_vandring"
+        android:layout_below="@id/button_innlogging_admin"
         android:name="com.sondreweb.kiosk_mode_alpha.AppsFragment"
         >
 

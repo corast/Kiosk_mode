@@ -145,5 +145,12 @@ public class HomeActivity extends FragmentActivity {
             startActivity(intent);
         }
     }
+
+    /*  Start Loging Activity for admin users.
+    * */
+    public void startAdminLogin(View view) {
+        Intent intent = new Intent(this, LoginAdminActivity.class);
+        startActivity(intent);
+    }
 }
 
