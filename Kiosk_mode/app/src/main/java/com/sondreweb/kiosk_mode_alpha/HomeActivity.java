@@ -28,7 +28,7 @@ public class HomeActivity extends FragmentActivity {
     public final static String TAG = HomeActivity.class.getSimpleName();
     private final static String APP = "com.sondreweb.geofencingalpha";
 
-
+    private View decorView;
     private PackageManager packageManager;
     private Context context;
 
@@ -64,7 +64,7 @@ public class HomeActivity extends FragmentActivity {
         {
             Toast.makeText(this,"Not device owner",Toast.LENGTH_SHORT);
         }
-
+        decorView = getWindow().getDecorView();
         context = this;
         startAccessibilityService();
         //checkIfAppInstalled(this, "testing");
@@ -84,6 +84,26 @@ public class HomeActivity extends FragmentActivity {
         {
             Toast.makeText(this, "Appen Geofencing er ikke innstallert", Toast.LENGTH_SHORT).show();
         }
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG,"onResume()");
+        hideSystemUiTest();
+    }
+
+    public void hideSystemUiTest(){
+        //decorView.setSystemUiVisibility(
+                /*View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                | View.SYSTEM_UI_FLAG_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                */
+        //);
     }
 
     @Override
