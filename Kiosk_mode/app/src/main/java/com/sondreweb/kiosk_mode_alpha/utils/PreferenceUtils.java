@@ -1,4 +1,4 @@
-package com.sondreweb.kiosk_mode_alpha;
+package com.sondreweb.kiosk_mode_alpha.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -7,12 +7,11 @@ import android.util.Log;
 
 /**
  * Created by sondre on 24-Feb-17.
- * Ansvar for å holde oversikt over vi faktisk skal våre i MonumentVandrings modus eller ikke, samt å sette
- * at vi skal være det.
+ * Ansvar for å holde oversikt over vi faktisk skal være i MonumentVandrings modus eller ikke, samt å lagre
+ * om vi skal eller ikke.
  */
 
 public class PreferenceUtils {
-
 
     private static final String TAG = PreferenceUtils.class.getSimpleName();
     //KEY som brukes for å hente ut en verdi fra Preferancene i systemet. Denne er viktig kun denne appen har tilgang til.
@@ -27,7 +26,6 @@ public class PreferenceUtils {
         *   Dette må ses på senere. Dersom vi kjører en factory reset, så mister vi alt uansett, Ikke noe vi får gjordt der ifra.
         * */
     }
-
 
 
     //TODO:finn ut hvem som kan faktisk forandre på denne.

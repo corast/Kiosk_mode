@@ -1,13 +1,14 @@
-package com.sondreweb.kiosk_mode_alpha;
+package com.sondreweb.kiosk_mode_alpha.services;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
 import android.app.ActivityManager;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.Toast;
+
+import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".HomeActivity">
+    tools:context=".activities.HomeActivity">
 <!--
     <Button
         android:id="@+id/apps_button"
@@ -34,10 +34,18 @@
         android:text="Start MonumentVandring"
         android:onClick="startMonumentVandring"/>
     <Button
+        android:id="@+id/button_start_map"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/button_start_vandring"
+        android:text="Start MonumentVandring"
+        android:onClick="startMap"/>
+    <Button
         android:id="@+id/button_innlogging_admin"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/button_start_vandring"
+        android:layout_below="@id/button_start_map"
         android:layout_centerHorizontal="true"
         android:text="Log in Admin"
         android:onClick="startAdminLogin"

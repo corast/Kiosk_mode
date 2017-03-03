@@ -1,6 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.sondreweb.kiosk_mode_alpha">
+    <!-- fil structur
+     <uses-permission />
+   <permission />
+   <permission-tree />
+   <permission-group />
+   <instrumentation />
+   <uses-sdk />
+   <uses-configuration />
+   <uses-feature />
+   <supports-screens />
+   <compatible-screens />
+   <supports-gl-texture />
+
+   <application>
+
+       <activity>
+           <intent-filter>
+               <action />
+               <category />
+               <data />
+           </intent-filter>
+           <meta-data />
+       </activity>
+
+       <activity-alias>
+           <intent-filter> . . . </intent-filter>
+           <meta-data />
+       </activity-alias>
+
+       <service>
+           <intent-filter> . . . </intent-filter>
+           <meta-data/>
+       </service>
+
+       <receiver>
+           <intent-filter> . . . </intent-filter>
+           <meta-data />
+       </receiver>
+
+       <provider>
+           <grant-uri-permission />
+           <meta-data />
+           <path-permission />
+       </provider>
+
+       <uses-library />
+
+   </application>
+   -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 
     <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
@@ -17,7 +68,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".HomeActivity"
+            android:name=".activities.HomeActivity"
             android:excludeFromRecents="true"
             android:label="Simple Launcher Activity"
             android:launchMode="singleTask"
@@ -36,15 +87,17 @@
         </activity>
 
         <service
-            android:name=".TestAccessiblityService"
+            android:name=".services.TestAccessiblityService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
         </service>
 
+        <activity android:name=".activities.MapsActivity"/>
+
         <receiver
-            android:name=".DeviceAdministator.DeviceAdminKiosk"
+            android:name=".deviceAdministator.DeviceAdminKiosk"
             android:label="Monument Vandring Administrator"
             android:permission="android.permission.BIND_DEVICE_ADMIN">
 
@@ -69,13 +122,44 @@
             This is set to the receiver when the user enables the device admin app. Your code typically handles this in onEnabled()
                 -->
                 <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+                <action android:name="android.app.action.ACTION_DEVICE_ADMIN_DISABLE_REQUESTED" />
+                <action android:name="android.app.action.ACTION_DEVICE_ADMIN_DISABLED" />
             </intent-filter>
         </receiver>
 
         <activity
             android:excludeFromRecents="true"
-            android:name=".LoginAdminActivity"
-            android:label="@string/title_activity_login_admin"></activity>
+            android:name=".activities.LoginAdminActivity"
+            android:label="@string/title_activity_login_admin"/>
+
+        <!-- enable: whether or not the service can be instantiatet by the system -->
+        <service android:name="com.sondreweb.kiosk_mode_alpha.services.GeofenceTransitionService"
+            android:enabled="true"/>
+
+        <receiver android:name="com.sondreweb.kiosk_mode_alpha.receivers.RestartBroadcastReciever"
+            android:enabled="true"
+            android:exported="true"
+            android:label="RestartServiceWhenStopped">
+            <intent-filter>
+                <action android:name="com.sondreweb.GeoFencingAlpha.Activity.RestartGeofencing"/>
+            </intent-filter>
+            <!-- Mottar startup intente sent fra systemet, når den booter opp.-->
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <!-- for å mota implisit intents fra systemet -->
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </receiver>
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyDZOUNiu3pqdWp1R66D57CYNsX-UDe9KJE"/>
+
+        <!-- For å få lov til å sjekke hvilken Google Play Service vi faktisk trenger å bruke, og deretter spørre brukeren om å oppdatere sin til å være samme versjon via store -->
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
     </application>
+
 
 </manifest>

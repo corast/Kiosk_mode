@@ -1,15 +1,17 @@
-package com.sondreweb.kiosk_mode_alpha;
+package com.sondreweb.kiosk_mode_alpha.adapters;
 
 import android.content.Context;
 import android.os.Build;
 import android.support.annotation.NonNull;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.sondreweb.kiosk_mode_alpha.AppModel;
+import com.sondreweb.kiosk_mode_alpha.R;
 
 import java.util.ArrayList;
 import java.util.Collection;

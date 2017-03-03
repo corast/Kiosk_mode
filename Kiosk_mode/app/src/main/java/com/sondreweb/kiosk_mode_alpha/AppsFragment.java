@@ -11,6 +11,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ListView;
 
+import com.sondreweb.kiosk_mode_alpha.adapters.AppAdapter;
+
 import java.util.ArrayList;
 
 /**
@@ -82,7 +84,7 @@ public class AppsFragment extends ListFragment implements LoaderManager.LoaderCa
         Log.d(TAG,"onLoadFinished()");
         //setter data inn i adapteret.
         adapter.setData(data);
-        //StartActivity("com.sondreweb.geofencingalpha");
+        //StartApp("com.sondreweb.geofencingalpha");
         //listen burde vises
         if(isResumed()){
             setListShown(true);
@@ -95,7 +97,7 @@ public class AppsFragment extends ListFragment implements LoaderManager.LoaderCa
     }
         //TODO: Bruke en App object istedet, litt tryggere på errors.
     public void StartActivity(String packageName){
-        Log.d(TAG,"StartActivity: "+packageName);
+        Log.d(TAG,"StartApp: "+packageName);
         Intent intent = getActivity().getPackageManager().getLaunchIntentForPackage(packageName);
 
         if(intent != null ){
