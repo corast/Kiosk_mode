@@ -25,7 +25,6 @@ public class TestAccessiblityService extends AccessibilityService {
     //BLACK LIST
     protected final String Settings = "com.android.settings";
 
-
     //WHITELIST LIST
     ArrayList<String> WhiteList = new ArrayList<String>(Arrays.asList(GeofencingApp, LauncherApp)); //populate med appene vi tilater i kiosk mode.
 
@@ -51,22 +50,22 @@ public class TestAccessiblityService extends AccessibilityService {
 
         setServiceInfo(info);
         //super.onServiceConnected();
-
     }
 
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
-        Log.d(TAG,"Event: "+event.toString());
-        Log.d(TAG,"PackageName: " +event.getPackageName());
+
         if( event != null && event.getPackageName()!= null ){
-        Log.d(TAG,event.getPackageName()+" != "+WhiteList);
+
         //TODO check Whitelist
         if(checkIfWhiteListed(event.getPackageName())){
             Log.d(TAG,"Denne appen er grei");
         }else {
             if(PreferenceUtils.isKioskModeActivated(this)){
-                Toast.makeText(this.getApplicationContext(), "Want to kill activity", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this.getApplicationContext(), "Ikke monumentVandring", Toast.LENGTH_SHORT).show();
+
+
 
                 if(event.getPackageName().toString().equalsIgnoreCase(Settings)){
                     //Log.d(TAG,"ActivityManager "+getActivityManager().toString());
@@ -106,7 +105,6 @@ public class TestAccessiblityService extends AccessibilityService {
         return false;
     }
 
-
     public ActivityManager getActivityManager(){
         //activityManager = (ActivityManager) context.getSystemService(this.getApplicationContext());
             if(activityManager != null) {
@@ -119,7 +117,6 @@ public class TestAccessiblityService extends AccessibilityService {
                 }
             }else
                 return activityManager;
-
     }
 
 }

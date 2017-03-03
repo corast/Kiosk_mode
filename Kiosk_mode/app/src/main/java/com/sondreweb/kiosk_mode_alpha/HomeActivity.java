@@ -14,6 +14,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.sondreweb.kiosk_mode_alpha.DeviceAdministator.DeviceAdminKiosk;
+
 /**
  * Created by sondre on 16-Feb-17.
  *
@@ -26,15 +28,43 @@ public class HomeActivity extends FragmentActivity {
     public final static String TAG = HomeActivity.class.getSimpleName();
     private final static String APP = "com.sondreweb.geofencingalpha";
 
-
+    private View decorView;
     private PackageManager packageManager;
     private Context context;
 
+    private DevicePolicyManager devicePolicyManager;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
+        //Lager en ny Component Indentifier fra en classe. Men hvorfor?
+            //TODO: finn ut hva dette faktisk gjør.
+        ComponentName deviceAdmin = new ComponentName(this, DeviceAdminKiosk.class);
+
+        //Henter DevicePolicMangar, brukes for å sjekke om vi er admin osl.
+        devicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
+
+        if(devicePolicyManager.isAdminActive(deviceAdmin)){
+            PreferenceUtils.setPrefAdminDevice(true, this); //dersom vi er admin, så kan vi sette at vi faktisk er det i instillingene:
+            Toast.makeText(this,"ikke Admin",Toast.LENGTH_SHORT);
+        }
+        else
+        {
+            PreferenceUtils.setPrefAdminDevice(false,this); //dersom vi ikk er admin, så lagrer vi dette til senere bruk.
+            Log.d(TAG,"vi er ikke admin");
+        }
+
+        if(devicePolicyManager.isDeviceOwnerApp(getPackageName())){
+           Log.d(TAG, "Vi er Device owner");
+        }
+        else
+        {
+            Toast.makeText(this,"Not device owner",Toast.LENGTH_SHORT);
+        }
+        decorView = getWindow().getDecorView();
         context = this;
         startAccessibilityService();
         //checkIfAppInstalled(this, "testing");
@@ -54,6 +84,26 @@ public class HomeActivity extends FragmentActivity {
         {
             Toast.makeText(this, "Appen Geofencing er ikke innstallert", Toast.LENGTH_SHORT).show();
         }
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG,"onResume()");
+        hideSystemUiTest();
+    }
+
+    public void hideSystemUiTest(){
+        //decorView.setSystemUiVisibility(
+                /*View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                | View.SYSTEM_UI_FLAG_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                */
+        //);
     }
 
     @Override
@@ -94,6 +144,13 @@ public class HomeActivity extends FragmentActivity {
         if(intent != null ){
             startActivity(intent);
         }
+    }
+
+    /*  Start Loging Activity for admin users.
+    * */
+    public void startAdminLogin(View view) {
+        Intent intent = new Intent(this, LoginAdminActivity.class);
+        startActivity(intent);
     }
 }
 

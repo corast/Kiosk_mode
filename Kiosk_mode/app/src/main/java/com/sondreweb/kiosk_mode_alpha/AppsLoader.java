@@ -17,7 +17,7 @@ import java.util.List;
 /**
  * Created by sondre on 17-Feb-17.
  * Custom loader, som loader alle innstallerte applikasjoner i en bakgrunnstråd, slik at UI(Main) tråden er ledig til andre ting.
- * TODO: Kunn legg til de vi ønsker at bruken kan ha tilgang til, som Monumentvandrings appen, og (kanskje) settings?
+ * TODO: Kunn legg til de vi ønsker at bruken kan ha tilgang til, som Monumentvandrings appen, og (kanskje) custom settings?
  *
  * source https://developer.android.com/reference/android/content/AsyncTaskLoader.html Under AppListLoader
  */
@@ -76,7 +76,7 @@ public class AppsLoader extends AsyncTaskLoader<ArrayList<AppModel>> {
                     Log.d(TAG,"Legg til app: "+ packageName);
                     AppModel app = new AppModel(context, apps.get(i));
                     app.loadLabel(context);
-                    Log.d(TAG,"App som vi kan kjøre: "+app);
+
                     items.add(app);
                 }
             }
