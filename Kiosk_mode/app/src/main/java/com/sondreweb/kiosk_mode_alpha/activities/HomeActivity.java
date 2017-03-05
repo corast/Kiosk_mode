@@ -1,17 +1,20 @@
 package com.sondreweb.kiosk_mode_alpha.activities;
 
+import android.app.ActivityManager;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -52,53 +55,10 @@ public class HomeActivity extends FragmentActivity implements
     private static GoogleApiClient googleApiClient;
 
 
-    @Override
-    protected void onStart() {
-        if(PreferenceUtils.isAppDeviceAdmin(this)){
-            statusText.setText("Vi er device admin");
-        }else{
-            statusText.setText("Vi er IKKE device admin");
-        }
-
-        if(devicePolicyManager.isDeviceOwnerApp(this.getPackageName())){
-            statusText.append(" | Vi er Device Owner");
-        }else{
-            statusText.append(" | Vi er IKKE Device Owner");
-        }
-
-        if(AppUtils.isAccessibilitySettingsOn(this)){
-            statusText.append(" | Accessibillity service er på");
-        }else{
-            statusText.append(" | Accessibility service er IKKE på");
-        }
-
-        if(AppUtils.isServiceRunning(GeofenceTransitionService.class,this)){
-            statusText.append("\nGeofenceTransitionService kjører");
-        }else{
-            statusText.append("\nGeofenceTransitionService er IKKE startet");
-        }
-
-        if(AppUtils.isGooglePlayServicesAvaliable(this,this)){
-            statusText.append("\nGooglePlaySerevices er tilgjengelig");
-        }else{
-            statusText.append("\nGooglePlaySerevices er IKKE tilgjengelig");
-        }
-
-        if(AppUtils.checkPermission(this)){
-            statusText.append("\nVi har rettigheter til Lokasjon tilgjengelig");
-        }else
-        {
-            AppUtils.askPermission(this);
-
-            statusText.append("\nVi har IKKE rettigheter til Lokasjon tilgjengelig");
-        }
-
-
-
-
-
-        super.onStart();
+    static {
+        //System.loadLibrary("");
     }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -134,9 +94,73 @@ public class HomeActivity extends FragmentActivity implements
 
         decorView = getWindow().getDecorView();
         context = this;
+
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
         startAccessibilityService();
         //checkIfAppInstalled(this, "testing");
     }
+
+    @Override
+    protected void onStart() {
+        if(PreferenceUtils.isAppDeviceAdmin(this)){
+            statusText.setText("Vi er device admin");
+        }else{
+            statusText.setText("Vi er IKKE device admin");
+        }
+
+        if(devicePolicyManager.isDeviceOwnerApp(this.getPackageName())){
+            statusText.append(" | Vi er Device Owner");
+        }else{
+            statusText.append(" | Vi er IKKE Device Owner");
+        }
+
+        if(AppUtils.isAccessibilitySettingsOn(this)){
+            statusText.append(" | Accessibillity service er på");
+        }else{
+            statusText.append(" | Accessibility service er IKKE på");
+        }
+
+        if(AppUtils.isServiceRunning(GeofenceTransitionService.class,this)){
+            statusText.append("\nGeofenceTransitionService kjører");
+        }else{
+            statusText.append("\nGeofenceTransitionService er IKKE startet");
+        }
+
+        if(AppUtils.isGooglePlayServicesAvaliable(this,this)){
+            statusText.append(" | GooglePlaySerevices er tilgjengelig");
+        }else{
+            statusText.append(" | GooglePlaySerevices er IKKE tilgjengelig");
+        }
+
+        if(AppUtils.checkPermission(this)){
+            statusText.append("\nVi har rettigheter til Lokasjon tilgjengelig");
+        }else
+        {
+            AppUtils.askPermission(this);
+            statusText.append("\nVi har IKKE rettigheter til Lokasjon tilgjengelig");
+        }
+
+        if(AppUtils.isProvidersAvailable(this)){
+            statusText.append("\nVi har ikke Location providerene Enabled på systemet");
+            Intent settingsIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+            this.startActivity(settingsIntent);
+        }else{
+            statusText.append("\nLocation GPS og NETWORK providerene er enabled");
+        }
+
+       /* if(AppUtils.checkLocationAvailabillity(this,getGoogleApiClient())){
+            statusText.append("\nVi har location tilgjengelig fra googleApiClient");
+        }else
+        {
+            statusText.append("\nVi har IKKE location tilgjengelig fra googleApiClient");
+        }
+        */
+
+
+        super.onStart();
+    }
+
 
     public void startAccessibilityService(){
         Log.d(TAG,"startAccessibilityService");
@@ -154,7 +178,8 @@ public class HomeActivity extends FragmentActivity implements
 
         if(checkIfAppInstalled(this,APP)){
             Toast.makeText(this, "Appen GeofencingAlpga er innstallert", Toast.LENGTH_SHORT).show();
-        }else
+        }
+        else
         {
             Toast.makeText(this, "Appen Geofencing er ikke innstallert", Toast.LENGTH_SHORT).show();
         }
@@ -180,6 +205,7 @@ public class HomeActivity extends FragmentActivity implements
         //);
     }
 
+
     @Override
     public void onBackPressed() {
         Log.d(TAG,"onBackPressed()");
@@ -195,6 +221,17 @@ public class HomeActivity extends FragmentActivity implements
         catch (PackageManager.NameNotFoundException e){
             return false;
         }
+    }
+
+    @Override
+    protected void onPause() {
+        Log.d(TAG, "onPause()");
+        super.onPause();
+
+        ActivityManager activityManager = (ActivityManager) getApplicationContext()
+                .getSystemService(Context.ACTIVITY_SERVICE);
+
+        //activityManager.moveTaskToFront(getTaskId(),0);
     }
 
     public Context getContext(){
@@ -250,6 +287,7 @@ public class HomeActivity extends FragmentActivity implements
             }
         }
     }
+
 
     /*                                 CALLBACKS                                        */
     /*¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤GoogleApiClient.ConnectionCallbacks¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤*/
@@ -307,5 +345,11 @@ public class HomeActivity extends FragmentActivity implements
             Log.d(TAG,googleApiClient.toString());
         }
     }
+
+    public void lockScreenNow(View view){
+        DevicePolicyManager devicePolicyManager = (DevicePolicyManager) this.getSystemService(Context.DEVICE_POLICY_SERVICE);
+        devicePolicyManager.lockNow();
+    }
+
 }
 

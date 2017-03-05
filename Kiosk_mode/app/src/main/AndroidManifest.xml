@@ -50,6 +50,8 @@
 
    </application>
    -->
+    <uses-permission android:name="android.permission.REORDER_TASKS"/>
+
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 
@@ -128,9 +130,11 @@
         </receiver>
 
         <activity
-            android:excludeFromRecents="true"
+
             android:name=".activities.LoginAdminActivity"
-            android:label="@string/title_activity_login_admin"/>
+            android:label="@string/title_activity_login_admin"
+            android:excludeFromRecents="true"
+            android:noHistory="true"/>
 
         <!-- enable: whether or not the service can be instantiatet by the system -->
         <service android:name="com.sondreweb.kiosk_mode_alpha.services.GeofenceTransitionService"

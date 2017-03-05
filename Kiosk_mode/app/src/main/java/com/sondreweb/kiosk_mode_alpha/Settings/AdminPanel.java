@@ -1,4 +1,4 @@
-package com.sondreweb.kiosk_mode_alpha.Settings;
+package com.sondreweb.kiosk_mode_alpha.settings;
 
 import android.os.Bundle;
 import android.preference.PreferenceActivity;

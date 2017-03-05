@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
@@ -22,6 +23,7 @@ import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofenceStatusCodes;
 import com.google.android.gms.location.GeofencingEvent;
 import com.sondreweb.kiosk_mode_alpha.R;
+import com.sondreweb.kiosk_mode_alpha.receivers.RestartBroadcastReciever;
 
 import java.util.List;
 
@@ -143,6 +145,7 @@ public class GeofenceTransitionService extends Service {
 
         //handler.postDelayed(getGpsCoordinate, 1000); //1 sec delay ved oppstart av servicet.
 
+        //RestartBroadcastReciever.completeWakefulIntent(intent);
 
         return START_STICKY; //When service is killed by the system, it will start up again.
     }

@@ -22,7 +22,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:text="Hello, dette er custom Launcher app"/>
+        android:text=" "/>
 
     <Button
         android:id="@+id/button_start_vandring"
@@ -56,13 +56,15 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/button_innlogging_admin"
-        android:name="com.sondreweb.kiosk_mode_alpha.AppsFragment"
-        >
+        android:layout_above="@+id/lock_screen_button"
+        android:name="com.sondreweb.kiosk_mode_alpha.AppsFragment"/>
 
-        <TextView
-            android:text="Testing"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-    </fragment>
+    <Button
+        android:id="@+id/lock_screen_button"
+        android:text="Lock Screen now"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:onClick="lockScreenNow"/>
 
 </RelativeLayout>
