@@ -61,7 +61,7 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
    // private AdminLoginTask mAuthAdminTask = null;
 
     // UI references.
-    private AutoCompleteTextView mEmailView;
+    private AutoCompleteTextView mNameView;
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
@@ -71,7 +71,7 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login_admin);
         // Set up the login form.
-        mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
+        mNameView = (AutoCompleteTextView) findViewById(R.id.email);
         populateAutoComplete();
 
         mPasswordView = (EditText) findViewById(R.id.password);
@@ -114,7 +114,7 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
             return true;
         }
         if (shouldShowRequestPermissionRationale(READ_CONTACTS)) {
-            Snackbar.make(mEmailView, R.string.permission_rationale, Snackbar.LENGTH_INDEFINITE)
+            Snackbar.make(mNameView, R.string.permission_rationale, Snackbar.LENGTH_INDEFINITE)
                     .setAction(android.R.string.ok, new View.OnClickListener() {
                         @Override
                         @TargetApi(Build.VERSION_CODES.M)
@@ -153,11 +153,11 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
         }
 
         // Reset errors.
-        mEmailView.setError(null);
+        mNameView.setError(null);
         mPasswordView.setError(null);
 
         // Store values at the time of the login attempt.
-        String email = mEmailView.getText().toString();
+        String email = mNameView.getText().toString();
         String password = mPasswordView.getText().toString();
 
         boolean cancel = false;
@@ -172,12 +172,12 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
 
         // Check for a valid email address.
         if (TextUtils.isEmpty(email)) {
-            mEmailView.setError(getString(R.string.error_field_required));
-            focusView = mEmailView;
+            mNameView.setError(getString(R.string.error_field_required));
+            focusView = mNameView;
             cancel = true;
         } else if (!isEmailValid(email)) {
-            mEmailView.setError(getString(R.string.error_invalid_email));
-            focusView = mEmailView;
+            mNameView.setError(getString(R.string.error_invalid_email));
+            focusView = mNameView;
             cancel = true;
         }
 
@@ -276,7 +276,7 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
                 new ArrayAdapter<>(LoginAdminActivity.this,
                         android.R.layout.simple_dropdown_item_1line, emailAddressCollection);
 
-        mEmailView.setAdapter(adapter);
+        mNameView.setAdapter(adapter);
     }
 
 

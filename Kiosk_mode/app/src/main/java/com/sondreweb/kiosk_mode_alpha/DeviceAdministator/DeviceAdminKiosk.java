@@ -3,6 +3,7 @@ package com.sondreweb.kiosk_mode_alpha.deviceAdministator;
 import android.app.admin.DeviceAdminReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.sondreweb.kiosk_mode_alpha.activities.HomeActivity;
@@ -17,6 +18,8 @@ import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
 
 public class DeviceAdminKiosk extends DeviceAdminReceiver{
 
+    public final static String TAG = DeviceAdminKiosk.class.getSimpleName();
+
     public void showToast(Context context, String msg){
         //String status = context.getString(R.string.admin_re, msg);
         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
@@ -27,6 +30,12 @@ public class DeviceAdminKiosk extends DeviceAdminReceiver{
         showToast(context,"onEnabled i DeviceAdmin");
         PreferenceUtils.setPrefAdminDevice(true,context);
         super.onEnabled(context, intent);
+    }
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        Log.d(TAG,intent.toString());
+        super.onReceive(context, intent);
     }
 
     @Override

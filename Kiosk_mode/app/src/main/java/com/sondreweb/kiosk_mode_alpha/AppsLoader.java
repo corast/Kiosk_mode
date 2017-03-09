@@ -52,8 +52,9 @@ public class AppsLoader extends AsyncTaskLoader<ArrayList<AppModel>> {
         Log.d(TAG, "loadInBackground()");
                     //Flagget som sendes med PacketMangger har verdi 0, som er alle apper som har gitt tillatelse for å installeres.
         List<ApplicationInfo> apps = packageManager.getInstalledApplications(PackageManager.PERMISSION_GRANTED);
+
         if( apps == null ){
-            apps = new ArrayList<ApplicationInfo>();
+            apps = new ArrayList<>();
         }
 
         final Context context = getContext();
@@ -72,7 +73,7 @@ public class AppsLoader extends AsyncTaskLoader<ArrayList<AppModel>> {
             if(packageManager.getLaunchIntentForPackage(packageName) != null){
                     //tester med 3 apper som vi vill kanskje ha.
 
-                if( packageName.equalsIgnoreCase("com.android.settings") || packageName.equalsIgnoreCase("com.sondreweb.geofencingalpha") ){
+                if( packageName.equalsIgnoreCase("com.android.settings") || packageName.equalsIgnoreCase("com.sondreweb.geofencingalpha") || packageName.equalsIgnoreCase("com.android.chrome") ){
                     Log.d(TAG,"Legg til app: "+ packageName);
                     AppModel app = new AppModel(context, apps.get(i));
                     app.loadLabel(context);

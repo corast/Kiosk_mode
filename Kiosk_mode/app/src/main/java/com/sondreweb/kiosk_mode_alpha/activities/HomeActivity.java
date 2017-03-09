@@ -1,32 +1,50 @@
 package com.sondreweb.kiosk_mode_alpha.activities;
 
 import android.app.ActivityManager;
+import android.app.UiModeManager;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
+import android.content.res.Resources;
+import android.graphics.PixelFormat;
+import android.net.Uri;
+import android.os.BatteryManager;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
+import com.sondreweb.kiosk_mode_alpha.CustomView;
 import com.sondreweb.kiosk_mode_alpha.deviceAdministator.DeviceAdminKiosk;
 import com.sondreweb.kiosk_mode_alpha.services.GeofenceTransitionService;
 import com.sondreweb.kiosk_mode_alpha.utils.AppUtils;
 import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
 import com.sondreweb.kiosk_mode_alpha.R;
 import com.sondreweb.kiosk_mode_alpha.services.TestAccessiblityService;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * Created by sondre on 16-Feb-17.
@@ -39,11 +57,12 @@ public class HomeActivity extends FragmentActivity implements
         ActivityCompat.OnRequestPermissionsResultCallback, GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener{
 
-
     public final static String TAG = HomeActivity.class.getSimpleName();
     private final static String APP = "com.sondreweb.geofencingalpha";
 
     private TextView statusText;
+
+    private Button startKioskButton;
 
     private View decorView;
     private PackageManager packageManager;
@@ -54,18 +73,25 @@ public class HomeActivity extends FragmentActivity implements
     //vi holder på googleApiClienten vår her.
     private static GoogleApiClient googleApiClient;
 
+    Intent intent = new Intent(Intent.ACTION_VIEW);
 
-    static {
+    static { //for passord ting.
         //System.loadLibrary("");
+        Log.d(TAG,"Static tag kjører........................................................................................................");
     }
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d(TAG,"onCreate()");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
-
-
+        //this.startActivity(intent);
+        startKioskButton = (Button) findViewById(R.id.button_start_kiosk);
+        try {
+            Runtime.getRuntime().exec("set-device-owner com.sondreweb.kiosk_mode_alpha.deviceAdministrator/.DeviceAdminKiosk");
+        }catch (IOException e){
+            Log.e(TAG,e.getMessage());
+        }
         statusText = (TextView) findViewById(R.id.home_text);
         //Lager en ny Component Indentifier fra en classe. Men hvorfor?
             //TODO: finn ut hva dette faktisk gjør.
@@ -84,32 +110,27 @@ public class HomeActivity extends FragmentActivity implements
             statusText.setText("Vi er ikke admin");
         }
 
-        if(devicePolicyManager.isDeviceOwnerApp(getPackageName())){
-           Log.d(TAG, "Vi er Device owner");
-        }
-        else
-        {
-            Log.d(TAG, "Vi er ikke Device owner");
-        }
 
         decorView = getWindow().getDecorView();
         context = this;
 
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        //getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         startAccessibilityService();
         //checkIfAppInstalled(this, "testing");
+        startConsumeView();
     }
 
     @Override
-    protected void onStart() {
+    protected void onStart() {//Ved onstart burde vi sjekke ulike ting.
+        Log.d(TAG,"onStart()");
         if(PreferenceUtils.isAppDeviceAdmin(this)){
             statusText.setText("Vi er device admin");
         }else{
             statusText.setText("Vi er IKKE device admin");
         }
 
-        if(devicePolicyManager.isDeviceOwnerApp(this.getPackageName())){
+        if(AppUtils.isDeviceOwner(this)){
             statusText.append(" | Vi er Device Owner");
         }else{
             statusText.append(" | Vi er IKKE Device Owner");
@@ -141,13 +162,34 @@ public class HomeActivity extends FragmentActivity implements
             statusText.append("\nVi har IKKE rettigheter til Lokasjon tilgjengelig");
         }
 
-        if(AppUtils.isProvidersAvailable(this)){
-            statusText.append("\nVi har ikke Location providerene Enabled på systemet");
-            Intent settingsIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-            this.startActivity(settingsIntent);
+        if(AppUtils.isGpsProviderAvailable(this)){
+            statusText.append("\nLocation GPS provider er enabled");
+
         }else{
-            statusText.append("\nLocation GPS og NETWORK providerene er enabled");
+            statusText.append("\nLocation GPS provider er disabled");
+           // Intent settingsIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+           // this.startActivity(settingsIntent);
         }
+
+        if(AppUtils.isNetworkProviderAvailable(this)){
+            statusText.append("\nLocation Network provider er enabled");
+        }else
+        {
+            statusText.append("\nLocation Network provider er disabled");
+        }
+
+        Intent batteryIntent = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        int level = batteryIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1); //Nåværende battery level. fra 0 til scale.
+        int scale = batteryIntent.getIntExtra(BatteryManager.EXTRA_SCALE, -1); //Maximun battery level
+
+        float batteryLevel = ((float)level / (float)scale) * 100.0f;
+        if(level == -1 || scale == -1){
+
+        }else
+        {
+            statusText.append("\n Battery nivå: " + batteryLevel + " %");
+        }
+
 
        /* if(AppUtils.checkLocationAvailabillity(this,getGoogleApiClient())){
             statusText.append("\nVi har location tilgjengelig fra googleApiClient");
@@ -156,11 +198,52 @@ public class HomeActivity extends FragmentActivity implements
             statusText.append("\nVi har IKKE location tilgjengelig fra googleApiClient");
         }
         */
-
-
+        getScreenDimens();
         super.onStart();
     }
 
+    public void startConsumeView(){
+        WindowManager manager = ((WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE));
+
+        WindowManager.LayoutParams localLayoutParams = new WindowManager.LayoutParams();
+        localLayoutParams.type = WindowManager.LayoutParams.TYPE_SYSTEM_ERROR;
+        localLayoutParams.gravity = Gravity.TOP | Gravity.RIGHT; //Oppe til høyre vill denne komme opp
+
+        localLayoutParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                //Window flag: even when this window is focusable (its FLAG_NOT_FOCUSABLE is not set), allow any pointer events outside of the window to be sent to the windows behind it.
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
+
+                //Window flag: place the window within the entire screen, ignoring decorations around the border (such as the status bar).
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
+        localLayoutParams.width = 960; //halvparten av sjermBredde, siden vi forsatt vill ha touch event-ene til notifikasjonene
+        localLayoutParams.height = (int) (50 * getResources().getDisplayMetrics().scaledDensity); //Stod 50, så får se hvordan det går.
+        localLayoutParams.format = PixelFormat.TRANSLUCENT; //litt gjennomsiktig. PixelFormat.TRANSLUCENT;
+        CustomView view = new CustomView(this);
+        //Bare slik at jeg kunne se Viewet.
+        view.setBackgroundColor(ContextCompat.getColor(context,R.color.transparent_red));
+        view.setAlpha(0.1f);
+        manager.addView(view, localLayoutParams);
+
+    }
+
+    @Override //Når vi holder inne Power Button, så kjører denne.
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        if(event.getKeyCode() == KeyEvent.KEYCODE_POWER){
+            Log.d(TAG,"Key power button pressed");
+            return true;
+        }
+        return super.dispatchKeyEvent(event);
+    }
+
+    @Override
+    public void onAttachedToWindow() {
+
+        //this.getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+        //this.getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
+
+        super.onAttachedToWindow();
+    }
 
     public void startAccessibilityService(){
         Log.d(TAG,"startAccessibilityService");
@@ -185,12 +268,37 @@ public class HomeActivity extends FragmentActivity implements
         }
     }
 
+    private void setKioskMode(boolean on){
+        UiModeManager uiModeManager = (UiModeManager) this.getSystemService(Context.UI_MODE_SERVICE);
+
+        //TODO: sjekk at alt kjører. Viss ikke så må vi be brukeren starte opp noen ting.
+
+
+        if(on){
+            //uiModeManager.enableCarMode(0);
+            Log.d(TAG,"Car mode enabled flag:"+UiModeManager.ENABLE_CAR_MODE_GO_CAR_HOME);
+        }else
+        {
+
+            //uiModeManager.disableCarMode(UiModeManager.DISABLE_CAR_MODE_GO_HOME);
+        }
+
+    }
+
 
     @Override
     protected void onResume() {
         super.onResume();
         Log.d(TAG,"onResume()");
         hideSystemUiTest();
+        setVisible(true);
+    }
+
+    public void getScreenDimens(){
+        Configuration configuration = this.getResources().getConfiguration();
+        int screenWidhtdp = configuration.screenWidthDp;
+        int screenHeigthdp = configuration.screenHeightDp;
+        Log.d(TAG,"Screen dimes width:"+screenWidhtdp+" dp heigth:"+screenHeigthdp+" dp");
     }
 
     public void hideSystemUiTest(){
@@ -203,8 +311,23 @@ public class HomeActivity extends FragmentActivity implements
                 | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                 */
         //);
+        decorView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        | WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
+                        | WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+        );
     }
 
+    @Override //Fra Google Developer på immersion
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        //hideSystemUiTest();
+    }
 
     @Override
     public void onBackPressed() {
@@ -232,6 +355,14 @@ public class HomeActivity extends FragmentActivity implements
                 .getSystemService(Context.ACTIVITY_SERVICE);
 
         //activityManager.moveTaskToFront(getTaskId(),0);
+
+        ComponentName cn = this.getComponentName();
+        Log.d(TAG,cn.toString());
+
+        if(cn != null && ! cn.getClassName().equals(getClass().getName())){
+            Log.d(TAG, "CN true, er recent button");
+            activityManager.moveTaskToFront(getTaskId(), 0);
+        }
     }
 
     public Context getContext(){
@@ -248,8 +379,9 @@ public class HomeActivity extends FragmentActivity implements
     }
 
     public void startMap(View view){
-        Intent intent = new Intent(this,MapsActivity.class);
-        startActivity(intent);
+        Intent intent = new Intent();
+        intent.setAction("com.sondreweb.geofencingalpha");
+        //context.startActivity(intent);
     }
 
     //TODO: Bruke en App object istedet, litt tryggere på errors.
@@ -260,6 +392,19 @@ public class HomeActivity extends FragmentActivity implements
         if(intent != null ){
             startActivity(intent);
         }
+    }
+
+    public void startKioskMode(View view){ //ved togling av knappen starte denne.
+        Log.d(TAG,view.toString());
+        setKioskMode(true);
+        startKioskButton.setClickable(false);
+        startKioskButton.setAlpha(0.5f); //greyer ut knappen litt.
+        startKioskButton.setText("Kiosk mode is On");
+        //startKioskButton.setLayoutParams(new RelativeLayout.LayoutParams(100,100));
+    }
+
+    public void startkioskMode(){
+
     }
 
     /*  Start Loging Activity for admin users.
@@ -347,9 +492,10 @@ public class HomeActivity extends FragmentActivity implements
     }
 
     public void lockScreenNow(View view){
-        DevicePolicyManager devicePolicyManager = (DevicePolicyManager) this.getSystemService(Context.DEVICE_POLICY_SERVICE);
-        devicePolicyManager.lockNow();
+        if(PreferenceUtils.isAppDeviceAdmin(this)) {
+            DevicePolicyManager devicePolicyManager = (DevicePolicyManager) this.getSystemService(Context.DEVICE_POLICY_SERVICE);
+            //devicePolicyManager.lockNow();
+        }
     }
-
 }
 

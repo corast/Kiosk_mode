@@ -3,10 +3,13 @@ package com.sondreweb.kiosk_mode_alpha.utils;
 import android.Manifest;
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.admin.DevicePolicyManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
+import android.net.Uri;
+import android.os.Environment;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -20,6 +23,8 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
 import com.sondreweb.kiosk_mode_alpha.services.TestAccessiblityService;
 
+import java.io.File;
+
 /**
  * Created by sondre on 03-Mar-17.
  *
@@ -28,7 +33,8 @@ import com.sondreweb.kiosk_mode_alpha.services.TestAccessiblityService;
 
 public class AppUtils{
 
-    private static final String TAG = AppUtils.class.getSimpleName();
+    private static final String TAG = AppUtils.class.getSimpleName()+"_custom";
+
 
     public final static int REQ_PERMISSION = 200;
 
@@ -49,14 +55,19 @@ public class AppUtils{
     }
 
     public static boolean isGooglePlayServicesAvaliable(Context context, Activity activity){
-        //Log.d(TAG,"isGooglePlayServicesAvaliable");
+        Log.d(TAG,"isGooglePlayServicesAvaliable");
         GoogleApiAvailability googleApiAvailbility = GoogleApiAvailability.getInstance();
         int resultCode = googleApiAvailbility.isGooglePlayServicesAvailable(context);
         if( resultCode != ConnectionResult.SUCCESS){
             //gir brukeren beskjed om hvorfor det ikke gikk
             try {
                 if (googleApiAvailbility.isUserResolvableError(resultCode)) {
-                    googleApiAvailbility.getErrorDialog(activity, resultCode, 2404).show();
+
+                   /* if(installFromApk(context)){
+
+                    }else{*/
+                        googleApiAvailbility.getErrorDialog(activity, resultCode, 2404).show();
+                    //}
                 }
             }catch (Exception e) {
                 Log.e("Error"+TAG," "+e);
@@ -64,6 +75,16 @@ public class AppUtils{
         }
         return resultCode == ConnectionResult.SUCCESS;
     }
+
+    public static boolean installFromApk(Context context){
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setDataAndType(Uri.fromFile(new File(Environment.getExternalStorageDirectory()+"/download/"+"com.google.android.gms.apk")), "application/vnd.android.package-archive");
+        intent.setFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
+        return true;
+    }
+
 
     // To check if service is enabled
     public static boolean isAccessibilitySettingsOn(Context mContext) {
@@ -104,8 +125,13 @@ public class AppUtils{
         return false;
     }
 
+    public static boolean isDeviceOwner(Context context){
+        DevicePolicyManager devicePolicyManager = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
+        return devicePolicyManager.isDeviceOwnerApp(context.getPackageName());
+    }
 
-    //Sjekker om vi har permission for å få tak i FINE_LOCATION (accurate location).
+
+    //Sjekker om vi har permission for å få tak i FINE_LOCATION (accurate location), Dette vill si at vi kan bruke GPS og WIFI for å finne lokasjon.
     public static boolean checkPermission(Context context) {
         boolean permissionGranted = ContextCompat.checkSelfPermission(context,
                 Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
@@ -160,6 +186,24 @@ public class AppUtils{
             //Log.d(TAG, "Location Enabled");
             return true;
         }
+    }
+
+    public static boolean isNetworkProviderAvailable(Context context){
+        LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+
+        if( locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER )){
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean isGpsProviderAvailable(Context context){
+        LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+
+        if( locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER )){
+            return true;
+        }
+        return false;
     }
 
 }

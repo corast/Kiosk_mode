@@ -4,10 +4,13 @@ import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
+import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.Toast;
 
+import com.sondreweb.kiosk_mode_alpha.activities.MapsActivity;
 import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
 
 import java.util.ArrayList;
@@ -41,10 +44,10 @@ public class TestAccessiblityService extends AccessibilityService {
         AccessibilityServiceInfo info = new AccessibilityServiceInfo();
         initiateWhitelist();
             //Vi er på utkikk etter alle eventer som har med å forandre Window state
+
         info.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED;
             //må lese meg opp på denne
         info.feedbackType = AccessibilityServiceInfo.FEEDBACK_ALL_MASK;
-
         info.flags = AccessibilityServiceInfo.DEFAULT;
             //slik at det er en tidsbegrensning på hvor lenge vi er connectet til en event(tror jeg).
         info.notificationTimeout = 100;
@@ -58,15 +61,16 @@ public class TestAccessiblityService extends AccessibilityService {
     public void onAccessibilityEvent(AccessibilityEvent event) {
 
         if( event != null && event.getPackageName()!= null ){
-
+            if(event.getEventType() == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED){
+                Log.d(TAG,"Event: "+ event.toString());
+            }
         //TODO check Whitelist
         if(checkIfWhiteListed(event.getPackageName())){
             Log.d(TAG,"Denne appen er grei");
         }else {
             if(PreferenceUtils.isKioskModeActivated(this)){
                 Toast.makeText(this.getApplicationContext(), "Ikke monumentVandring", Toast.LENGTH_SHORT).show();
-
-
+                Log.d(TAG, "Eventet kjører om Aplikasjonen er grei eller ikke.");
 
                 if(event.getPackageName().toString().equalsIgnoreCase(Settings)){
                     //Log.d(TAG,"ActivityManager "+getActivityManager().toString());
@@ -74,6 +78,17 @@ public class TestAccessiblityService extends AccessibilityService {
                     //getActivityManager().killBackgroundProcesses(event.getPackageName().toString());
                     //HomeActivity.KillProcess(event.getPackageName().toString());
                     //TODO: Finn ut hvordan vi forhinder noen aktiviter å starte. Muligens vi bare kontrollerer menuen med passord innlogging for å starte blackListed Aplications.
+                    Log.d(TAG, "stop Settings test");
+                    //Intent stopIntent = new Intent("com.android.settings");
+                    //stopIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    //stopIntent.setFlags(Intent.FLAG_RECEIVER_REPLACE_PENDING);
+                    //startActivity(stopIntent);
+                    //(stopIntent);
+                    Intent app = new Intent("com.sondreweb.kiosk_mode_alpha.activities.MapsActivity");
+                    //startActivity(app);
+                    WindowManager windowManager;
+
+                    this.performGlobalAction(GLOBAL_ACTION_HOME);
 
                     }
                 }

@@ -3,4 +3,9 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
+    <color name="pineApple">#FCDC3B</color>
+    <color name="lightGreen">#7FFF00</color>
+    <color name="redWard">#fff44336</color>
+    <color name="gold">#d4af37</color>
+    <color name="transparent_red">#40FF4081</color>
 </resources>

@@ -50,18 +50,34 @@
 
    </application>
    -->
+    <!-- For å kunne disable Recent apps button. -->
     <uses-permission android:name="android.permission.REORDER_TASKS"/>
+
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 
+
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGEE"/>
+
     <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
+
+    <!--Allows using PowerManager WakeLocks to keep processor from sleeping or screen from dimming. -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
     <!-- To auto-complete the email text field in the login form with the user's emails -->
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.READ_PROFILE" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
+
+    <!-- For å lage et view som "spiser" alle inputene på notifikasjons baren-->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+
+    <uses-permission android:name="android.permission.PREVENT_POWER_KEY" />
+    
+    <uses-permission android:name="android.permission.WRITE_SETTINGS"/>
+
 
     <application
         android:allowBackup="true"
@@ -70,14 +86,16 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
+            android:theme="@style/Base.ThemeOverlay.AppCompat.Dark"
             android:name=".activities.HomeActivity"
             android:excludeFromRecents="true"
             android:label="Simple Launcher Activity"
-            android:launchMode="singleTask"
+            android:launchMode="singleInstance"
             android:screenOrientation="userLandscape"
-            android:stateNotNeeded="true"
-            android:theme="@android:style/Theme.Wallpaper.NoTitleBar.Fullscreen">
+            android:clearTaskOnLaunch="true"
+            android:stateNotNeeded="true">
 
+            <!-- singleInstace: slik at vi ikke kan kjøre flere instanser. -->
             <!-- TODO: Fiks orientasjon, slik at vi faktisk bare viser en orientasjon slik som resten av tangoen gjør. -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -85,15 +103,22 @@
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
+
+                <!--  Become the Car Mode activity
+                <category android:name="android.intent.category.CAR_DOCK" />
+                -->
             </intent-filter>
         </activity>
 
         <service
             android:name=".services.TestAccessiblityService"
+            android:enabled="true"
+
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
+
         </service>
 
         <activity android:name=".activities.MapsActivity"/>
@@ -126,6 +151,7 @@
                 <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
                 <action android:name="android.app.action.ACTION_DEVICE_ADMIN_DISABLE_REQUESTED" />
                 <action android:name="android.app.action.ACTION_DEVICE_ADMIN_DISABLED" />
+                <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </receiver>
 
@@ -164,6 +190,4 @@
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
     </application>
-
-
 </manifest>

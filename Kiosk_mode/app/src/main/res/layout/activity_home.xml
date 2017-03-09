@@ -17,29 +17,32 @@
         android:layout_centerHorizontal="true"/>
       -->
 
+
     <TextView
         android:id="@+id/home_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:text=" "/>
+        android:text=" "
+        android:background="@color/colorPrimaryDark"/>
 
     <Button
-        android:id="@+id/button_start_vandring"
+        android:id="@+id/button_start_kiosk"
         android:layout_width="match_parent"
-        android:layout_height="40dp"
+        android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:background="@color/colorAccent"
         android:layout_below="@id/home_text"
-        android:text="Start MonumentVandring"
-        android:onClick="startMonumentVandring"/>
+        android:text="Start Kiosk mode"
+        android:onClick="startKioskMode"/>
+
     <Button
         android:id="@+id/button_start_map"
         android:layout_width="match_parent"
         android:layout_height="40dp"
         android:layout_centerHorizontal="true"
-        android:layout_below="@id/button_start_vandring"
+        android:layout_below="@id/button_start_kiosk"
         android:text="Start MonumentVandring"
+        android:layout_alignWithParentIfMissing="true"
         android:onClick="startMap"/>
     <Button
         android:id="@+id/button_innlogging_admin"
