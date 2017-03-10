@@ -29,7 +29,7 @@ public class PreferenceUtils {
 
 
     //TODO:finn ut hvem som kan faktisk forandre på denne.
-    public static void setKioskModeActive(final boolean active, final Context context){
+    public static void setKioskModeActive( final Context context, boolean active){
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         //Henter Preferansene til systemet.
         if(sharedPreferences.edit().putBoolean(PREF_KIOSK_MODE, active).commit()){

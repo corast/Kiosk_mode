@@ -87,8 +87,8 @@ public class TestAccessiblityService extends AccessibilityService {
                     Intent app = new Intent("com.sondreweb.kiosk_mode_alpha.activities.MapsActivity");
                     //startActivity(app);
                     WindowManager windowManager;
-
-                    this.performGlobalAction(GLOBAL_ACTION_HOME);
+                    this.performGlobalAction(GLOBAL_ACTION_BACK);
+                    //1this.performGlobalAction(GLOBAL_ACTION_HOME);
 
                     }
                 }

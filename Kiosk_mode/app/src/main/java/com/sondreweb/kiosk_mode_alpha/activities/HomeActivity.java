@@ -15,6 +15,7 @@ import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Environment;
+import android.preference.PreferenceActivity;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -60,7 +61,7 @@ public class HomeActivity extends FragmentActivity implements
     public final static String TAG = HomeActivity.class.getSimpleName();
     private final static String APP = "com.sondreweb.geofencingalpha";
 
-    private TextView statusText;
+    private TextView statusText, googleClientText;
 
     private Button startKioskButton;
 
@@ -87,11 +88,9 @@ public class HomeActivity extends FragmentActivity implements
         setContentView(R.layout.activity_home);
         //this.startActivity(intent);
         startKioskButton = (Button) findViewById(R.id.button_start_kiosk);
-        try {
-            Runtime.getRuntime().exec("set-device-owner com.sondreweb.kiosk_mode_alpha.deviceAdministrator/.DeviceAdminKiosk");
-        }catch (IOException e){
-            Log.e(TAG,e.getMessage());
-        }
+
+
+        googleClientText = (TextView) findViewById(R.id.text_googleApiConnection);
         statusText = (TextView) findViewById(R.id.home_text);
         //Lager en ny Component Indentifier fra en classe. Men hvorfor?
             //TODO: finn ut hva dette faktisk gjør.
@@ -110,6 +109,17 @@ public class HomeActivity extends FragmentActivity implements
             statusText.setText("Vi er ikke admin");
         }
 
+        /* Initalize google API client.(Trenger ikke nyeste Versjon av Servicen for dette)
+        * */
+        createGoogleApi();
+
+
+        if(AppUtils.isGooglePlayServicesAvaliable(this,this)){
+            //createGoogleApi(); //lager GoogleApiClienten vår.
+            googleApiClient.connect();
+        }
+
+
 
         decorView = getWindow().getDecorView();
         context = this;
@@ -121,9 +131,27 @@ public class HomeActivity extends FragmentActivity implements
         startConsumeView();
     }
 
+
+
+    //Create GoogleApiClient Instance
+    private boolean createGoogleApi() {
+        Log.d(TAG, "createGoogleApi()");
+        if (googleApiClient == null) {
+            googleApiClient = new GoogleApiClient.Builder(this)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .addApi(LocationServices.API)
+                    .build();
+            Log.d(TAG,"googleApiClient: "+googleApiClient.toString());
+        }
+        return true;
+    }
+
     @Override
     protected void onStart() {//Ved onstart burde vi sjekke ulike ting.
         Log.d(TAG,"onStart()");
+        createGoogleApi(); //Tilfelle det er null.
+
         if(PreferenceUtils.isAppDeviceAdmin(this)){
             statusText.setText("Vi er device admin");
         }else{
@@ -149,9 +177,9 @@ public class HomeActivity extends FragmentActivity implements
         }
 
         if(AppUtils.isGooglePlayServicesAvaliable(this,this)){
-            statusText.append(" | GooglePlaySerevices er tilgjengelig");
+            statusText.append(" | GooglePlayServicen er oppdatert og tilgjengelig");
         }else{
-            statusText.append(" | GooglePlaySerevices er IKKE tilgjengelig");
+            statusText.append(" | GooglePlaySerevices er IKKE tilgjengelig med gammel utgave");
         }
 
         if(AppUtils.checkPermission(this)){
@@ -178,6 +206,13 @@ public class HomeActivity extends FragmentActivity implements
             statusText.append("\nLocation Network provider er disabled");
         }
 
+        if(googleApiClient.isConnected()){
+            googleClientText.setText("googleApiClienten er connected");
+        }else
+        {
+            googleClientText.setText("googleApiClienten er IKKE connected");
+        }
+
         Intent batteryIntent = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         int level = batteryIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1); //Nåværende battery level. fra 0 til scale.
         int scale = batteryIntent.getIntExtra(BatteryManager.EXTRA_SCALE, -1); //Maximun battery level
@@ -191,6 +226,7 @@ public class HomeActivity extends FragmentActivity implements
         }
 
 
+
        /* if(AppUtils.checkLocationAvailabillity(this,getGoogleApiClient())){
             statusText.append("\nVi har location tilgjengelig fra googleApiClient");
         }else
@@ -200,6 +236,24 @@ public class HomeActivity extends FragmentActivity implements
         */
         getScreenDimens();
         super.onStart();
+    }
+
+    /**
+     * Opdater Bruker grense snittet, slik at når vi gjør forandringer, så skal det synes her.
+     */
+
+    public void updateGui(){
+        if(PreferenceUtils.isKioskModeActivated(this)){
+            //Må sette knappen til å være Disabled
+            startKioskButton.setClickable(false);
+            startKioskButton.setAlpha(0.5f); //greyer ut knappen litt.
+            startKioskButton.setText("Kiosk mode is On");
+
+        }else{
+            startKioskButton.setClickable(true);
+            startKioskButton.setAlpha(1); //greyer ut knappen litt.
+            startKioskButton.setText("Start Kiosk Mode");
+        }
     }
 
     public void startConsumeView(){
@@ -216,7 +270,7 @@ public class HomeActivity extends FragmentActivity implements
                 //Window flag: place the window within the entire screen, ignoring decorations around the border (such as the status bar).
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
         localLayoutParams.width = 960; //halvparten av sjermBredde, siden vi forsatt vill ha touch event-ene til notifikasjonene
-        localLayoutParams.height = (int) (50 * getResources().getDisplayMetrics().scaledDensity); //Stod 50, så får se hvordan det går.
+        localLayoutParams.height = (int) (40 * getResources().getDisplayMetrics().scaledDensity); //Stod 50, så får se hvordan det går.
         localLayoutParams.format = PixelFormat.TRANSLUCENT; //litt gjennomsiktig. PixelFormat.TRANSLUCENT;
         CustomView view = new CustomView(this);
         //Bare slik at jeg kunne se Viewet.
@@ -268,20 +322,22 @@ public class HomeActivity extends FragmentActivity implements
         }
     }
 
-    private void setKioskMode(boolean on){
+    private void setKioskMode(boolean activate){
         UiModeManager uiModeManager = (UiModeManager) this.getSystemService(Context.UI_MODE_SERVICE);
 
         //TODO: sjekk at alt kjører. Viss ikke så må vi be brukeren starte opp noen ting.
 
 
-        if(on){
+       /* if(on){
             //uiModeManager.enableCarMode(0);
-            Log.d(TAG,"Car mode enabled flag:"+UiModeManager.ENABLE_CAR_MODE_GO_CAR_HOME);
+            //Log.d(TAG,"Car mode enabled flag:"+UiModeManager.ENABLE_CAR_MODE_GO_CAR_HOME);
         }else
         {
 
             //uiModeManager.disableCarMode(UiModeManager.DISABLE_CAR_MODE_GO_HOME);
-        }
+        } */
+
+        PreferenceUtils.setKioskModeActive(this, activate);
 
     }
 
@@ -372,12 +428,6 @@ public class HomeActivity extends FragmentActivity implements
             return this.getApplicationContext();
     }
 
-    public void startMonumentVandring(View view) {
-       //vi starter MonumentVandringen
-        PreferenceUtils.setKioskModeActive(true, this);
-        StartApp(APP);
-    }
-
     public void startMap(View view){
         Intent intent = new Intent();
         intent.setAction("com.sondreweb.geofencingalpha");
@@ -396,11 +446,23 @@ public class HomeActivity extends FragmentActivity implements
 
     public void startKioskMode(View view){ //ved togling av knappen starte denne.
         Log.d(TAG,view.toString());
+        if( ! kioskModeReady()){
+
+        }
         setKioskMode(true);
-        startKioskButton.setClickable(false);
-        startKioskButton.setAlpha(0.5f); //greyer ut knappen litt.
-        startKioskButton.setText("Kiosk mode is On");
         //startKioskButton.setLayoutParams(new RelativeLayout.LayoutParams(100,100));
+        updateGui();
+    }
+
+    public boolean kioskModeReady(){
+        if(AppUtils.isAccessibilitySettingsOn(this)){
+            return true;
+        }else {
+            Intent intent = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
+            startActivityForResult(intent, 0);
+
+            return false;
+        }
     }
 
     public void startkioskMode(){
@@ -443,7 +505,8 @@ public class HomeActivity extends FragmentActivity implements
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-
+        Log.d(TAG,"Vi er Connected med GoogleAPiClienten");
+        googleClientText.setText("googleApiClienten er connected");
     }
 
     /**
@@ -452,7 +515,8 @@ public class HomeActivity extends FragmentActivity implements
 
     @Override
     public void onConnectionSuspended(int i) {
-
+        Log.d(TAG,"Mister connection med GoogleApiClienten");
+        googleClientText.setText("googleApiclienten: onConnectionSuspended");
     }
 
     /*#######################GoogleApiClient.ConnectionCallbacks#######################*/
@@ -463,7 +527,11 @@ public class HomeActivity extends FragmentActivity implements
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        Log.d(TAG,"Failed to connect googleAPiClient"); //Muligens Gammel Versjon av
         //TODO: Finn ut hva problemet kan være og koble til på nytt.
+
+        //TODO: Be bruker oppdatere GooglePlayService, dersom gammel versjon.
+        googleClientText.setText("googleApiClienten on ConnectionFailed");
     }
 
 /*#######################END oogleApiClient.OnConnectionFailedListener###############*/
@@ -478,24 +546,18 @@ public class HomeActivity extends FragmentActivity implements
     }
     /* SET FUNCTIONS*/
 
-    //Create GoogleApiClient Instance
-    private void createGoogleApi() {
-        Log.d(TAG, "createGoogleApi()");
-        if (googleApiClient == null) {
-            googleApiClient = new GoogleApiClient.Builder(this)
-                    .addConnectionCallbacks(this)
-                    .addOnConnectionFailedListener(this)
-                    .addApi(LocationServices.API)
-                    .build();
-            Log.d(TAG,googleApiClient.toString());
-        }
-    }
+
 
     public void lockScreenNow(View view){
         if(PreferenceUtils.isAppDeviceAdmin(this)) {
             DevicePolicyManager devicePolicyManager = (DevicePolicyManager) this.getSystemService(Context.DEVICE_POLICY_SERVICE);
             //devicePolicyManager.lockNow();
         }
+
+        PreferenceUtils.setKioskModeActive(this,false);
+        updateGui();
     }
+
+
 }
 

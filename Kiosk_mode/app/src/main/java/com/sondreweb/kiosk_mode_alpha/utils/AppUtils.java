@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.FileUriExposedException;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -21,9 +22,11 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
 import com.sondreweb.kiosk_mode_alpha.services.TestAccessiblityService;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 
 /**
  * Created by sondre on 03-Mar-17.
@@ -60,14 +63,29 @@ public class AppUtils{
         int resultCode = googleApiAvailbility.isGooglePlayServicesAvailable(context);
         if( resultCode != ConnectionResult.SUCCESS){
             //gir brukeren beskjed om hvorfor det ikke gikk
+            //ConnectionResult.RESOLUTION_REQUIRED vill si at vi kan be brukeren intallerer hva det som mangler.
             try {
                 if (googleApiAvailbility.isUserResolvableError(resultCode)) {
 
-                   /* if(installFromApk(context)){
+                    if(apkFileExists(context,"/download/com.google.android.gms.apk")){
 
-                    }else{*/
-                        googleApiAvailbility.getErrorDialog(activity, resultCode, 2404).show();
-                    //}
+                    }
+
+                    if(installFromApk(context, "/download/com.google.android.gms.apk")){
+                        //installFromApk(context,"/download/com.google.android.gms.apk");
+                    }
+
+                    if(isPacketInstalled("com.google.android.gms.apk",context)){
+                        Log.d(TAG, "Package is not installed.");
+                    }
+
+
+                    resultCode = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context); //oppdaterer.
+                    if( resultCode != ConnectionResult.SUCCESS){
+                       // googleApiAvailbility.getErrorDialog(activity, resultCode, 2404).show();
+                    }
+                    //googleApiAvailbility.getErrorDialog(activity, resultCode, 2404).show();
+
                 }
             }catch (Exception e) {
                 Log.e("Error"+TAG," "+e);
@@ -76,13 +94,42 @@ public class AppUtils{
         return resultCode == ConnectionResult.SUCCESS;
     }
 
-    public static boolean installFromApk(Context context){
+    public static boolean isPacketInstalled(String packagename, Context context){
+        try{
+            context.getPackageManager().getPackageInfo(packagename,0);
+            return true;
+        }catch (PackageManager.NameNotFoundException e){
+            return false;
+        }
+    }
+
+    public static boolean installFromApk(Context context, String apkFile){
+        Log.d(TAG, Environment.getExternalStorageDirectory() + apkFile);
         Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setDataAndType(Uri.fromFile(new File(Environment.getExternalStorageDirectory()+"/download/"+"com.google.android.gms.apk")), "application/vnd.android.package-archive");
-        intent.setFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(intent);
+        try {
+            intent.setDataAndType(Uri.fromFile(new File(Environment.getExternalStorageDirectory() + apkFile)), "application/vnd.android.package-archive");
+            intent.setFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+        }catch (NullPointerException E){
+            return false;
+        }catch (Exception E){
+            return false;
+        }
         return true;
+    }
+
+
+    public static boolean apkFileExists(Context context, String filePath){
+        File file = new File(Environment.getExternalStorageDirectory() + filePath);
+        Log.d(TAG,"Path : "+Environment.getExternalStorageDirectory() + filePath);
+
+
+        if(file.isFile()){
+            Log.d(TAG,filePath+ " exists");
+            return true;
+        }
+        return false;
     }
 
 
@@ -190,6 +237,7 @@ public class AppUtils{
 
     public static boolean isNetworkProviderAvailable(Context context){
         LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+
 
         if( locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER )){
             return true;

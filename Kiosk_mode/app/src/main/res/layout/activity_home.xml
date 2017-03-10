@@ -25,13 +25,20 @@
         android:layout_alignParentTop="true"
         android:text=" "
         android:background="@color/colorPrimaryDark"/>
+    <TextView
+        android:id="@+id/text_googleApiConnection"
+        android:layout_width="wrap_content"
+        android:text=" Not Connected"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/home_text"/>
+
 
     <Button
         android:id="@+id/button_start_kiosk"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_below="@id/home_text"
+        android:layout_below="@id/text_googleApiConnection"
         android:text="Start Kiosk mode"
         android:onClick="startKioskMode"/>
 
@@ -44,6 +51,7 @@
         android:text="Start MonumentVandring"
         android:layout_alignWithParentIfMissing="true"
         android:onClick="startMap"/>
+
     <Button
         android:id="@+id/button_innlogging_admin"
         android:layout_width="match_parent"
@@ -51,8 +59,7 @@
         android:layout_below="@id/button_start_map"
         android:layout_centerHorizontal="true"
         android:text="Log in Admin"
-        android:onClick="startAdminLogin"
-        />
+        android:onClick="startAdminLogin" />
 
     <fragment
         android:id="@+id/apps_grid"
@@ -64,7 +71,7 @@
 
     <Button
         android:id="@+id/lock_screen_button"
-        android:text="Lock Screen now"
+        android:text="stop Kiosk mode now"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
