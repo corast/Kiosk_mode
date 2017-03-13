@@ -86,7 +86,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:theme="@style/Base.ThemeOverlay.AppCompat.Dark"
+            android:theme="@style/Theme.AppCompat.NoActionBar"
             android:name=".activities.HomeActivity"
             android:excludeFromRecents="true"
             android:label="Simple Launcher Activity"
@@ -110,15 +110,17 @@
             </intent-filter>
         </activity>
 
+        <!-- EXPORTED: Whether or not components of other applications can invoke the service or interact with it —
+        "true" if they can, and "false" if not. When the value is "false", only components of
+        the same application or applications with the same user ID can start the service or bind to it. -->
         <service
             android:name=".services.TestAccessiblityService"
             android:enabled="true"
-
+            android:exported="false"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
-
         </service>
 
         <activity android:name=".activities.MapsActivity"/>
@@ -156,7 +158,6 @@
         </receiver>
 
         <activity
-
             android:name=".activities.LoginAdminActivity"
             android:label="@string/title_activity_login_admin"
             android:excludeFromRecents="true"

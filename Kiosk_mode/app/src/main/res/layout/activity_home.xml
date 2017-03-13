@@ -70,6 +70,14 @@
         android:name="com.sondreweb.kiosk_mode_alpha.AppsFragment"/>
 
     <Button
+        android:id="@+id/button_touch_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/lock_screen_button"
+        android:text="Togle touchView"
+        android:onClick="toogleTouchView"/>
+
+    <Button
         android:id="@+id/lock_screen_button"
         android:text="stop Kiosk mode now"
         android:layout_width="match_parent"

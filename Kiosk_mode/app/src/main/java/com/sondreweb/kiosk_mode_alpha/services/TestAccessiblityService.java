@@ -59,6 +59,9 @@ public class TestAccessiblityService extends AccessibilityService {
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
+        if(event != null){
+            Log.d(TAG,"event: "+event.toString());
+        }
 
         if( event != null && event.getPackageName()!= null ){
             if(event.getEventType() == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED){
@@ -70,7 +73,6 @@ public class TestAccessiblityService extends AccessibilityService {
         }else {
             if(PreferenceUtils.isKioskModeActivated(this)){
                 Toast.makeText(this.getApplicationContext(), "Ikke monumentVandring", Toast.LENGTH_SHORT).show();
-                Log.d(TAG, "Eventet kjører om Aplikasjonen er grei eller ikke.");
 
                 if(event.getPackageName().toString().equalsIgnoreCase(Settings)){
                     //Log.d(TAG,"ActivityManager "+getActivityManager().toString());
@@ -91,7 +93,28 @@ public class TestAccessiblityService extends AccessibilityService {
                     //1this.performGlobalAction(GLOBAL_ACTION_HOME);
 
                     }
-                }
+                    else if(event.getClassName().equals("com.android.systemui.recent.RecentsActivity")){
+                    /*
+                    *   Siden vi ikke tillater Recent button å bli clikket, må vi disable denne "appen".
+                    *   Dersom vi går GLOBAL_ACTION_BACK her så havner vi i default launcheren, og ut av vår egen.
+                    *   Må dermed passe på at denne går tilbake til HOME.
+                    * */
+                        this.performGlobalAction(GLOBAL_ACTION_HOME);
+                    }
+                    else{
+                            Log.d(TAG, "Ikke en godkjent event:");
+                            if(event.getPackageName().toString().equalsIgnoreCase("com.android.keyguard")){
+                                Log.d(TAG,"com.android.keyguard prøver å gjøre noe");
+                                this.performGlobalAction(GLOBAL_ACTION_BACK);
+                            }else if(event.getPackageName().toString().equalsIgnoreCase("android")){
+                                Log.d(TAG,"android prøver å gjøre noe");
+                                this.performGlobalAction(GLOBAL_ACTION_BACK);
+                            }else if(event.getClassName().equals("com.android.systemui.recent.RecentsActivity")){
+                                this.performGlobalAction(GLOBAL_ACTION_HOME);
+                            }
+                            /*event.getPackageName().equals("com.android.systemui"*/
+                        }
+                    }
             }
         }
     }
@@ -100,6 +123,7 @@ public class TestAccessiblityService extends AccessibilityService {
         WhiteList.add("com.sondreweb.geofencingAlpha");
         WhiteList.add("com.sondreweb.kiosk_mode_alpha");
     }
+
 
     @Override
     public void onInterrupt() {

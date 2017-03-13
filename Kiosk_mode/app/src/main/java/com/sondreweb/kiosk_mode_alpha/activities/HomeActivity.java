@@ -12,6 +12,7 @@ import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.PixelFormat;
 import android.net.Uri;
+import android.nfc.Tag;
 import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Environment;
@@ -256,6 +257,8 @@ public class HomeActivity extends FragmentActivity implements
         }
     }
 
+    public View touchView = null;
+
     public void startConsumeView(){
         WindowManager manager = ((WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE));
 
@@ -275,9 +278,34 @@ public class HomeActivity extends FragmentActivity implements
         CustomView view = new CustomView(this);
         //Bare slik at jeg kunne se Viewet.
         view.setBackgroundColor(ContextCompat.getColor(context,R.color.transparent_red));
+        view.setId(R.id.view_notification);
         view.setAlpha(0.1f);
+        touchView = view; //lagrere Viewet i en variabel;
         manager.addView(view, localLayoutParams);
 
+    }
+
+    public void disableTouchView(){
+        if(touchView != null){
+            touchView.setVisibility(View.GONE);
+        }
+    }
+
+    public void enableTouchView(){
+        if(touchView != null){
+            touchView.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private boolean toogle = true;
+    public void toogleTouchView(View view){
+        if(toogle){
+            disableTouchView();
+            toogle = false;
+        }else {
+            enableTouchView();
+            toogle = true;
+        }
     }
 
     @Override //Når vi holder inne Power Button, så kjører denne.
@@ -454,6 +482,12 @@ public class HomeActivity extends FragmentActivity implements
         updateGui();
     }
 
+    /*
+     Denne skal returnere true, dersom alt av krav er oppfylt.
+        Accessibility service må være på.
+        Touch Event View som blokker quick settings.
+        MonumentVandring appen må også være innstalert og satt og korrekt(med monumentene lastet inn).
+    * */
     public boolean kioskModeReady(){
         if(AppUtils.isAccessibilitySettingsOn(this)){
             return true;
