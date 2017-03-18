@@ -125,7 +125,7 @@ public class HomeActivity extends FragmentActivity implements
         decorView = getWindow().getDecorView();
         context = this;
 
-        //getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         startAccessibilityService();
         //checkIfAppInstalled(this, "testing");

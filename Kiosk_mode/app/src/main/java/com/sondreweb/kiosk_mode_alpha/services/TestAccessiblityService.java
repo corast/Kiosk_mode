@@ -107,6 +107,8 @@ public class TestAccessiblityService extends AccessibilityService {
                     }
                     else{
                             Log.d(TAG, "Ikke en godkjent event:");
+
+
                             if(event.getPackageName().toString().equalsIgnoreCase("com.android.keyguard")){
                                 Log.d(TAG,"com.android.keyguard prøver å gjøre noe");
                                 this.performGlobalAction(GLOBAL_ACTION_BACK);
@@ -115,6 +117,8 @@ public class TestAccessiblityService extends AccessibilityService {
                                 this.performGlobalAction(GLOBAL_ACTION_BACK);
                             }else if(event.getClassName().equals("com.android.systemui.recent.RecentsActivity")){
                                 this.performGlobalAction(GLOBAL_ACTION_HOME);
+                            }else if(event.getClassName().equals("android.widget.FrameLayout") && event.getPackageName().equals("com.android.keyguard")){
+                                this.performGlobalAction(GLOBAL_ACTION_BACK);
                             }
                             /*event.getPackageName().equals("com.android.systemui"*/
                         }

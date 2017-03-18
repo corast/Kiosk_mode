@@ -20,18 +20,25 @@ public class RestartBroadcastReciever extends WakefulBroadcastReceiver {
 
     /*Broadcast Cases som vi bruker*/
     private final static String BOOT_COMPLETED = "android.intent.action.BOOT_COMPLETED";
+    private final static String SCREEN_OFF = "android.intent.action.BOOT_COMPLETED";
 
     //denne lytter kunn til com.sondreweb.GeoFencingAlpha.Activity.RestartGeofencing.
     @Override
     public void onReceive(Context context, Intent intent) {
         //dette er bare tull altså
         String action = intent.getAction();
+        Log.d(TAG,"¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤");
+        Log.d(TAG,action);
+        Log.d(TAG,"¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤");
         switch(action){
-            case BOOT_COMPLETED:
+            case Intent.ACTION_BOOT_COMPLETED:
                 //TODO: re-registrer Geofencet igjenn.
                 //sendToast(context);
                 checkIfGeofenceIsAlive(context);
                 sendToast(context);
+                break;
+            case Intent.ACTION_SCREEN_OFF:
+                Log.d(TAG, "ACTION SCREEN OFF");
                 break;
             default:
                 Log.d(TAG,"Action som ble motatt i BroadcastReceiver:"+ action);

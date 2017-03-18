@@ -4,10 +4,14 @@ package com.sondreweb.kiosk_mode_alpha.services;
  * Created by sondre on 03-Mar-17.
  */
 
+import android.app.Activity;
+import android.app.KeyguardManager;
 import android.app.NotificationManager;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
@@ -16,6 +20,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.WindowManager;
 
 import java.util.ArrayList;
 
@@ -23,6 +28,7 @@ import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofenceStatusCodes;
 import com.google.android.gms.location.GeofencingEvent;
 import com.sondreweb.kiosk_mode_alpha.R;
+import com.sondreweb.kiosk_mode_alpha.activities.HomeActivity;
 import com.sondreweb.kiosk_mode_alpha.receivers.RestartBroadcastReciever;
 
 import java.util.List;
@@ -90,6 +96,9 @@ public class GeofenceTransitionService extends Service {
 
     public GeofenceTransitionService(){} //default constructor
 
+    private ScreenOffReceiver screenOffReceiver;
+
+    private PowerManager.WakeLock wakeLock;
 
     @Override
     public void onCreate() {
@@ -99,6 +108,12 @@ public class GeofenceTransitionService extends Service {
         notificationMananger = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
         notificationBuilder = new NotificationCompat.Builder(this); //Instansiate the NotificatioBuilder.
         startInForeground("starting GeofenceService", true); //setter opp notifikasjonen
+
+        final IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_OFF);
+        screenOffReceiver = new ScreenOffReceiver();
+        registerReceiver(screenOffReceiver, filter);
+
+
     }
 
     //Pending intents will start This again(i think).
@@ -248,5 +263,36 @@ public class GeofenceTransitionService extends Service {
             default:
                 return "Uknown error";
         }
+    }
+
+    public class ScreenOffReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(intent.getAction().equals(Intent.ACTION_SCREEN_OFF)){
+                Log.d(TAG, "*****************************************************");
+                Log.d(TAG, "Action Screen Off recieved");
+
+                Intent i = new Intent(context, HomeActivity.class);
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(i);
+
+                //wakeUpDevice();
+            }
+        }
+    }
+
+    public void wakeUpDevice(){
+        PowerManager powerManager = ((PowerManager) getSystemService(Context.POWER_SERVICE));
+        PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP,"tag");
+        wakeLock.acquire();
+    }
+
+    public PowerManager.WakeLock getWakeLock(){
+        if(wakeLock == null){
+            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "wakeup");
+        }
+        return wakeLock;
     }
 }
