@@ -60,7 +60,11 @@ public class TestAccessiblityService extends AccessibilityService {
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
         if(event != null){
+            Log.d(TAG,"---------------------------------------------");
             Log.d(TAG,"event: "+event.toString());
+            Log.d(TAG,"Event classname: "+event.getClassName());
+            Log.d(TAG,"Event packagename: "+event.getPackageName());
+            Log.d(TAG,"---------------------------------------------");
         }
 
         if( event != null && event.getPackageName()!= null ){
@@ -72,7 +76,7 @@ public class TestAccessiblityService extends AccessibilityService {
             Log.d(TAG,"Denne appen er grei");
         }else {
             if(PreferenceUtils.isKioskModeActivated(this)){
-                Toast.makeText(this.getApplicationContext(), "Ikke monumentVandring", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(this.getApplicationContext(), "Ikke monumentVandring", Toast.LENGTH_SHORT).show();
 
                 if(event.getPackageName().toString().equalsIgnoreCase(Settings)){
                     //Log.d(TAG,"ActivityManager "+getActivityManager().toString());
