@@ -112,7 +112,7 @@ public class GeofenceTransitionService extends Service {
         final IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_OFF);
         screenOffReceiver = new ScreenOffReceiver();
         registerReceiver(screenOffReceiver, filter);
-
+        //getWakeLockNew().acquire();
 
     }
 
@@ -123,20 +123,24 @@ public class GeofenceTransitionService extends Service {
         // we can also check wether the action is from the Geofence or simply starting up the service again.
 
         //this can create Error the first time this service is started. We will have to figure out what to do.
-        GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
-        Log.d(TAG,"GeofenceEvent: "+geofencingEvent.toString());
-        //Error handeling
-        if( geofencingEvent.hasError() ){ //TODO:finne ut hvorfor det har oppstått en error, og fikse dette
-            String errorMessage = getErrorString( geofencingEvent.getErrorCode() );
-            //dersom geofenceEvent.getErrorCode() returnere GEOFENCE_NOT_AVAILABLE, betyr dette at brukeren har disabled network location provider.
-            //Dermed vill alle registrerte Geofence bli fjernet og
-            Log.e(TAG,errorMessage);
-            onDestroy(); //We can destroy the service, because there is no geofence that it can monitor anymore, this needs to be fixed somehow.
+        GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent); //henter Geofencet fra intent viss intent kommer fra et Geofence.
+                //ellers så er det bare at vi starter Servicen fra hvilket som helst annet sted.
+        if(geofencingEvent != null ){
+            Log.d(TAG,"GeofenceEvent: "+geofencingEvent.toString());
+            if( geofencingEvent.hasError() ){ //TODO:finne ut hvorfor det har oppstått en error, og fikse dette
+                String errorMessage = getErrorString( geofencingEvent.getErrorCode() );
+                //dersom geofenceEvent.getErrorCode() returnere GEOFENCE_NOT_AVAILABLE, betyr dette at brukeren har disabled network location provider.
+                //Dermed vill alle registrerte Geofence bli fjernet og
+                Log.e(TAG,errorMessage);
+                onDestroy(); //We can destroy the service, because there is no geofence that it can monitor anymore, this needs to be fixed somehow.
+            }
         }
+        //Error handeling
+
 
         //Retrieve GeofenceTransiton
         int geoFenceTransition = geofencingEvent.getGeofenceTransition();
-
+        Log.d(TAG,"geofenceTransiton: "+geoFenceTransition);
         //check types
         if( geoFenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER || geoFenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT )
         {   //hent geofences som ble triggered
@@ -272,11 +276,14 @@ public class GeofenceTransitionService extends Service {
             if(intent.getAction().equals(Intent.ACTION_SCREEN_OFF)){
                 Log.d(TAG, "*****************************************************");
                 Log.d(TAG, "Action Screen Off recieved");
-
+                /*
                 Intent i = new Intent(context, HomeActivity.class);
                 i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(i);
+                */
 
+                //getFullWakeLock().acquire();
+                wakeUpDevice();
                 //wakeUpDevice();
             }
         }
@@ -284,7 +291,7 @@ public class GeofenceTransitionService extends Service {
 
     public void wakeUpDevice(){
         PowerManager powerManager = ((PowerManager) getSystemService(Context.POWER_SERVICE));
-        PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP,"tag");
+        PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.PARTIAL_WAKE_LOCK  ,"tag");
         wakeLock.acquire();
     }
 
@@ -295,4 +302,25 @@ public class GeofenceTransitionService extends Service {
         }
         return wakeLock;
     }
+
+    //SCREEN_BRIGHT_WAKE_LOCK
+
+    public PowerManager.WakeLock getWakeLockNew(){
+        if(wakeLock == null){
+            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK  , "wakeup");
+        }
+        return wakeLock;
+    }
+
+    PowerManager.WakeLock fullWakeLock;
+    public PowerManager.WakeLock getFullWakeLock(){
+
+        PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            if(fullWakeLock == null){
+                return fullWakeLock = powerManager.newWakeLock((PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP), "Loneworker - FULL WAKE LOCK");
+            }
+        return fullWakeLock;
+    }
+
 }

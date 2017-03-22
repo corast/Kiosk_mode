@@ -120,8 +120,6 @@ public class HomeActivity extends FragmentActivity implements
             googleApiClient.connect();
         }
 
-
-
         decorView = getWindow().getDecorView();
         context = this;
 
@@ -226,8 +224,6 @@ public class HomeActivity extends FragmentActivity implements
             statusText.append("\n Battery nivå: " + batteryLevel + " %");
         }
 
-
-
        /* if(AppUtils.checkLocationAvailabillity(this,getGoogleApiClient())){
             statusText.append("\nVi har location tilgjengelig fra googleApiClient");
         }else
@@ -258,6 +254,7 @@ public class HomeActivity extends FragmentActivity implements
     }
 
     public View touchView = null;
+    public View navigationTouchView = null;
 
     public void startConsumeView(){
         WindowManager manager = ((WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE));
@@ -281,13 +278,42 @@ public class HomeActivity extends FragmentActivity implements
         view.setId(R.id.view_notification);
         view.setAlpha(0.1f);
         touchView = view; //lagrere Viewet i en variabel;
-        manager.addView(view, localLayoutParams);
+        manager.addView(touchView, localLayoutParams);
 
+        /*  //Bare en test på om det går ann å legge til et View over navigation baren, det fungerte i dette vindu, men når vi forlater her ifra. så er ikke lenger parent like stort.
+        WindowManager manager = ((WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE));
+
+        WindowManager.LayoutParams localLayoutParamsNavigation = new WindowManager.LayoutParams();
+        localLayoutParamsNavigation.type = WindowManager.LayoutParams.TYPE_SYSTEM_ERROR;
+        localLayoutParamsNavigation.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
+        localLayoutParamsNavigation.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                //Window flag: even when this window is focusable (its FLAG_NOT_FOCUSABLE is not set), allow any pointer events outside of the window to be sent to the windows behind it.
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
+
+                //Window flag: place the window within the entire screen, ignoring decorations around the border (such as the status bar).
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
+
+                WindowManager.LayoutParams.FLAG_FULLSCREEN;
+
+        localLayoutParamsNavigation.width = 960;
+        localLayoutParamsNavigation.height = (int) (60 * getResources().getDisplayMetrics().scaledDensity);
+        localLayoutParamsNavigation.format = PixelFormat.TRANSLUCENT; //litt gjennomsiktig. PixelFormat.TRANSLUCENT
+        CustomView navigationview = new CustomView(this);
+
+        navigationview.setBackgroundColor(ContextCompat.getColor(context,R.color.transparent_red));
+        navigationTouchView = navigationview;
+
+        manager.addView(navigationTouchView,localLayoutParamsNavigation );
+        */
     }
 
     public void disableTouchView(){
         if(touchView != null){
             touchView.setVisibility(View.GONE);
+        }
+
+        if(navigationTouchView != null){
+            navigationTouchView.setVisibility(View.GONE);
         }
     }
 
@@ -295,9 +321,14 @@ public class HomeActivity extends FragmentActivity implements
         if(touchView != null){
             touchView.setVisibility(View.VISIBLE);
         }
+
+        if(navigationTouchView != null){
+            navigationTouchView.setVisibility(View.VISIBLE);
+        }
     }
 
     private boolean toogle = true;
+
     public void toogleTouchView(View view){
         if(toogle){
             disableTouchView();
@@ -340,7 +371,6 @@ public class HomeActivity extends FragmentActivity implements
     }
 
     public void showApps(View v) {
-
         if(checkIfAppInstalled(this,APP)){
             Toast.makeText(this, "Appen GeofencingAlpga er innstallert", Toast.LENGTH_SHORT).show();
         }
@@ -355,7 +385,6 @@ public class HomeActivity extends FragmentActivity implements
 
         //TODO: sjekk at alt kjører. Viss ikke så må vi be brukeren starte opp noen ting.
 
-
        /* if(on){
             //uiModeManager.enableCarMode(0);
             //Log.d(TAG,"Car mode enabled flag:"+UiModeManager.ENABLE_CAR_MODE_GO_CAR_HOME);
@@ -366,9 +395,7 @@ public class HomeActivity extends FragmentActivity implements
         } */
 
         PreferenceUtils.setKioskModeActive(this, activate);
-
     }
-
 
     @Override
     protected void onResume() {
@@ -579,8 +606,6 @@ public class HomeActivity extends FragmentActivity implements
         return googleApiClient;
     }
     /* SET FUNCTIONS*/
-
-
 
     public void lockScreenNow(View view){
         if(PreferenceUtils.isAppDeviceAdmin(this)) {
