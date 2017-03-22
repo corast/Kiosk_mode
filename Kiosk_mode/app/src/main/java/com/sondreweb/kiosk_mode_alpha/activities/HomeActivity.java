@@ -280,8 +280,8 @@ public class HomeActivity extends FragmentActivity implements
         touchView = view; //lagrere Viewet i en variabel;
         manager.addView(touchView, localLayoutParams);
 
-        /*  //Bare en test på om det går ann å legge til et View over navigation baren, det fungerte i dette vindu, men når vi forlater her ifra. så er ikke lenger parent like stort.
-        WindowManager manager = ((WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE));
+        /* //Bare en test på om det går ann å legge til et View over navigation baren, det fungerte i dette vindu, men når vi forlater her ifra. så er ikke lenger parent like stort.
+        //WindowManager manager = ((WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE));
 
         WindowManager.LayoutParams localLayoutParamsNavigation = new WindowManager.LayoutParams();
         localLayoutParamsNavigation.type = WindowManager.LayoutParams.TYPE_SYSTEM_ERROR;
@@ -305,6 +305,7 @@ public class HomeActivity extends FragmentActivity implements
 
         manager.addView(navigationTouchView,localLayoutParamsNavigation );
         */
+
     }
 
     public void disableTouchView(){
@@ -470,6 +471,7 @@ public class HomeActivity extends FragmentActivity implements
         ComponentName cn = this.getComponentName();
         Log.d(TAG,cn.toString());
 
+        //Husker ikke hva denne var for, muligens Recent button problemer.
         if(cn != null && ! cn.getClassName().equals(getClass().getName())){
             Log.d(TAG, "CN true, er recent button");
             activityManager.moveTaskToFront(getTaskId(), 0);
@@ -607,14 +609,17 @@ public class HomeActivity extends FragmentActivity implements
     }
     /* SET FUNCTIONS*/
 
+    public void stopKioskMode(View view){
+        PreferenceUtils.setKioskModeActive(this,false);
+        updateGui();
+    }
+
+
     public void lockScreenNow(View view){
         if(PreferenceUtils.isAppDeviceAdmin(this)) {
             DevicePolicyManager devicePolicyManager = (DevicePolicyManager) this.getSystemService(Context.DEVICE_POLICY_SERVICE);
-            //devicePolicyManager.lockNow();
+            devicePolicyManager.lockNow();
         }
-
-        PreferenceUtils.setKioskModeActive(this,false);
-        updateGui();
     }
 
 

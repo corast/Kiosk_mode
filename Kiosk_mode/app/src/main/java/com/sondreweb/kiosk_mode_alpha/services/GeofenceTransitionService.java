@@ -30,6 +30,8 @@ import com.google.android.gms.location.GeofencingEvent;
 import com.sondreweb.kiosk_mode_alpha.R;
 import com.sondreweb.kiosk_mode_alpha.activities.HomeActivity;
 import com.sondreweb.kiosk_mode_alpha.receivers.RestartBroadcastReciever;
+import com.sondreweb.kiosk_mode_alpha.utils.AppUtils;
+import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
 
 import java.util.List;
 
@@ -100,6 +102,11 @@ public class GeofenceTransitionService extends Service {
 
     private PowerManager.WakeLock wakeLock;
 
+    static{
+
+       // PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "My Tag");
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -111,8 +118,9 @@ public class GeofenceTransitionService extends Service {
 
         final IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_OFF);
         screenOffReceiver = new ScreenOffReceiver();
+
+        // Registrer Recievereren vi trenger for å fange SCREEN_OFF.
         registerReceiver(screenOffReceiver, filter);
-        //getWakeLockNew().acquire();
 
     }
 
@@ -120,6 +128,8 @@ public class GeofenceTransitionService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
+        Log.d(TAG,"onStartCommand(intent, flag,startId) ##################################################");
+
         // we can also check wether the action is from the Geofence or simply starting up the service again.
 
         //this can create Error the first time this service is started. We will have to figure out what to do.
@@ -134,25 +144,25 @@ public class GeofenceTransitionService extends Service {
                 Log.e(TAG,errorMessage);
                 onDestroy(); //We can destroy the service, because there is no geofence that it can monitor anymore, this needs to be fixed somehow.
             }
+
+            //Retrieve GeofenceTransiton
+            int geoFenceTransition = geofencingEvent.getGeofenceTransition();
+            Log.d(TAG,"geofenceTransiton: "+geoFenceTransition);
+            //check types
+            if( geoFenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER || geoFenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT )
+            {   //hent geofences som ble triggered
+                List<Geofence> triggeredGeofence = geofencingEvent.getTriggeringGeofences();
+                //Create a detail message with geofence recieved
+                String geofenceTransitionDetails = getGeofenceTransitionDetails(geoFenceTransition, triggeredGeofence );
+                //send notifikasjon detaljene som String
+                startInForeground( geofenceTransitionDetails , true); //Update the details of the notification.
+                //TODO: Lock the devise and/or warn the user.
+
+                //TODO: 2 Geofences, one wich will warn the user, and the other one which will lock the device.
+            }
         }
         //Error handeling
 
-
-        //Retrieve GeofenceTransiton
-        int geoFenceTransition = geofencingEvent.getGeofenceTransition();
-        Log.d(TAG,"geofenceTransiton: "+geoFenceTransition);
-        //check types
-        if( geoFenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER || geoFenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT )
-        {   //hent geofences som ble triggered
-            List<Geofence> triggeredGeofence = geofencingEvent.getTriggeringGeofences();
-            //Create a detail message with geofence recieved
-            String geofenceTransitionDetails = getGeofenceTransitionDetails(geoFenceTransition, triggeredGeofence );
-            //send notifikasjon detaljene som String
-            startInForeground( geofenceTransitionDetails , true); //Update the details of the notification.
-            //TODO: Lock the devise and/or warn the user.
-
-            //TODO: 2 Geofences, one wich will warn the user, and the other one which will lock the device.
-        }
         /*TODO sjekk hvilken av eventene fant sted, dersom det er ENTER, så vet vi at brukeren befinner seg innenfor området, og kan trygt fortsette(starte opp Monumentvandringen)
          dersom det er EXIT, så må vi sende en advarsem som varer i 5 minutter om at brukeren må gå tilbake innenfor specifisert område. Dersom EMTER evemten trer inn, stopper vi denne
          Tellingen. Men dersom ENTER ikke finner sted, så må vi låse enheten, slik at den ikke kan brukes til annet enn å finne veien tilbake.
@@ -204,7 +214,6 @@ public class GeofenceTransitionService extends Service {
         return status +" "+ TextUtils.join(", ", triggeredGeofenceList);
     }
 
-
     /* Notification build up:
     * | Icon | Title
     *         SubText
@@ -226,6 +235,7 @@ public class GeofenceTransitionService extends Service {
 
         startForeground(mId, notificationBuilder.build()); //Start showing the notification on the (Action)/task bar.
     }
+
 
     private int getNotificationIcon(){
         boolean useWhiteIcon = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
@@ -268,7 +278,11 @@ public class GeofenceTransitionService extends Service {
                 return "Uknown error";
         }
     }
-
+/*
+*   BroadcastReciever
+*   Mottar Broadcast om ACTION_SCREEN_OFF.
+*   Vekker enheten derskom dette mottas, slik at skjermen ikke skrus av.
+* */
     public class ScreenOffReceiver extends BroadcastReceiver {
 
         @Override
@@ -281,10 +295,10 @@ public class GeofenceTransitionService extends Service {
                 i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(i);
                 */
-
-                //getFullWakeLock().acquire();
-                wakeUpDevice();
-                //wakeUpDevice();
+                if(PreferenceUtils.isKioskModeActivated(context)){
+                    getFullWakeLock().acquire();
+                    getFullWakeLock().release();
+                }
             }
         }
     }
@@ -298,7 +312,7 @@ public class GeofenceTransitionService extends Service {
     public PowerManager.WakeLock getWakeLock(){
         if(wakeLock == null){
             PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-            wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "wakeup");
+            wakeLock = pm.newWakeLock( PowerManager.ACQUIRE_CAUSES_WAKEUP, "wakeup");
         }
         return wakeLock;
     }
@@ -318,7 +332,7 @@ public class GeofenceTransitionService extends Service {
 
         PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
             if(fullWakeLock == null){
-                return fullWakeLock = powerManager.newWakeLock((PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP), "Loneworker - FULL WAKE LOCK");
+                return fullWakeLock = powerManager.newWakeLock((PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP), "FULL WAKE LOCK");
             }
         return fullWakeLock;
     }

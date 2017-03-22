@@ -145,8 +145,8 @@
                 android:name="android.app.device_admin"
                 android:resource="@xml/device_admin" />
 
-            <intent-filter>
 
+            <intent-filter>
                 <!--
             is the primary action that a DeviceAdminReceiver subclass must handle to be allowed to manage a device.
             This is set to the receiver when the user enables the device admin app. Your code typically handles this in onEnabled()
@@ -177,7 +177,6 @@
             </intent-filter>
             <!-- Mottar startup intente sent fra systemet, når den booter opp.-->
             <intent-filter>
-                <action android:name="android.intent.action.SCREEN_OFF"/>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
                 <!-- for å mota implisit intents fra systemet -->
                 <category android:name="android.intent.category.DEFAULT"/>
