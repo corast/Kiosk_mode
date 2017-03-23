@@ -10,7 +10,6 @@ import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Environment;
-import android.os.FileUriExposedException;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -22,11 +21,9 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.sondreweb.kiosk_mode_alpha.services.TestAccessiblityService;
+import com.sondreweb.kiosk_mode_alpha.services.AccessibilityService;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 
 /**
  * Created by sondre on 03-Mar-17.
@@ -136,7 +133,7 @@ public class AppUtils{
     // To check if service is enabled
     public static boolean isAccessibilitySettingsOn(Context mContext) {
         int accessibilityEnabled = 0;
-        final String service = mContext.getPackageName() + "/" + TestAccessiblityService.class.getCanonicalName();
+        final String service = mContext.getPackageName() + "/" + AccessibilityService.class.getCanonicalName();
         try {
             accessibilityEnabled = Settings.Secure.getInt(
                     mContext.getApplicationContext().getContentResolver(),
@@ -252,6 +249,17 @@ public class AppUtils{
             return true;
         }
         return false;
+    }
+
+    /*Sjekekr om appen er innstalert, vi må altså sjekke om Monumentvandrings appen er installert, ellers så får ikke brukeren gjordt noe.*/
+    public static boolean isAppInstalled(Context context, String uri){
+        try{
+            context.getPackageManager().getApplicationInfo(uri,0);
+            return true;
+        }
+        catch (PackageManager.NameNotFoundException e){
+            return false;
+        }
     }
 
 }

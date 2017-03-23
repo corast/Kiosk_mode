@@ -115,7 +115,7 @@
         "true" if they can, and "false" if not. When the value is "false", only components of
         the same application or applications with the same user ID can start the service or bind to it. -->
         <service
-            android:name=".services.TestAccessiblityService"
+            android:name=".services.AccessibilityService"
             android:enabled="true"
             android:exported="false"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">

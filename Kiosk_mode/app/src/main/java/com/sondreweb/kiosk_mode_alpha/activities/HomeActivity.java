@@ -9,15 +9,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.graphics.PixelFormat;
-import android.net.Uri;
-import android.nfc.Tag;
 import android.os.BatteryManager;
 import android.os.Bundle;
-import android.os.Environment;
-import android.preference.PreferenceActivity;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -29,24 +23,24 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.RelativeLayout;
+import android.widget.GridView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.ToggleButton;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
 import com.sondreweb.kiosk_mode_alpha.CustomView;
+import com.sondreweb.kiosk_mode_alpha.StatusInfo;
+import com.sondreweb.kiosk_mode_alpha.adapters.StatusAdapter;
 import com.sondreweb.kiosk_mode_alpha.deviceAdministator.DeviceAdminKiosk;
 import com.sondreweb.kiosk_mode_alpha.services.GeofenceTransitionService;
 import com.sondreweb.kiosk_mode_alpha.utils.AppUtils;
 import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
 import com.sondreweb.kiosk_mode_alpha.R;
-import com.sondreweb.kiosk_mode_alpha.services.TestAccessiblityService;
+import com.sondreweb.kiosk_mode_alpha.services.AccessibilityService;
 
-import java.io.File;
-import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * Created by sondre on 16-Feb-17.
@@ -63,6 +57,8 @@ public class HomeActivity extends FragmentActivity implements
     private final static String APP = "com.sondreweb.geofencingalpha";
 
     private TextView statusText, googleClientText;
+
+    private GridView gridView;
 
     private Button startKioskButton;
 
@@ -88,8 +84,11 @@ public class HomeActivity extends FragmentActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
         //this.startActivity(intent);
-        startKioskButton = (Button) findViewById(R.id.button_start_kiosk);
 
+        gridView = (GridView)findViewById(R.id.grid_status_view);
+        gridView.setGravity(Gravity.FILL_HORIZONTAL);
+
+        startKioskButton = (Button) findViewById(R.id.button_start_kiosk);
 
         googleClientText = (TextView) findViewById(R.id.text_googleApiConnection);
         statusText = (TextView) findViewById(R.id.home_text);
@@ -114,7 +113,6 @@ public class HomeActivity extends FragmentActivity implements
         * */
         createGoogleApi();
 
-
         if(AppUtils.isGooglePlayServicesAvaliable(this,this)){
             //createGoogleApi(); //lager GoogleApiClienten vår.
             googleApiClient.connect();
@@ -126,11 +124,9 @@ public class HomeActivity extends FragmentActivity implements
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         startAccessibilityService();
-        //checkIfAppInstalled(this, "testing");
+        //isAppInstalled(this, "testing");
         startConsumeView();
     }
-
-
 
     //Create GoogleApiClient Instance
     private boolean createGoogleApi() {
@@ -146,10 +142,59 @@ public class HomeActivity extends FragmentActivity implements
         return true;
     }
 
+    public ArrayList<StatusInfo> statusList = new ArrayList<>() ;;
+
+    public void createAndUpdateStatusList(){
+        if(! statusList.isEmpty()){
+            statusList = new ArrayList<>(); //tømmer listen.
+        }
+        //Må først sjekke
+            StatusInfo status;
+        status = new StatusInfo("GooglePlayServices");
+
+        if(AppUtils.isGooglePlayServicesAvaliable(this,this)){
+            status.setStatus(true);
+            statusText.append(" | GooglePlayServicen er oppdatert og tilgjengelig");
+        }else{
+            statusText.append(" | GooglePlaySerevices er IKKE tilgjengelig med gammel utgave");
+        }
+
+        statusList.add(status);
+
+        status = new StatusInfo("DeviceAdmin");
+        if(PreferenceUtils.isAppDeviceAdmin(this)){
+            status.setStatus(true);
+            statusText.setText("Vi er device admin");
+        }else{
+            statusText.setText("Vi er IKKE device admin");
+        }
+
+        statusList.add(status);
+
+        status = new StatusInfo("AccessibilityService");
+        if(AppUtils.isAccessibilitySettingsOn(this)){
+            status.setStatus(true);
+            statusText.append(" | Accessibillity service er på");
+        }else{
+            statusText.append(" | Accessibility service er IKKE på");
+        }
+
+        statusList.add(status);
+
+        Log.d(TAG, statusList.toString());
+
+
+        StatusAdapter statusAdapter = new StatusAdapter(HomeActivity.this);
+        statusAdapter.setData(statusList);
+        //gridView.setAdapter(statusAdapter);
+    }
+
     @Override
     protected void onStart() {//Ved onstart burde vi sjekke ulike ting.
         Log.d(TAG,"onStart()");
         createGoogleApi(); //Tilfelle det er null.
+
+        createAndUpdateStatusList();
 
         if(PreferenceUtils.isAppDeviceAdmin(this)){
             statusText.setText("Vi er device admin");
@@ -234,6 +279,7 @@ public class HomeActivity extends FragmentActivity implements
         getScreenDimens();
         super.onStart();
     }
+
 
     /**
      * Opdater Bruker grense snittet, slik at når vi gjør forandringer, så skal det synes her.
@@ -361,7 +407,7 @@ public class HomeActivity extends FragmentActivity implements
 
     public void startAccessibilityService(){
         Log.d(TAG,"startAccessibilityService");
-        Intent accessibilityServiceIntent = new Intent(this,TestAccessiblityService.class);
+        Intent accessibilityServiceIntent = new Intent(this,AccessibilityService.class);
         startService(accessibilityServiceIntent);
 
         if(! AppUtils.isServiceRunning(GeofenceTransitionService.class,this)){
@@ -372,7 +418,7 @@ public class HomeActivity extends FragmentActivity implements
     }
 
     public void showApps(View v) {
-        if(checkIfAppInstalled(this,APP)){
+        if(AppUtils.isAppInstalled(this,APP)){
             Toast.makeText(this, "Appen GeofencingAlpga er innstallert", Toast.LENGTH_SHORT).show();
         }
         else
@@ -400,8 +446,20 @@ public class HomeActivity extends FragmentActivity implements
 
     @Override
     protected void onResume() {
+
+
+
+        if(PreferenceUtils.isKioskModeActivated(getApplicationContext())){
+            //dette betyr av vi egentlig skal gå til MonumentVandring.
+            Intent launcherIntent = getPackageManager().getLaunchIntentForPackage("com.android.chrome");
+            if(launcherIntent != null){
+                //startActivity(launcherIntent);
+            }
+        }
+
         super.onResume();
         Log.d(TAG,"onResume()");
+
         hideSystemUiTest();
         setVisible(true);
     }
@@ -447,16 +505,7 @@ public class HomeActivity extends FragmentActivity implements
         //super.onBackPressed(); //Siden vi er Bunnen av aplikasjons stacken, så er det ikke vits i å trykke onBack, den gjør heller ikke noe her ifra.
     }
 
-    /*Sjekekr om appen er innstalert, vi må altså sjekke om Monumentvandrings appen er installert, ellers så får ikke brukeren gjordt noe.*/
-    public boolean checkIfAppInstalled(Context context, String uri){
-        try{
-            context.getPackageManager().getApplicationInfo(uri,0);
-            return true;
-        }
-        catch (PackageManager.NameNotFoundException e){
-            return false;
-        }
-    }
+
 
     @Override
     protected void onPause() {
@@ -523,7 +572,6 @@ public class HomeActivity extends FragmentActivity implements
         }else {
             Intent intent = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
             startActivityForResult(intent, 0);
-
             return false;
         }
     }
@@ -614,14 +662,11 @@ public class HomeActivity extends FragmentActivity implements
         updateGui();
     }
 
-
     public void lockScreenNow(View view){
         if(PreferenceUtils.isAppDeviceAdmin(this)) {
             DevicePolicyManager devicePolicyManager = (DevicePolicyManager) this.getSystemService(Context.DEVICE_POLICY_SERVICE);
             devicePolicyManager.lockNow();
         }
     }
-
-
 }
 

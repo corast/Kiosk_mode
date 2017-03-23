@@ -179,7 +179,7 @@ public class GeofenceTransitionService extends Service {
         return START_STICKY; //When service is killed by the system, it will start up again.
     }
 
-
+/*
     private Runnable getGpsCoordinate = new Runnable() {
         @Override
         public void run() {
@@ -192,7 +192,7 @@ public class GeofenceTransitionService extends Service {
             handler.postDelayed(this, 1000);// et sekund til neste itterasjon av tråd.
         }
     };
-
+*/
 
     //Generer detaljert melding om geofence
     private String getGeofenceTransitionDetails(int geoFenceTransition, List<Geofence> triggeredeGeofences)
@@ -235,7 +235,6 @@ public class GeofenceTransitionService extends Service {
 
         startForeground(mId, notificationBuilder.build()); //Start showing the notification on the (Action)/task bar.
     }
-
 
     private int getNotificationIcon(){
         boolean useWhiteIcon = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);

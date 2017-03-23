@@ -1,6 +1,5 @@
 package com.sondreweb.kiosk_mode_alpha.services;
 
-import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
 import android.app.ActivityManager;
 import android.content.Context;
@@ -10,7 +9,6 @@ import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.Toast;
 
-import com.sondreweb.kiosk_mode_alpha.activities.MapsActivity;
 import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
 
 import java.util.ArrayList;
@@ -20,7 +18,7 @@ import java.util.Arrays;
  * Created by sondre on 23-Feb-17.
  */
 
-public class TestAccessiblityService extends AccessibilityService {
+public class AccessibilityService extends android.accessibilityservice.AccessibilityService {
 
     //WHITELISTED APPS:
     protected final String GeofencingApp = "com.sondreweb.geofencingAlpha";
@@ -32,25 +30,33 @@ public class TestAccessiblityService extends AccessibilityService {
     //WHITELIST LIST
     ArrayList<String> WhiteList = new ArrayList<String>(Arrays.asList(GeofencingApp, LauncherApp)); //populate med appene vi tilater i kiosk mode.
 
-    private static final String TAG = TestAccessiblityService.class.getSimpleName();
+    private static final String TAG = AccessibilityService.class.getSimpleName();
 
     private ActivityManager activityManager;
 
     //private ActivityManager activityManager;
 
+    /*
+    * onServiceConnected: når vi starter opp Servicen.
+    * Setter Event typen den lytter etter å være WINDOW_STATE_CHANGED.
+    * Setter feedbackType til å være FEEDBACK_ALL_MASK;
+    * */
     @Override
     protected void onServiceConnected() {
         Log.d(TAG,TAG+" started");
         AccessibilityServiceInfo info = new AccessibilityServiceInfo();
         initiateWhitelist();
             //Vi er på utkikk etter alle eventer som har med å forandre Window state
-
         info.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED;
-            //må lese meg opp på denne
+
+            //Gir oss tillatese på å gi feedback på alle former, Spoken, Haptic, Audible, Visual, Generic og Braille.
         info.feedbackType = AccessibilityServiceInfo.FEEDBACK_ALL_MASK;
+            //Setter hvilket flag vi skal bruke: Default service is invoked only if no package specific one exists.
+            // In case of more than one package specific service only the earlier registered is notified.
         info.flags = AccessibilityServiceInfo.DEFAULT;
-            //slik at det er en tidsbegrensning på hvor lenge vi er connectet til en event(tror jeg).
-        info.notificationTimeout = 100;
+            //The timeout after the most recent event of a given type before an AccessibilityService is notified.
+            //Delay før vi får inn Eventet som har skjedd.
+        info.notificationTimeout = 100; //0.1 sekunder er nok for bruken til å se hva som har skjedd, men ikke nok tid til å faktisk gjøre noe.
 
         setServiceInfo(info);
         //super.onServiceConnected();
@@ -76,7 +82,7 @@ public class TestAccessiblityService extends AccessibilityService {
             Log.d(TAG,"Denne appen er grei");
         }else {
             if(PreferenceUtils.isKioskModeActivated(this)){
-                //Toast.makeText(this.getApplicationContext(), "Ikke monumentVandring", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this.getApplicationContext(), "Ikke Monument Vandring", Toast.LENGTH_SHORT).show();
 
                 if(event.getPackageName().toString().equalsIgnoreCase(Settings)){
                     //Log.d(TAG,"ActivityManager "+getActivityManager().toString());

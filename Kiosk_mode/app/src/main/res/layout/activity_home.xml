@@ -26,12 +26,27 @@
         android:text=" "
         android:background="@color/colorPrimaryDark"/>
 
+    <!-- GridViewet må ha columnWidth, som er større enn hvert View. Viss vi ikke setter denne
+        så vill vi alltid få 2 kolonner.
+        Vi satt den til 120 dp, siden da har vi -->
+    <GridView
+        android:id="@+id/grid_status_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/home_text"
+        android:numColumns="auto_fit"
+        android:horizontalSpacing="10dp"
+        android:verticalSpacing="10dp"
+        android:columnWidth="120dp"
+        />
+
+
     <TextView
         android:id="@+id/text_googleApiConnection"
         android:layout_width="wrap_content"
         android:text=" Not Connected"
         android:layout_height="wrap_content"
-        android:layout_below="@id/home_text"/>
+        android:layout_below="@id/grid_status_view"/>
 
     <Button
         android:id="@+id/button_start_kiosk"
@@ -68,6 +83,7 @@
         android:layout_below="@id/button_innlogging_admin"
         android:layout_above="@+id/button_lock_screen"
         android:name="com.sondreweb.kiosk_mode_alpha.AppsFragment"/>
+
     <Button
         android:id="@+id/button_lock_screen"
         android:text="Lock Screen test"
