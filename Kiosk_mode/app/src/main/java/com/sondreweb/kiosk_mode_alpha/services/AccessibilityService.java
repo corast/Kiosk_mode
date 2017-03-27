@@ -28,7 +28,7 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
     protected final String Settings = "com.android.settings";
 
     //WHITELIST LIST
-    ArrayList<String> WhiteList = new ArrayList<String>(Arrays.asList(GeofencingApp, LauncherApp)); //populate med appene vi tilater i kiosk mode.
+    ArrayList<String> WhiteList = new ArrayList<String>(Arrays.asList(GeofencingApp, LauncherApp)); //populate med appene vi tillater i kiosk mode.
 
     private static final String TAG = AccessibilityService.class.getSimpleName();
 
@@ -45,7 +45,7 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
     protected void onServiceConnected() {
         Log.d(TAG,TAG+" started");
         AccessibilityServiceInfo info = new AccessibilityServiceInfo();
-        initiateWhitelist();
+        //initiateWhitelist();
             //Vi er på utkikk etter alle eventer som har med å forandre Window state
         info.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED;
 
@@ -56,7 +56,7 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
         info.flags = AccessibilityServiceInfo.DEFAULT;
             //The timeout after the most recent event of a given type before an AccessibilityService is notified.
             //Delay før vi får inn Eventet som har skjedd.
-        info.notificationTimeout = 100; //0.1 sekunder er nok for bruken til å se hva som har skjedd, men ikke nok tid til å faktisk gjøre noe.
+        info.notificationTimeout = 200; //0.1 sekunder er nok for bruken til å se hva som har skjedd, men ikke nok tid til å faktisk gjøre noe.
 
         setServiceInfo(info);
         //super.onServiceConnected();
@@ -133,10 +133,11 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
         }
     }
 
+    /*
     public void initiateWhitelist(){
         WhiteList.add("com.sondreweb.geofencingAlpha");
         WhiteList.add("com.sondreweb.kiosk_mode_alpha");
-    }
+    } */
 
 
     @Override

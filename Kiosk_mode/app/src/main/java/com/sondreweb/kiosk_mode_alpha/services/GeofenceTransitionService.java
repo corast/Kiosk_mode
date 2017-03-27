@@ -7,15 +7,20 @@ package com.sondreweb.kiosk_mode_alpha.services;
 import android.app.Activity;
 import android.app.KeyguardManager;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.location.Location;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.PowerManager;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
@@ -24,9 +29,19 @@ import android.view.WindowManager;
 
 import java.util.ArrayList;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.FusedLocationProviderApi;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofenceStatusCodes;
 import com.google.android.gms.location.GeofencingEvent;
+import com.google.android.gms.location.LocationAvailability;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 import com.sondreweb.kiosk_mode_alpha.R;
 import com.sondreweb.kiosk_mode_alpha.activities.HomeActivity;
 import com.sondreweb.kiosk_mode_alpha.receivers.RestartBroadcastReciever;
@@ -71,7 +86,46 @@ import java.util.List;
     *
     * */
 
-public class GeofenceTransitionService extends Service {
+public class GeofenceTransitionService extends Service implements
+        LocationListener, FusedLocationProviderApi, GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener{
+
+
+    GoogleApiClient googleApiClient;
+
+    /**
+     *  LocationListener callbacks
+     */
+
+    @Override
+    public void onLocationChanged(Location location) { //lytter til når location forandres, på denne måten kan vi lytte etter locationChange flere steder.
+
+    }
+
+    /*   ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
+    *   GoogleApiClient.ConnectionCallbacks
+    *    ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
+    * */
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+
+    }
+
+    /*  ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
+    *   GoogleApiClient.OnConnectionFailedListener
+    *   ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
+    * */
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+    }
 
     /*¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤Broadcast reviever TAGS¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤*/
     //Tags that we are listening for go here, to keep track of everyone this service is listening for.
@@ -80,6 +134,8 @@ public class GeofenceTransitionService extends Service {
     /*¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤END TAGS¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤*/
 
 
+    public static final String START_GEOFENCE = "comgeofence..start"
+;
     private static final String TAG = GeofenceTransitionService.class.getSimpleName();
 
     private final int mId = 2222; //tilfeldig ID for Notifikasjonen.
@@ -131,7 +187,12 @@ public class GeofenceTransitionService extends Service {
         Log.d(TAG,"onStartCommand(intent, flag,startId) ##################################################");
 
         // we can also check wether the action is from the Geofence or simply starting up the service again.
+        if(intent.getAction().equalsIgnoreCase(START_GEOFENCE)){ //dersom vi starter servicen med hensikt å starte lokasjons håndtering
+            Log.d(TAG,"Start LocationRequests fra servicen  ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤");
+            if(createGoogleApi()){
 
+            }
+        }
         //this can create Error the first time this service is started. We will have to figure out what to do.
         GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent); //henter Geofencet fra intent viss intent kommer fra et Geofence.
                 //ellers så er det bare at vi starter Servicen fra hvilket som helst annet sted.
@@ -177,6 +238,24 @@ public class GeofenceTransitionService extends Service {
         //RestartBroadcastReciever.completeWakefulIntent(intent);
 
         return START_STICKY; //When service is killed by the system, it will start up again.
+    }
+
+
+    /*
+    *   GoogleApiClient connection
+    * */
+
+    private boolean createGoogleApi() {
+        Log.d(TAG, "createGoogleApi()");
+        if (googleApiClient == null) {
+            googleApiClient = new GoogleApiClient.Builder(this)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .addApi(LocationServices.API)
+                    .build();
+            Log.d(TAG,"googleApiClient: "+googleApiClient.toString());
+        }
+        return true;
     }
 
 /*
@@ -334,6 +413,71 @@ public class GeofenceTransitionService extends Service {
                 return fullWakeLock = powerManager.newWakeLock((PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP), "FULL WAKE LOCK");
             }
         return fullWakeLock;
+    }
+
+    /*
+    *   End Keep screen awake code.
+    * */
+
+
+    @Override
+    public Location getLastLocation(GoogleApiClient googleApiClient) {
+        return null;
+    }
+
+    @Override
+    public LocationAvailability getLocationAvailability(GoogleApiClient googleApiClient) {
+        return null;
+    }
+
+    @Override
+    public PendingResult<Status> requestLocationUpdates(GoogleApiClient googleApiClient, LocationRequest locationRequest, LocationListener locationListener) {
+        return null;
+    }
+
+    @Override
+    public PendingResult<Status> requestLocationUpdates(GoogleApiClient googleApiClient, LocationRequest locationRequest, LocationListener locationListener, Looper looper) {
+        return null;
+    }
+
+    @Override
+    public PendingResult<Status> requestLocationUpdates(GoogleApiClient googleApiClient, LocationRequest locationRequest, LocationCallback locationCallback, Looper looper) {
+        return null;
+    }
+
+    @Override
+    public PendingResult<Status> requestLocationUpdates(GoogleApiClient googleApiClient, LocationRequest locationRequest, PendingIntent pendingIntent) {
+        return null;
+    }
+
+    @Override
+    public PendingResult<Status> removeLocationUpdates(GoogleApiClient googleApiClient, LocationListener locationListener) {
+        return null;
+    }
+
+    @Override
+    public PendingResult<Status> removeLocationUpdates(GoogleApiClient googleApiClient, PendingIntent pendingIntent) {
+        return null;
+    }
+
+    @Override
+    public PendingResult<Status> removeLocationUpdates(GoogleApiClient googleApiClient, LocationCallback locationCallback) {
+        return null;
+    }
+
+    @Override
+    public PendingResult<Status> setMockMode(GoogleApiClient googleApiClient, boolean b) {
+        return null;
+    }
+
+    @Override
+    public PendingResult<Status> setMockLocation(GoogleApiClient googleApiClient, Location location) {
+        return null;
+    }
+
+    @Override
+    public PendingResult<Status> flushLocations(GoogleApiClient googleApiClient) {
+        return null;
     }
 
 }

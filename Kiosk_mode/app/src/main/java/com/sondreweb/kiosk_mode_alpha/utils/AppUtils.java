@@ -54,7 +54,9 @@ public class AppUtils{
         return false;
     }
 
-    public static boolean isGooglePlayServicesAvaliable(Context context, Activity activity){
+
+
+    public static boolean isGooglePlayServicesAvailableAndPoll(Context context, Activity activity){
         Log.d(TAG,"isGooglePlayServicesAvaliable");
         GoogleApiAvailability googleApiAvailbility = GoogleApiAvailability.getInstance();
         int resultCode = googleApiAvailbility.isGooglePlayServicesAvailable(context);
@@ -81,13 +83,24 @@ public class AppUtils{
                     if( resultCode != ConnectionResult.SUCCESS){
                        // googleApiAvailbility.getErrorDialog(activity, resultCode, 2404).show();
                     }
-                    //googleApiAvailbility.getErrorDialog(activity, resultCode, 2404).show();
-
+                    //googleApiAvailbility.getErrorDialog(activity, resultCode, 2404).show(); //ber brukeren installere Google Play Services fra Play Store.
                 }
             }catch (Exception e) {
                 Log.e("Error"+TAG," "+e);
             }
         }
+        return resultCode == ConnectionResult.SUCCESS; //returnere kunn true dersom ConnectionResult.SECCESS som o
+    }
+
+    /*
+    *   ConnectionResult.SUCCESS vill si vi koblet oss velykket til. '
+    *   Merk at dette tar ikke i betraktning om vi trenger en oppdatering av Google Play Services.
+    *       men viss det er SUCCESS så er versjonen god nok.
+    * */
+
+    public static boolean isGooglePlayServicesAvailable(Context context){
+        GoogleApiAvailability googleApiAvailbility = GoogleApiAvailability.getInstance();
+        int resultCode = googleApiAvailbility.isGooglePlayServicesAvailable(context);
         return resultCode == ConnectionResult.SUCCESS;
     }
 
@@ -100,14 +113,22 @@ public class AppUtils{
         }
     }
 
-    public static boolean installFromApk(Context context, String apkFile){
+    /*
+    *   Metode for å be brukeren installerer APK fra filsti.
+    * */
+    private static boolean installFromApk(Context context, String apkFile){
         Log.d(TAG, Environment.getExternalStorageDirectory() + apkFile);
         Intent intent = new Intent(Intent.ACTION_VIEW);
         try {
+            /*
+            * Prøver å starte en ny activitet, som er en poppup fragment med informasjon om hva som skal innstalleres, og om dette gotas av brukern.
+            * Men brukeren kan avslå dette, og ingen ting skjer.
+            * */
             intent.setDataAndType(Uri.fromFile(new File(Environment.getExternalStorageDirectory() + apkFile)), "application/vnd.android.package-archive");
             intent.setFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(intent);
+
         }catch (NullPointerException E){
             return false;
         }catch (Exception E){
@@ -117,6 +138,9 @@ public class AppUtils{
     }
 
 
+    /*
+    * Skal sjekke om en APK fil eksitere på valg posisjon, men var noe problematisk.
+    * */
     public static boolean apkFileExists(Context context, String filePath){
         File file = new File(Environment.getExternalStorageDirectory() + filePath);
         Log.d(TAG,"Path : "+Environment.getExternalStorageDirectory() + filePath);
@@ -130,19 +154,27 @@ public class AppUtils{
     }
 
 
-    // To check if service is enabled
+    /*
+    *   Sjekker om Accessibility servicen er på.
+    *
+    *   Fra code siden....
+    * */
     public static boolean isAccessibilitySettingsOn(Context mContext) {
         int accessibilityEnabled = 0;
+        //Navn på servicen, pakkenavn + navn på servicen.
         final String service = mContext.getPackageName() + "/" + AccessibilityService.class.getCanonicalName();
         try {
+            //henter int verdien på om den er enabled.
             accessibilityEnabled = Settings.Secure.getInt(
                     mContext.getApplicationContext().getContentResolver(),
                     android.provider.Settings.Secure.ACCESSIBILITY_ENABLED);
-            Log.v(TAG, "accessibilityEnabled = " + accessibilityEnabled);
+
+            //Log.v(TAG, "accessibilityEnabled = " + accessibilityEnabled);
         } catch (Settings.SettingNotFoundException e) {
             Log.e(TAG, "Error finding setting, default accessibility to not found: "
                     + e.getMessage());
         }
+
         TextUtils.SimpleStringSplitter mStringColonSplitter = new TextUtils.SimpleStringSplitter(':');
 
         if (accessibilityEnabled == 1) {
@@ -169,6 +201,8 @@ public class AppUtils{
         return false;
     }
 
+
+
     public static boolean isDeviceOwner(Context context){
         DevicePolicyManager devicePolicyManager = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
         return devicePolicyManager.isDeviceOwnerApp(context.getPackageName());
@@ -183,7 +217,7 @@ public class AppUtils{
         return permissionGranted;
     }
 
-    //spør om permission viss det ikke er gitt.
+    //spør om permission viss det ikke er gitt på å få tak i Fine location.
     public static void askPermission(Activity activity) {
         Log.d(TAG, "askPermission()");
         ActivityCompat.requestPermissions(activity,
@@ -244,12 +278,12 @@ public class AppUtils{
 
     public static boolean isGpsProviderAvailable(Context context){
         LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-
         if( locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER )){
             return true;
         }
         return false;
     }
+
 
     /*Sjekekr om appen er innstalert, vi må altså sjekke om Monumentvandrings appen er installert, ellers så får ikke brukeren gjordt noe.*/
     public static boolean isAppInstalled(Context context, String uri){
@@ -260,6 +294,17 @@ public class AppUtils{
         catch (PackageManager.NameNotFoundException e){
             return false;
         }
+    }
+
+    /*
+    *   Boilerplate code for å håndtere at ulike settings ikke er skrudd på.
+    *
+    *   Dette gjelder kunn for DeviceManager, AccessibilityService, Location GPS og WIFI, Google Play Services, TouchView
+    * */
+
+
+    public static boolean isNotificationMenuLocked(){ //denne må sjekke om touchEvent Viewet eksisterer og er synelig.
+        return true;
     }
 
 }

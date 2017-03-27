@@ -66,7 +66,7 @@
         android:text="Start MonumentVandring"
         android:layout_alignWithParentIfMissing="true"
         android:onClick="startMap"/>
-
+<!--
     <Button
         android:id="@+id/button_innlogging_admin"
         android:layout_width="match_parent"
@@ -75,12 +75,12 @@
         android:layout_centerHorizontal="true"
         android:text="Log in Admin"
         android:onClick="startAdminLogin" />
-
+-->
     <fragment
         android:id="@+id/apps_grid"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@id/button_innlogging_admin"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/button_start_map"
         android:layout_above="@+id/button_lock_screen"
         android:name="com.sondreweb.kiosk_mode_alpha.AppsFragment"/>
 

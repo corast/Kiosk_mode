@@ -68,12 +68,14 @@ public class AppsLoader extends AsyncTaskLoader<ArrayList<AppModel>> {
 
             String packageName = apps.get(i).packageName;
 
-            //Log.d(TAG,"PackageName: " +packageName);
+
             //kunn de som er lauchable/kjørbare intents vi er interresert i
             if(packageManager.getLaunchIntentForPackage(packageName) != null){
-                    //tester med 3 apper som vi vill kanskje ha.
 
-                if( packageName.equalsIgnoreCase("com.android.settings") || packageName.equalsIgnoreCase("com.sondreweb.geofencingalpha") || packageName.equalsIgnoreCase("com.android.chrome") ){
+                    //tester med 3 apper som vi vill kanskje ha.
+                    Log.d(TAG,"PackageName: " +packageName);
+                if( packageName.equalsIgnoreCase("com.android.settings") || packageName.equalsIgnoreCase("com.sondreweb.geofencingalpha") || packageName.equalsIgnoreCase("com.android.chrome")
+                        || packageName.equalsIgnoreCase("com.android.deskclock") || packageName.equalsIgnoreCase("com.android.gallery")){
                     Log.d(TAG,"Legg til app: "+ packageName);
                     AppModel app = new AppModel(context, apps.get(i));
                     app.loadLabel(context);
@@ -167,7 +169,7 @@ public class AppsLoader extends AsyncTaskLoader<ArrayList<AppModel>> {
     public void deliverResult(ArrayList<AppModel> apps) {
         Log.d(TAG,"deliverResult()");
         if(isReset()){
-            //An async query kom inn mens loaderen stoppet, we trenger da ikke resultatet.
+            //An async query kom inn mens loaderen stoppet, vi trenger da ikke resultatet.
             if(apps !=null){
                 onReleaseResources(apps);
             }

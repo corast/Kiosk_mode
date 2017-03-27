@@ -8,6 +8,7 @@ import android.widget.Toast;
 
 import com.sondreweb.kiosk_mode_alpha.utils.AppUtils;
 import com.sondreweb.kiosk_mode_alpha.services.GeofenceTransitionService;
+import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
 
 /**
  * Created by sondre on 27-Jan-17.
@@ -53,15 +54,18 @@ public class RestartBroadcastReciever extends WakefulBroadcastReceiver {
 
     public void checkIfGeofenceIsAlive(Context context){
         if(! AppUtils.isServiceRunning(GeofenceTransitionService.class, context)){ //false betyr at servicen ikke kjørere.
-            //dersom servicen vår ikke kjører, så starter vi den.
-            //TODO Legg til actions viss det trengs å vite hvor servicen startet fra.
-            Intent GeofenceTransitionService = new Intent(context, GeofenceTransitionService.class);
-            GeofenceTransitionService.setAction("RESTART"); //slik at vi vet at det mobilen har blir resatt, vi må då muligens gå direkte til MonumentVandring.
-            context.startService(GeofenceTransitionService);
+            if(PreferenceUtils.isKioskModeActivated(context)) { //Dersom Kiosk Mode er activatet, så kan vi også starte Servicen vår.
+                //dersom servicen vår ikke kjører, så starter vi den.
+                //TODO Legg til actions viss det trengs å vite hvor servicen startet fra.
+                Intent GeofenceTransitionService = new Intent(context, GeofenceTransitionService.class);
+                GeofenceTransitionService.setAction("RESTART"); //slik at vi vet at det mobilen har blir resatt, vi må då muligens gå direkte til MonumentVandring.
+                context.startService(GeofenceTransitionService);
+            }
         }
     }
 
     public void reRegisterGeofence(){
+        //TODO: reRegisterGeofence når vi skrur på mobilen igjenn.
     }
 
 }

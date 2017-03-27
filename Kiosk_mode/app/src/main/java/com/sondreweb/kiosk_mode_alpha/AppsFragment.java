@@ -28,9 +28,11 @@ public class AppsFragment extends ListFragment implements LoaderManager.LoaderCa
 
     public static final String TAG = AppsFragment.class.getSimpleName();
 
+
     public AppsFragment(){super();
     }
 
+    //TODO: fiks slik at fragmentet displayer horizontalt.
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
@@ -51,6 +53,12 @@ public class AppsFragment extends ListFragment implements LoaderManager.LoaderCa
         // or start a new one.
         getLoaderManager().initLoader(0, null, this);
     }
+
+
+    /**
+     *
+     * Hva som skjer når vi klikker på et Iten i listen vår.
+     */
 
 
     @Override
@@ -92,8 +100,6 @@ public class AppsFragment extends ListFragment implements LoaderManager.LoaderCa
         {
             setListShownNoAnimation(true);
         }
-
-
     }
         //TODO: Bruke en App object istedet, litt tryggere på errors.
     public void StartActivity(String packageName){

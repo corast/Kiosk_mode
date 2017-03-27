@@ -21,6 +21,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.ViewManager;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.GridView;
@@ -113,7 +114,7 @@ public class HomeActivity extends FragmentActivity implements
         * */
         createGoogleApi();
 
-        if(AppUtils.isGooglePlayServicesAvaliable(this,this)){
+        if(AppUtils.isGooglePlayServicesAvailableAndPoll(this,this)){
             //createGoogleApi(); //lager GoogleApiClienten vår.
             googleApiClient.connect();
         }
@@ -142,51 +143,68 @@ public class HomeActivity extends FragmentActivity implements
         return true;
     }
 
+    public static GoogleApiClient createGoogleApiClient(){
+        if(googleApiClient != null){
+            return googleApiClient;
+        }else
+          return null;
+    }
+
     public ArrayList<StatusInfo> statusList = new ArrayList<>() ;;
 
+    /*
+    *   Lager en Liste med Statuser, som inneholder navn og en bool
+    *   hvor boolen forteller om statusen er klar.
+    *   Når alt er klart kan vi begynne Vandringen(MonumentVandring).
+    * */
     public void createAndUpdateStatusList(){
         if(! statusList.isEmpty()){
             statusList = new ArrayList<>(); //tømmer listen.
         }
         //Må først sjekke
-            StatusInfo status;
-        status = new StatusInfo("GooglePlayServices");
+            StatusInfo status; //status objekt som vi bare kan bruke, mulig dette er litt dårlig, siden vi får samme objekt med ulike parametere.
 
-        if(AppUtils.isGooglePlayServicesAvaliable(this,this)){
+        status = new StatusInfo("Google Play Services");
+        if(AppUtils.isGooglePlayServicesAvailable(this)){
             status.setStatus(true);
-            statusText.append(" | GooglePlayServicen er oppdatert og tilgjengelig");
         }else{
-            statusText.append(" | GooglePlaySerevices er IKKE tilgjengelig med gammel utgave");
+            status.setStatus(false);
         }
-
         statusList.add(status);
 
-        status = new StatusInfo("DeviceAdmin");
+        status = new StatusInfo("Device Admin");
         if(PreferenceUtils.isAppDeviceAdmin(this)){
             status.setStatus(true);
-            statusText.setText("Vi er device admin");
         }else{
-            statusText.setText("Vi er IKKE device admin");
+            status.setStatus(false);
         }
-
         statusList.add(status);
 
-        status = new StatusInfo("AccessibilityService");
+        status = new StatusInfo("Accessibility Service");
         if(AppUtils.isAccessibilitySettingsOn(this)){
             status.setStatus(true);
-            statusText.append(" | Accessibillity service er på");
         }else{
-            statusText.append(" | Accessibility service er IKKE på");
+            status.setStatus(false);
         }
-
         statusList.add(status);
+
+        //sjekker touchVievet
+        status = new StatusInfo("TouchView");
+        if(isTouchViewVisible()){
+            status.setStatus(true);
+        }else{
+            status.setStatus(false);
+        }
+        statusList.add(status);
+
+        //
 
         Log.d(TAG, statusList.toString());
 
 
         StatusAdapter statusAdapter = new StatusAdapter(HomeActivity.this);
         statusAdapter.setData(statusList);
-        //gridView.setAdapter(statusAdapter);
+        gridView.setAdapter(statusAdapter);
     }
 
     @Override
@@ -194,7 +212,7 @@ public class HomeActivity extends FragmentActivity implements
         Log.d(TAG,"onStart()");
         createGoogleApi(); //Tilfelle det er null.
 
-        createAndUpdateStatusList();
+        createAndUpdateStatusList(); //oppdaterer listen.
 
         if(PreferenceUtils.isAppDeviceAdmin(this)){
             statusText.setText("Vi er device admin");
@@ -220,7 +238,7 @@ public class HomeActivity extends FragmentActivity implements
             statusText.append("\nGeofenceTransitionService er IKKE startet");
         }
 
-        if(AppUtils.isGooglePlayServicesAvaliable(this,this)){
+        if(AppUtils.isGooglePlayServicesAvailable(this)){
             statusText.append(" | GooglePlayServicen er oppdatert og tilgjengelig");
         }else{
             statusText.append(" | GooglePlaySerevices er IKKE tilgjengelig med gammel utgave");
@@ -302,29 +320,63 @@ public class HomeActivity extends FragmentActivity implements
     public View touchView = null;
     public View navigationTouchView = null;
 
-    public void startConsumeView(){
+    public boolean isTouchView(){//denne returlere null uansett.
         WindowManager manager = ((WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE));
+        Log.d(TAG,"R.id.view_notification : "+this.findViewById(R.id.view_notification));
+        Log.d(TAG,"R.id.view_notification : "+this.findViewById(R.id.view_notification));
 
-        WindowManager.LayoutParams localLayoutParams = new WindowManager.LayoutParams();
-        localLayoutParams.type = WindowManager.LayoutParams.TYPE_SYSTEM_ERROR;
-        localLayoutParams.gravity = Gravity.TOP | Gravity.RIGHT; //Oppe til høyre vill denne komme opp
+        return touchView != null;
+    }
 
-        localLayoutParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
-                //Window flag: even when this window is focusable (its FLAG_NOT_FOCUSABLE is not set), allow any pointer events outside of the window to be sent to the windows behind it.
-                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
+    public boolean isTouchViewVisible(){
+        if(isTouchView()) {
+            //Dette ser ut til å kjøre før vi faktisk har laget viewet.
+            Log.d(TAG,"visibility : "+ touchView.getVisibility());
+            switch (touchView.getVisibility()) {
 
-                //Window flag: place the window within the entire screen, ignoring decorations around the border (such as the status bar).
-                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
-        localLayoutParams.width = 960; //halvparten av sjermBredde, siden vi forsatt vill ha touch event-ene til notifikasjonene
-        localLayoutParams.height = (int) (40 * getResources().getDisplayMetrics().scaledDensity); //Stod 50, så får se hvordan det går.
-        localLayoutParams.format = PixelFormat.TRANSLUCENT; //litt gjennomsiktig. PixelFormat.TRANSLUCENT;
-        CustomView view = new CustomView(this);
-        //Bare slik at jeg kunne se Viewet.
-        view.setBackgroundColor(ContextCompat.getColor(context,R.color.transparent_red));
-        view.setId(R.id.view_notification);
-        view.setAlpha(0.1f);
-        touchView = view; //lagrere Viewet i en variabel;
-        manager.addView(touchView, localLayoutParams);
+                //Synelig
+                case View.VISIBLE:
+                    return true;
+                //usynelig, men plassen tar er forsatt ibruk. TODO: må finne ut om invisible kan forsatt ta imot touch events.
+                case View.INVISIBLE:
+                    return false;
+
+                //Borte, kan ikke sees og tar ikke opp plass.
+                case View.GONE:
+                    return false;
+            }
+        }
+        return false;
+    }
+
+    public void startConsumeView(){
+        if(this.findViewById(R.id.view_notification) == null) {//vi legger bare till dersom det er null, som vill si at det ikke eksiterer allerede.
+
+            WindowManager manager = ((WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE));
+            WindowManager.LayoutParams localLayoutParams = new WindowManager.LayoutParams();
+            localLayoutParams.type = WindowManager.LayoutParams.TYPE_SYSTEM_ERROR;
+            localLayoutParams.gravity = Gravity.TOP | Gravity.RIGHT; //Oppe til høyre vill denne komme opp
+
+            localLayoutParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                    //Window flag: even when this window is focusable (its FLAG_NOT_FOCUSABLE is not set), allow any pointer events outside of the window to be sent to the windows behind it.
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
+
+                    //Window flag: place the window within the entire screen, ignoring decorations around the border (such as the status bar).
+                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
+            localLayoutParams.width = 960; //halvparten av sjermBredde, siden vi forsatt vill ha touch event-ene til notifikasjonene
+            localLayoutParams.height = (int) (40 * getResources().getDisplayMetrics().scaledDensity); //Stod 50, så får se hvordan det går.
+            localLayoutParams.format = PixelFormat.TRANSLUCENT; //litt gjennomsiktig. PixelFormat.TRANSLUCENT;
+            CustomView view = new CustomView(this);
+            //Bare slik at jeg kunne se Viewet.
+            view.setBackgroundColor(ContextCompat.getColor(context, R.color.transparent_red));
+            view.setId(R.id.view_notification);
+            view.setAlpha(0.1f);
+            touchView = view; //lagrere Viewet i en variabel;
+            manager.addView(touchView, localLayoutParams);
+        }else
+        {
+            Log.e(TAG, "Error med å legge til nytt NotifactionView");
+        }
 
         /* //Bare en test på om det går ann å legge til et View over navigation baren, det fungerte i dette vindu, men når vi forlater her ifra. så er ikke lenger parent like stort.
         //WindowManager manager = ((WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE));
@@ -354,14 +406,12 @@ public class HomeActivity extends FragmentActivity implements
 
     }
 
+    //TODO fiks denne. For mye boilerplate kode.
     public void disableTouchView(){
         if(touchView != null){
             touchView.setVisibility(View.GONE);
         }
 
-        if(navigationTouchView != null){
-            navigationTouchView.setVisibility(View.GONE);
-        }
     }
 
     public void enableTouchView(){
@@ -369,9 +419,6 @@ public class HomeActivity extends FragmentActivity implements
             touchView.setVisibility(View.VISIBLE);
         }
 
-        if(navigationTouchView != null){
-            navigationTouchView.setVisibility(View.VISIBLE);
-        }
     }
 
     private boolean toogle = true;
@@ -437,7 +484,6 @@ public class HomeActivity extends FragmentActivity implements
             //Log.d(TAG,"Car mode enabled flag:"+UiModeManager.ENABLE_CAR_MODE_GO_CAR_HOME);
         }else
         {
-
             //uiModeManager.disableCarMode(UiModeManager.DISABLE_CAR_MODE_GO_HOME);
         } */
 
@@ -446,9 +492,7 @@ public class HomeActivity extends FragmentActivity implements
 
     @Override
     protected void onResume() {
-
-
-
+        //litt feil.
         if(PreferenceUtils.isKioskModeActivated(getApplicationContext())){
             //dette betyr av vi egentlig skal gå til MonumentVandring.
             Intent launcherIntent = getPackageManager().getLaunchIntentForPackage("com.android.chrome");
@@ -587,6 +631,10 @@ public class HomeActivity extends FragmentActivity implements
         startActivity(intent);
     }
 
+    /*
+    *   Callback for når vi requester permission for å hente ut lokasjon.
+    * */
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -605,7 +653,6 @@ public class HomeActivity extends FragmentActivity implements
             }
         }
     }
-
 
     /*                                 CALLBACKS                                        */
     /*¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤GoogleApiClient.ConnectionCallbacks¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤*/

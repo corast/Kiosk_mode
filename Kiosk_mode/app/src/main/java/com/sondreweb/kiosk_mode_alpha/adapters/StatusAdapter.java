@@ -11,6 +11,7 @@ import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.sondreweb.kiosk_mode_alpha.AppModel;
@@ -38,9 +39,10 @@ public class StatusAdapter extends ArrayAdapter<StatusInfo>{
 
     }
 
-    public static class ViewHolder{
+    private static class ViewHolder{
         ImageButton icon;
         TextView label;
+        RelativeLayout rLayout;
     }
 
 
@@ -67,29 +69,41 @@ public class StatusAdapter extends ArrayAdapter<StatusInfo>{
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
 
-        AppAdapter.ViewHolder viewHolder;
+        StatusAdapter.ViewHolder viewHolder;
 
         //Dersom convertView ikke er laget enda.
         if(convertView == null){
-            viewHolder = new AppAdapter.ViewHolder();
+            viewHolder = new StatusAdapter.ViewHolder();
             convertView = inflater.inflate(R.layout.gridview_status, parent,false);
 
             viewHolder.icon = (ImageButton) convertView.findViewById(R.id.grid_status_image_button);
             viewHolder.label = (TextView) convertView.findViewById(R.id.grid_status_name);
+            viewHolder.rLayout = (RelativeLayout) convertView.findViewById(R.id.relative_layout_grid_status);
 
             convertView.setTag(viewHolder);
         }
         else
         {
-            viewHolder = (AppAdapter.ViewHolder) convertView.getTag();
+            viewHolder = (StatusAdapter.ViewHolder) convertView.getTag();
         }
 
         StatusInfo status = getItem(position);
 
-        viewHolder.icon.setImageResource(status.getImageDrawable());
-        viewHolder.label.setText(status.getName());
+        //TODO: forandre på iconene basert på hva vi trykker på.
+        if(status != null) {
+            if (status.getStatus()) { //siden statusen er aktiv og klar.
+                viewHolder.rLayout.setBackgroundResource(R.color.lightGreen);
+            }else
+            {
+                viewHolder.rLayout.setBackgroundResource(R.color.redWard);
+            }
 
+            viewHolder.icon.setImageResource(status.getImageDrawable());
+            viewHolder.label.setText(status.getName());
+
+        }
         return convertView;
+
     }
 
     //TODO: fiks slik at vi kan trykke på de ulike statusene.

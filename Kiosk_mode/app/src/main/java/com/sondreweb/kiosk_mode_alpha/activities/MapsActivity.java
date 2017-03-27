@@ -31,6 +31,7 @@ import com.sondreweb.kiosk_mode_alpha.R;
  */
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback{
+
     private static final String TAG = MapsActivity.class.getSimpleName();
 
     private MapFragment mapFragment;
@@ -172,6 +173,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             gMap.animateCamera(cameraUpdate);
         }
     }
+
+
 
     private void cameraUpdate(){
         if(locationMarker != null) {
