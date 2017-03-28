@@ -44,7 +44,9 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.sondreweb.kiosk_mode_alpha.R;
 import com.sondreweb.kiosk_mode_alpha.activities.HomeActivity;
+import com.sondreweb.kiosk_mode_alpha.activities.LoginAdminActivity;
 import com.sondreweb.kiosk_mode_alpha.receivers.RestartBroadcastReciever;
+import com.sondreweb.kiosk_mode_alpha.settings.AdminPanel;
 import com.sondreweb.kiosk_mode_alpha.utils.AppUtils;
 import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
 
@@ -86,9 +88,13 @@ import java.util.List;
     *
     * */
 
+
+
 public class GeofenceTransitionService extends Service implements
         LocationListener, FusedLocationProviderApi, GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener{
+
+    private static final String STOP_KIOSK = "com.sondreweb.STOP_KIOSK";
 
 
     GoogleApiClient googleApiClient;
@@ -172,12 +178,13 @@ public class GeofenceTransitionService extends Service implements
         notificationBuilder = new NotificationCompat.Builder(this); //Instansiate the NotificatioBuilder.
         startInForeground("starting GeofenceService", true); //setter opp notifikasjonen
 
-        final IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_OFF);
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_SCREEN_OFF);
+        filter.addAction(STOP_KIOSK);
         screenOffReceiver = new ScreenOffReceiver();
 
         // Registrer Recievereren vi trenger for å fange SCREEN_OFF.
         registerReceiver(screenOffReceiver, filter);
-
     }
 
     //Pending intents will start This again(i think).
@@ -186,6 +193,7 @@ public class GeofenceTransitionService extends Service implements
         super.onStartCommand(intent, flags, startId);
         Log.d(TAG,"onStartCommand(intent, flag,startId) ##################################################");
 
+        Log.d(TAG,intent.toString());
         // we can also check wether the action is from the Geofence or simply starting up the service again.
         if(intent.getAction().equalsIgnoreCase(START_GEOFENCE)){ //dersom vi starter servicen med hensikt å starte lokasjons håndtering
             Log.d(TAG,"Start LocationRequests fra servicen  ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤");
@@ -310,7 +318,25 @@ public class GeofenceTransitionService extends Service implements
                 .setContentText(msg) // Text; Location being monitored.
                 .setSubText("SubText") //lan lot centrum geofence
                 .setTicker("Service starting") //geofence running
-                .setPriority(NotificationCompat.PRIORITY_MAX); //Makes the system prioritize this notification over the others(or the same as other with max
+                .setPriority(NotificationCompat.PRIORITY_MAX);//Makes the system prioritize this notification over the others(or the same as other with max
+
+        //For å starte opp Loggin activity.
+        Intent loggInIntent = new Intent(this,LoginAdminActivity.class);
+        loggInIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent pendingInlogging = PendingIntent.getActivity(this,0,loggInIntent,PendingIntent.FLAG_UPDATE_CURRENT);
+
+
+
+        Intent stopKiosk = new Intent(STOP_KIOSK);
+        PendingIntent pendingStopKiosk = PendingIntent.getBroadcast(getApplicationContext(),0,stopKiosk,PendingIntent.FLAG_UPDATE_CURRENT);
+
+        //TODO: koble opp mot Innlogging, gjøres ved å ta ibruk
+
+        //notificationBuilder.setContentIntent(pendingIntent);
+        notificationBuilder.addAction(R.drawable.login_48, "Log Inn", pendingInlogging );
+        notificationBuilder.addAction(R.drawable.unlock_50, "Stop Kioks Mode",pendingStopKiosk);
+        //PendingIntent resultPendingIntent = PendingIntent.getActivities(context, 0, logginIntent, 0);
+
 
         startForeground(mId, notificationBuilder.build()); //Start showing the notification on the (Action)/task bar.
     }
@@ -365,19 +391,45 @@ public class GeofenceTransitionService extends Service implements
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            if(intent.getAction().equals(Intent.ACTION_SCREEN_OFF)){
-                Log.d(TAG, "*****************************************************");
-                Log.d(TAG, "Action Screen Off recieved");
+            Log.d(TAG,"------------------------------------------------------------");
+            Log.d(TAG,"VI mottok et intent:"+intent.getAction());
+            switch (intent.getAction()){
+                case Intent.ACTION_SCREEN_OFF:
+                    Log.d(TAG, "*****************************************************");
+                    Log.d(TAG, "Action Screen Off recieved");
                 /*
                 Intent i = new Intent(context, HomeActivity.class);
                 i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(i);
                 */
+                    if(PreferenceUtils.isKioskModeActivated(context)){
+                        getFullWakeLock().acquire();
+                        getFullWakeLock().release();
+                    }
+                    break;
+                case GeofenceTransitionService.STOP_KIOSK:
+                    Log.d(TAG, "Vi setter Kioks mode til false");
+                    Log.d(TAG,"Kiosk mode nå: "+PreferenceUtils.isKioskModeActivated(context));
+                    PreferenceUtils.setKioskModeActive(context,false);
+                    Log.d(TAG,"Kiosk mode nå etter forandring: "+PreferenceUtils.isKioskModeActivated(context));
+                    break;
+            }
+           /* if(intent.getAction().equals(Intent.ACTION_SCREEN_OFF)){
+                Log.d(TAG, "*****************************************************");
+                Log.d(TAG, "Action Screen Off recieved");
+
+                Intent i = new Intent(context, HomeActivity.class);
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(i);
+
                 if(PreferenceUtils.isKioskModeActivated(context)){
                     getFullWakeLock().acquire();
                     getFullWakeLock().release();
                 }
+            }else if(intent.getAction().equalsIgnoreCase(STOP_KIOSK)){
+                PreferenceUtils.setKioskModeActive(context,false); //Skrur av Kiosk mode.
             }
+            */
         }
     }
 

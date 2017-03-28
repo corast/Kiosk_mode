@@ -60,6 +60,8 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
 
         setServiceInfo(info);
         //super.onServiceConnected();
+
+        WhiteList.add(PreferenceUtils.getPrefkioskModeApp(getApplicationContext()));
     }
 
 

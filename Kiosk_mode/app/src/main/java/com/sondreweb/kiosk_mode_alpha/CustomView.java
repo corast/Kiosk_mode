@@ -7,6 +7,7 @@ import android.view.ViewGroup;
 
 /**
  * Created by sondre on 09-Mar-17.
+ * Sørger for at vi kan
  */
 
 public class CustomView extends ViewGroup {

@@ -29,7 +29,7 @@ public class AppAdapter extends ArrayAdapter<AppModel> {
 
     public AppAdapter(Context context)
     {
-        super(context, android.R.layout.two_line_list_item);
+        super(context, R.layout.test_horizontal_layout);
 
         inflater = LayoutInflater.from(context);
 
@@ -74,7 +74,6 @@ public class AppAdapter extends ArrayAdapter<AppModel> {
             viewHolder.label = (TextView) convertView.findViewById(R.id.label);
 
             convertView.setTag(viewHolder);
-
         }
         else
         {

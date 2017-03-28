@@ -8,7 +8,10 @@ import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 
 import com.sondreweb.kiosk_mode_alpha.adapters.AppAdapter;
@@ -28,7 +31,6 @@ public class AppsFragment extends ListFragment implements LoaderManager.LoaderCa
 
     public static final String TAG = AppsFragment.class.getSimpleName();
 
-
     public AppsFragment(){super();
     }
 
@@ -41,25 +43,23 @@ public class AppsFragment extends ListFragment implements LoaderManager.LoaderCa
         packageManager = getActivity().getPackageManager();
         // Give some text to display if there is no data.
         setEmptyText("No Applications");
-
         // Create an empty adapter we will use to display the loaded data.
+
         adapter = new AppAdapter(getActivity());
         setListAdapter(adapter);
 
         //start out with a progress indicator
-        setListShown(false);
+        setListShown(true);
 
         // Prepare the loader.  Either re-connect with an existing one,
         // or start a new one.
         getLoaderManager().initLoader(0, null, this);
     }
 
-
     /**
      *
      * Hva som skjer når vi klikker på et Iten i listen vår.
      */
-
 
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
@@ -83,6 +83,25 @@ public class AppsFragment extends ListFragment implements LoaderManager.LoaderCa
         // sample only has one Loader with no arguments, so it is simple.
         //return new Loader<>(getActivity());
         return new AppsLoader(getActivity());
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        //View view = inflater.inflate(R.layout.test_horizontal_layout, container, false);
+        setListAdapter(adapter);
+        View layout = super.onCreateView(inflater,container,savedInstanceState);
+
+        ListView listView = (ListView) layout.findViewById(android.R.id.list);
+        ViewGroup parent = (ViewGroup) listView.getParent();
+
+        int listViewIndex = parent.indexOfChild(listView);
+        parent.removeViewAt(listViewIndex);
+        LinearLayout mLinearLayout = (LinearLayout) inflater.inflate(R.layout.test_horizontal_layout, container, false);
+
+        parent.addView(mLinearLayout, listViewIndex, listView.getLayoutParams());
+        return layout;
+
+        //return super.onCreateView(inflater, container, savedInstanceState);
     }
 
 

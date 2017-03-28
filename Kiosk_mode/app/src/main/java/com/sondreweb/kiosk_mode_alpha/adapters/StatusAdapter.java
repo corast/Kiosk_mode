@@ -100,7 +100,6 @@ public class StatusAdapter extends ArrayAdapter<StatusInfo>{
 
             viewHolder.icon.setImageResource(status.getImageDrawable());
             viewHolder.label.setText(status.getName());
-
         }
         return convertView;
 

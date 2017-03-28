@@ -17,9 +17,11 @@ public class PreferenceUtils {
     //KEY som brukes for å hente ut en verdi fra Preferancene i systemet. Denne er viktig kun denne appen har tilgang til.
     private static final String PREF_KIOSK_MODE = "pref_kiosk_mode";
     private static final String PREF_ADMIN_DEVICE = "pref_admin_device";
+    private static final String PREF_KIOSK_APP = "pref_kiosk_application";
+
+    private static final String DEFAULT_APP = "com.android.chrome"; //VI setter Chrome nå i starten for å teste.
 
     public static boolean isKioskModeActivated(final Context context){
-        Log.d(TAG,"isKioskModeActivated ctx:"+context.toString());
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         return sharedPreferences.getBoolean(PREF_KIOSK_MODE,false); //default value er false
         /*Default value er false, siden dersom vi ikke har registrert Kiosk mode enda, så er lurt å ikke gå inn i Kiosk heller
@@ -55,5 +57,25 @@ public class PreferenceUtils {
             Log.d(TAG, "Successfully set Admin to: "+active);
         }else
             Log.e(TAG,"Error setting Admin to: "+active);
+    }
+
+    public static void setPrefkioskModeApp(final String appPackage,final Context context){
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        if(sharedPreferences.edit().putString(PREF_KIOSK_APP, appPackage).commit()){
+
+        }
+    }
+
+    public static String getPrefkioskModeApp(final Context context){
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        //TODO: check if package is installed
+        String kiosk_app = sharedPreferences.getString(PREF_KIOSK_APP, DEFAULT_APP);
+        /*
+        *   En kjapp test på om Packagen som vi faktisk har er installert på enheten.
+        * */
+        if(AppUtils.isPacketInstalled(kiosk_app,context)){//True dersom den eksiterer
+            return kiosk_app;
+        }
+        return DEFAULT_APP; //Da bare returnere vi Default app stringen, siden den vet vi eksiterer.
     }
 }

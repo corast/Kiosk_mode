@@ -21,8 +21,8 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.ViewManager;
 import android.view.WindowManager;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.GridView;
 import android.widget.TextView;
@@ -32,6 +32,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
 import com.sondreweb.kiosk_mode_alpha.CustomView;
+import com.sondreweb.kiosk_mode_alpha.GridItemListener;
 import com.sondreweb.kiosk_mode_alpha.StatusInfo;
 import com.sondreweb.kiosk_mode_alpha.adapters.StatusAdapter;
 import com.sondreweb.kiosk_mode_alpha.deviceAdministator.DeviceAdminKiosk;
@@ -88,7 +89,12 @@ public class HomeActivity extends FragmentActivity implements
 
         gridView = (GridView)findViewById(R.id.grid_status_view);
         gridView.setGravity(Gravity.FILL_HORIZONTAL);
-
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Log.d(TAG,"onItemClick listerner er trykket" + view.toString());
+            }
+        });
         startKioskButton = (Button) findViewById(R.id.button_start_kiosk);
 
         googleClientText = (TextView) findViewById(R.id.text_googleApiConnection);
@@ -114,10 +120,10 @@ public class HomeActivity extends FragmentActivity implements
         * */
         createGoogleApi();
 
-        if(AppUtils.isGooglePlayServicesAvailableAndPoll(this,this)){
+        /*if(AppUtils.isGooglePlayServicesAvailableAndPoll(this,this)){
             //createGoogleApi(); //lager GoogleApiClienten vår.
             googleApiClient.connect();
-        }
+        } */
 
         decorView = getWindow().getDecorView();
         context = this;
@@ -150,7 +156,12 @@ public class HomeActivity extends FragmentActivity implements
           return null;
     }
 
-    public ArrayList<StatusInfo> statusList = new ArrayList<>() ;;
+
+    /*
+    *   Liste som holder på alle statusene våre. Denne må oppdateres kontinuelig, ved forandring på systemet.
+    * */
+    public ArrayList<StatusInfo> statusList = new ArrayList<>() ;
+
 
     /*
     *   Lager en Liste med Statuser, som inneholder navn og en bool
@@ -205,7 +216,30 @@ public class HomeActivity extends FragmentActivity implements
         StatusAdapter statusAdapter = new StatusAdapter(HomeActivity.this);
         statusAdapter.setData(statusList);
         gridView.setAdapter(statusAdapter);
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Log.d(TAG,view.toString());
+            }
+        });
     }
+
+    public boolean allStatusTrue(){
+        for(StatusInfo s : statusList){
+            if(! s.getStatus()){ //dersom det failer en gang, så er det ikke klart til å starte.
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean allStatusTrueTest(){
+       if(PreferenceUtils.isKioskModeActivated(context) && AppUtils.isAccessibilitySettingsOn(context)){
+           return true;
+       }
+        return false;
+    }
+
 
     @Override
     protected void onStart() {//Ved onstart burde vi sjekke ulike ting.
@@ -239,9 +273,9 @@ public class HomeActivity extends FragmentActivity implements
         }
 
         if(AppUtils.isGooglePlayServicesAvailable(this)){
-            statusText.append(" | GooglePlayServicen er oppdatert og tilgjengelig");
+            statusText.append(" | Google Play Servicen er oppdatert og tilgjengelig");
         }else{
-            statusText.append(" | GooglePlaySerevices er IKKE tilgjengelig med gammel utgave");
+            statusText.append(" | Google Play Services er IKKE tilgjengelig med gammel utgave");
         }
 
         if(AppUtils.checkPermission(this)){
@@ -295,15 +329,24 @@ public class HomeActivity extends FragmentActivity implements
         }
         */
         getScreenDimens();
+        updateStartKioskGui();
+
+        //TODO: dersom alt er OK her, og vi egentlig skal være i Kiosk, så må vi hoppe til den appen.
+        if(PreferenceUtils.isKioskModeActivated(context)){
+            PreferenceUtils.getPrefkioskModeApp(context);
+        }
+
         super.onStart();
     }
+
+
 
 
     /**
      * Opdater Bruker grense snittet, slik at når vi gjør forandringer, så skal det synes her.
      */
 
-    public void updateGui(){
+    public void updateStartKioskGui(){
         if(PreferenceUtils.isKioskModeActivated(this)){
             //Må sette knappen til å være Disabled
             startKioskButton.setClickable(false);
@@ -411,7 +454,6 @@ public class HomeActivity extends FragmentActivity implements
         if(touchView != null){
             touchView.setVisibility(View.GONE);
         }
-
     }
 
     public void enableTouchView(){
@@ -493,13 +535,19 @@ public class HomeActivity extends FragmentActivity implements
     @Override
     protected void onResume() {
         //litt feil.
-        if(PreferenceUtils.isKioskModeActivated(getApplicationContext())){
+        if(allStatusTrueTest()){
             //dette betyr av vi egentlig skal gå til MonumentVandring.
-            Intent launcherIntent = getPackageManager().getLaunchIntentForPackage("com.android.chrome");
+            String prefApp = PreferenceUtils.getPrefkioskModeApp(context);
+            Toast.makeText(this.getApplicationContext(), "Går til app med navn: "+prefApp, Toast.LENGTH_SHORT).show();
+            Intent launcherIntent = getPackageManager().getLaunchIntentForPackage(prefApp);
             if(launcherIntent != null){
-                //startActivity(launcherIntent);
+                startActivity(launcherIntent);
+            }else{
+                Log.e(TAG,"Error starting KioskMode fra Launcher");
             }
         }
+
+
 
         super.onResume();
         Log.d(TAG,"onResume()");
@@ -594,14 +642,26 @@ public class HomeActivity extends FragmentActivity implements
         }
     }
 
-    public void startKioskMode(View view){ //ved togling av knappen starte denne.
-        Log.d(TAG,view.toString());
-        if( ! kioskModeReady()){
-
+    //starter Kiosk mode
+    /*
+    *   Denne skal skru på KioskMode, og så skal vi hoppe til MonumentVandring. Det er forusatt at alt er klart.
+    * */
+    public void startKioskMode(View view){
+        if( ! kioskModeReady() ){
+            //Da kan vi ikke starte KioskModen.
         }
+
         setKioskMode(true);
         //startKioskButton.setLayoutParams(new RelativeLayout.LayoutParams(100,100));
-        updateGui();
+        updateStartKioskGui();
+        //TODO: Hopp til MonumentVandring
+
+        Intent intent = getPackageManager().getLaunchIntentForPackage(PreferenceUtils.getPrefkioskModeApp(context));
+        if(intent != null){
+            this.startActivity(intent);
+        }else{ //dersom intent er null, så har vi et problem
+            Log.e(TAG,"Error ved å starte kioks_mode appen");
+        }
     }
 
     /*
@@ -620,11 +680,9 @@ public class HomeActivity extends FragmentActivity implements
         }
     }
 
-    public void startkioskMode(){
-
-    }
-
     /*  Start Loging Activity for admin users.
+    *   Ikke ferdig.
+    *
     * */
     public void startAdminLogin(View view) {
         Intent intent = new Intent(this, LoginAdminActivity.class);
@@ -706,13 +764,19 @@ public class HomeActivity extends FragmentActivity implements
 
     public void stopKioskMode(View view){
         PreferenceUtils.setKioskModeActive(this,false);
-        updateGui();
+        updateStartKioskGui();
     }
 
     public void lockScreenNow(View view){
         if(PreferenceUtils.isAppDeviceAdmin(this)) {
             DevicePolicyManager devicePolicyManager = (DevicePolicyManager) this.getSystemService(Context.DEVICE_POLICY_SERVICE);
             devicePolicyManager.lockNow();
+        }
+    }
+
+    public void unlockScreenNow(){
+        if(PreferenceUtils.isAppDeviceAdmin(this)) {
+            DevicePolicyManager devicePolicyManager = (DevicePolicyManager) this.getSystemService(Context.DEVICE_POLICY_SERVICE);
         }
     }
 }

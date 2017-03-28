@@ -84,6 +84,7 @@
         android:layout_above="@+id/button_lock_screen"
         android:name="com.sondreweb.kiosk_mode_alpha.AppsFragment"/>
 
+
     <Button
         android:id="@+id/button_lock_screen"
         android:text="Lock Screen test"
