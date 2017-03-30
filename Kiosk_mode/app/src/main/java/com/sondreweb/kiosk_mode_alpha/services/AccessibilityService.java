@@ -120,13 +120,15 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
                             if(event.getPackageName().toString().equalsIgnoreCase("com.android.keyguard")){
                                 Log.d(TAG,"com.android.keyguard prøver å gjøre noe");
                                 this.performGlobalAction(GLOBAL_ACTION_BACK);
-                            }else if(event.getPackageName().toString().equalsIgnoreCase("android")){
+                            }else if(event.getPackageName().toString().equalsIgnoreCase("android")){ //tar alt fra systemet.
                                 Log.d(TAG,"android prøver å gjøre noe");
                                 this.performGlobalAction(GLOBAL_ACTION_BACK);
                             }else if(event.getClassName().equals("com.android.systemui.recent.RecentsActivity")){
                                 this.performGlobalAction(GLOBAL_ACTION_HOME);
                             }else if(event.getClassName().equals("android.widget.FrameLayout") && event.getPackageName().equals("com.android.keyguard")){
                                 this.performGlobalAction(GLOBAL_ACTION_BACK);
+                            }else if(event.getClassName().equals("com.android.launcher")){
+                                this.performGlobalAction(GLOBAL_ACTION_HOME);
                             }
                             /*event.getPackageName().equals("com.android.systemui"*/
                         }

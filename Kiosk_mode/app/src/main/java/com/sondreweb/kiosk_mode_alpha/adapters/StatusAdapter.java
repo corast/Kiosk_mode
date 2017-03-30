@@ -8,15 +8,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.sondreweb.kiosk_mode_alpha.AppModel;
 import com.sondreweb.kiosk_mode_alpha.R;
-import com.sondreweb.kiosk_mode_alpha.StatusInfo;
+import com.sondreweb.kiosk_mode_alpha.classes.StatusInfo;
 
 import java.util.ArrayList;
 import java.util.Collection;

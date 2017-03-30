@@ -32,8 +32,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
 import com.sondreweb.kiosk_mode_alpha.CustomView;
-import com.sondreweb.kiosk_mode_alpha.GridItemListener;
-import com.sondreweb.kiosk_mode_alpha.StatusInfo;
+import com.sondreweb.kiosk_mode_alpha.classes.StatusInfo;
 import com.sondreweb.kiosk_mode_alpha.adapters.StatusAdapter;
 import com.sondreweb.kiosk_mode_alpha.deviceAdministator.DeviceAdminKiosk;
 import com.sondreweb.kiosk_mode_alpha.services.GeofenceTransitionService;
@@ -416,7 +415,8 @@ public class HomeActivity extends FragmentActivity implements
             view.setAlpha(0.1f);
             touchView = view; //lagrere Viewet i en variabel;
             manager.addView(touchView, localLayoutParams);
-        }else
+        }
+        else
         {
             Log.e(TAG, "Error med å legge til nytt NotifactionView");
         }
@@ -535,6 +535,7 @@ public class HomeActivity extends FragmentActivity implements
     @Override
     protected void onResume() {
         //litt feil.
+        Log.d(TAG,"onResume() i Home");
         if(allStatusTrueTest()){
             //dette betyr av vi egentlig skal gå til MonumentVandring.
             String prefApp = PreferenceUtils.getPrefkioskModeApp(context);
@@ -546,8 +547,6 @@ public class HomeActivity extends FragmentActivity implements
                 Log.e(TAG,"Error starting KioskMode fra Launcher");
             }
         }
-
-
 
         super.onResume();
         Log.d(TAG,"onResume()");
@@ -649,6 +648,7 @@ public class HomeActivity extends FragmentActivity implements
     public void startKioskMode(View view){
         if( ! kioskModeReady() ){
             //Da kan vi ikke starte KioskModen.
+            return;
         }
 
         setKioskMode(true);
@@ -704,7 +704,7 @@ public class HomeActivity extends FragmentActivity implements
                     //getLastKnowLocation();
                 } else {
                     //permissionDenied();
-                    //Siden vi ikke har permission til å bruke Location, så kan vi heller ikke starte monument vandring eller Geofence etc.
+                    //Siden vi ikke har permission til å bruke Location, så kan vi heller ikke starte monument vandring eller GeofenceClass etc.
                     //TODO: stop app her.
                 }
                 break;

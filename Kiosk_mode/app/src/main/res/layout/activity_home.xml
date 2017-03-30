@@ -55,7 +55,8 @@
         android:layout_centerHorizontal="true"
         android:layout_below="@id/text_googleApiConnection"
         android:text="Start Kiosk mode"
-        android:onClick="startKioskMode"/>
+        android:onClick="startKioskMode"
+        />
 
     <Button
         android:id="@+id/button_start_map"
@@ -65,7 +66,8 @@
         android:layout_below="@id/button_start_kiosk"
         android:text="Start MonumentVandring"
         android:layout_alignWithParentIfMissing="true"
-        android:onClick="startMap"/>
+        android:onClick="startMap"
+        android:visibility="gone"/>
 <!--
     <Button
         android:id="@+id/button_innlogging_admin"

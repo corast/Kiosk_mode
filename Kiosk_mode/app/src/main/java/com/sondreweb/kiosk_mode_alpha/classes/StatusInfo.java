@@ -1,6 +1,8 @@
-package com.sondreweb.kiosk_mode_alpha;
+package com.sondreweb.kiosk_mode_alpha.classes;
 
 import android.graphics.drawable.Drawable;
+
+import com.sondreweb.kiosk_mode_alpha.R;
 
 /**
  * Created by sondre on 23-Mar-17.

@@ -80,7 +80,7 @@ public class AppModel {
     /**
     * Sett Label fra context til Applikasjonen.
     */
-    void loadLabel(Context context){
+    public void loadLabel(Context context){
         if(appLabel == null || !mounted){
             mounted = false;
             appLabel = info.packageName;

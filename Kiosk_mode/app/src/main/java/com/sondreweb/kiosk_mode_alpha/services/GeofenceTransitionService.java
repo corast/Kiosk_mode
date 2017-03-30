@@ -37,11 +37,13 @@ import com.google.android.gms.location.FusedLocationProviderApi;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofenceStatusCodes;
 import com.google.android.gms.location.GeofencingEvent;
+import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.model.LatLng;
 import com.sondreweb.kiosk_mode_alpha.R;
 import com.sondreweb.kiosk_mode_alpha.activities.HomeActivity;
 import com.sondreweb.kiosk_mode_alpha.activities.LoginAdminActivity;
@@ -56,13 +58,13 @@ import java.util.List;
  * Created by sondre on 26-Jan-17.
  * The Service that will run in the background on a seperate thread(mostly)
  *  and do the work it is tasked with.
- *  Run events when the users reacts with a Geofence.
+ *  Run events when the users reacts with a GeofenceClass.
  *  Lock the device if the user exits the Geofences.
  *  Must be efficient enught, ie not draw all the battery power afther an hour etc.
  *
  *  Must be able to start itself up again when the system reboots, starts.
  *  Tasked with keeping the system only usable within the parameters(geofence).
- *  Tasked with Warning the user if he is almost exiting an Geofence. (need different Geofence levels).
+ *  Tasked with Warning the user if he is almost exiting an GeofenceClass. (need different GeofenceClass levels).
  *
  *  Should be able to get the location with only GPS tracking.(this needs more reasearch).
  *
@@ -99,39 +101,6 @@ public class GeofenceTransitionService extends Service implements
 
     GoogleApiClient googleApiClient;
 
-    /**
-     *  LocationListener callbacks
-     */
-
-    @Override
-    public void onLocationChanged(Location location) { //lytter til når location forandres, på denne måten kan vi lytte etter locationChange flere steder.
-
-    }
-
-    /*   ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
-    *   GoogleApiClient.ConnectionCallbacks
-    *    ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
-    * */
-
-    @Override
-    public void onConnectionSuspended(int i) {
-
-    }
-
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-
-    }
-
-    /*  ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
-    *   GoogleApiClient.OnConnectionFailedListener
-    *   ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
-    * */
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
-    }
 
     /*¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤Broadcast reviever TAGS¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤*/
     //Tags that we are listening for go here, to keep track of everyone this service is listening for.
@@ -140,7 +109,9 @@ public class GeofenceTransitionService extends Service implements
     /*¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤END TAGS¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤*/
 
 
-    public static final String START_GEOFENCE = "comgeofence..start"
+    public static final String START_GEOFENCE = "com.geofence.start"
+
+
 ;
     private static final String TAG = GeofenceTransitionService.class.getSimpleName();
 
@@ -165,7 +136,6 @@ public class GeofenceTransitionService extends Service implements
     private PowerManager.WakeLock wakeLock;
 
     static{
-
        // PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "My Tag");
     }
 
@@ -194,7 +164,7 @@ public class GeofenceTransitionService extends Service implements
         Log.d(TAG,"onStartCommand(intent, flag,startId) ##################################################");
 
         Log.d(TAG,intent.toString());
-        // we can also check wether the action is from the Geofence or simply starting up the service again.
+        // we can also check wether the action is from the GeofenceClass or simply starting up the service again.
         if(intent.getAction().equalsIgnoreCase(START_GEOFENCE)){ //dersom vi starter servicen med hensikt å starte lokasjons håndtering
             Log.d(TAG,"Start LocationRequests fra servicen  ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤");
             if(createGoogleApi()){
@@ -202,14 +172,14 @@ public class GeofenceTransitionService extends Service implements
             }
         }
         //this can create Error the first time this service is started. We will have to figure out what to do.
-        GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent); //henter Geofencet fra intent viss intent kommer fra et Geofence.
+        GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent); //henter Geofencet fra intent viss intent kommer fra et GeofenceClass.
                 //ellers så er det bare at vi starter Servicen fra hvilket som helst annet sted.
         if(geofencingEvent != null ){
             Log.d(TAG,"GeofenceEvent: "+geofencingEvent.toString());
             if( geofencingEvent.hasError() ){ //TODO:finne ut hvorfor det har oppstått en error, og fikse dette
                 String errorMessage = getErrorString( geofencingEvent.getErrorCode() );
                 //dersom geofenceEvent.getErrorCode() returnere GEOFENCE_NOT_AVAILABLE, betyr dette at brukeren har disabled network location provider.
-                //Dermed vill alle registrerte Geofence bli fjernet og
+                //Dermed vill alle registrerte GeofenceClass bli fjernet og
                 Log.e(TAG,errorMessage);
                 onDestroy(); //We can destroy the service, because there is no geofence that it can monitor anymore, this needs to be fixed somehow.
             }
@@ -249,9 +219,25 @@ public class GeofenceTransitionService extends Service implements
     }
 
 
+    public void testing(){
+        Geofence geofence = createGeofence(new LatLng(0.1412421,12412412),1231.14f);
+        geofence.getRequestId();
+    }
+
+    private Geofence createGeofence(LatLng latLng, float radius){
+        return new Geofence.Builder()
+                .setCircularRegion(latLng.latitude, latLng.longitude,radius)
+                .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
+                .build();
+    }
+
     /*
     *   GoogleApiClient connection
     * */
+
+
+
 
     private boolean createGoogleApi() {
         Log.d(TAG, "createGoogleApi()");
@@ -280,6 +266,69 @@ public class GeofenceTransitionService extends Service implements
         }
     };
 */
+
+    /**
+     *  ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
+     *      Create GeofenceList
+     *  ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
+     * **/
+
+    private List<Geofence> createGeofences(){
+
+        long expire = Geofence.NEVER_EXPIRE;
+        int event = Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT;
+        //setRequestID = Database.ID.
+
+        ArrayList<Geofence> geofenceList = new ArrayList<Geofence>();
+
+        //TODO: loop igjennom Databasen og hent alle geofencer, og gjør disse om til geofence objecter.
+
+
+
+        return geofenceList;
+    }
+
+    /***
+     *  End GeofenceClass
+     * */
+
+
+    /*  ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
+    *   GeofenceRequest STARt
+    *   ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
+    * */
+
+    //create GeofenceRequests, vi spesifisere også hva som triggeres
+    //GeofenceBuilder.setInitialTrigger: Sets the geofence notification behavior at the moment when the geofences are added.
+    private GeofencingRequest createGeofenceRequest(Geofence geofence) {
+        Log.d(TAG, "createGeofenceRequest()");
+        return new GeofencingRequest.Builder()
+                .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)  //.setInitialTrigger: Sets the geofence notification behavior at the moment when the geofences are added.
+                .addGeofence(geofence) //.addGeofence : Adds a geofence to be monitored by geofencing service.
+                .build();
+    }
+
+    //GeofenceBuilder.setInitialTrigger: Sets the geofence notification behavior at the moment when the geofences are added.
+    /*
+    *   Legger til flere Gofence samtidig i en Request.
+    *
+    * */
+    private GeofencingRequest createGeofenceRequest(List<Geofence> geofences) {
+        Log.d(TAG, "createGeofenceRequest()");
+        return new GeofencingRequest.Builder()
+                //.setInitialTrigger: Sets the geofence notification behavior at the moment when the geofences are added.
+                .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
+                //.addGeofences: Adds all the geofences in the given list to be monitored by geofencing service.
+                .addGeofences(geofences)
+                //.build: Builds the GeofencingRequest object.
+                .build();
+    }
+
+    /*
+    *   ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
+    *   GeofenceRequest END
+    *   ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
+    * */
 
     //Generer detaljert melding om geofence
     private String getGeofenceTransitionDetails(int geoFenceTransition, List<Geofence> triggeredeGeofences)
@@ -314,7 +363,7 @@ public class GeofenceTransitionService extends Service implements
 
         notificationBuilder
                 .setSmallIcon(getNotificationIcon()) //icon that the user see in status bar.
-                .setContentTitle("Title") // Geofence Service
+                .setContentTitle("Title") // GeofenceClass Service
                 .setContentText(msg) // Text; Location being monitored.
                 .setSubText("SubText") //lan lot centrum geofence
                 .setTicker("Service starting") //geofence running
@@ -373,7 +422,7 @@ public class GeofenceTransitionService extends Service implements
         switch (errorCode)
         {
             case GeofenceStatusCodes.GEOFENCE_NOT_AVAILABLE:
-                return "Geofence not available";
+                return "GeofenceClass not available";
             case GeofenceStatusCodes.GEOFENCE_TOO_MANY_GEOFENCES:
                 return "Too many Geofences";
             case GeofenceStatusCodes.GEOFENCE_TOO_MANY_PENDING_INTENTS:
@@ -472,8 +521,55 @@ public class GeofenceTransitionService extends Service implements
     * */
 
 
+    /*
+    *   LocationRequest
+    * */
+
+    /**¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
+     *  LocationListener
+     *  ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
+     */
+
+    @Override
+    public void onLocationChanged(Location location) { //lytter til når location forandres, på denne måten kan vi lytte etter locationChange flere steder.
+
+    }
+    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    /*   ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
+    *           GoogleApiClient.ConnectionCallbacks
+    *    ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
+    * */
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+
+    }
+    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    /*  ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
+    *           GoogleApiClient.OnConnectionFailedListener
+    *   ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
+    * */
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+    }
+    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    /*¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
+    *         FusedLocationProviderApi
+    * ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
+    * */
+
     @Override
     public Location getLastLocation(GoogleApiClient googleApiClient) {
+
         return null;
     }
 
@@ -531,5 +627,10 @@ public class GeofenceTransitionService extends Service implements
     public PendingResult<Status> flushLocations(GoogleApiClient googleApiClient) {
         return null;
     }
+
+    /*¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
+    *         FusedLocationProviderApi END
+    * ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
+    * */
 
 }
