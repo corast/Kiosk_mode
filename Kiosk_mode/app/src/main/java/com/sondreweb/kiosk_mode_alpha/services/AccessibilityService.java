@@ -64,7 +64,7 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
         WhiteList.add(PreferenceUtils.getPrefkioskModeApp(getApplicationContext()));
     }
 
-
+    //TODO: Fiks på Whitelisten, og kanskje noe blacklisting, slik at vi er sikker på at alt uønsket ikke kan framkomme underveis, samtidig så er Packagename litt universel for flere Classnames.
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
         if(event != null){

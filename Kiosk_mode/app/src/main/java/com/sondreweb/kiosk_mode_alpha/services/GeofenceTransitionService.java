@@ -90,17 +90,16 @@ import java.util.List;
     *
     * */
 
-
-
 public class GeofenceTransitionService extends Service implements
         LocationListener, FusedLocationProviderApi, GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener{
 
     private static final String STOP_KIOSK = "com.sondreweb.STOP_KIOSK";
 
+    private final int UPDATE_INTERVAL = 20*1000;//20 seconds
+    private final int FASTEST_INTERVAL = 4*1000;// 4 seconds.
 
     GoogleApiClient googleApiClient;
-
 
     /*¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤Broadcast reviever TAGS¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤*/
     //Tags that we are listening for go here, to keep track of everyone this service is listening for.
@@ -109,10 +108,14 @@ public class GeofenceTransitionService extends Service implements
     /*¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤END TAGS¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤*/
 
 
-    public static final String START_GEOFENCE = "com.geofence.start"
+    public static final String START_GEOFENCE = "com.geofence.start";
+
+    /*
+    *   Når mobilen restartes av en eller ann grunn og viss den forsatt skal være i Kiosk mode, må vi reRegistrere Geofencne våre. Siden de forsvinner fra minne.
+    * */
+    public static final String RESTART_GEOFENCES = "com.geofence.restart";
 
 
-;
     private static final String TAG = GeofenceTransitionService.class.getSimpleName();
 
     private final int mId = 2222; //tilfeldig ID for Notifikasjonen.
@@ -135,6 +138,9 @@ public class GeofenceTransitionService extends Service implements
 
     private PowerManager.WakeLock wakeLock;
 
+    private static Context sContext;
+
+
     static{
        // PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "My Tag");
     }
@@ -155,6 +161,18 @@ public class GeofenceTransitionService extends Service implements
 
         // Registrer Recievereren vi trenger for å fange SCREEN_OFF.
         registerReceiver(screenOffReceiver, filter);
+        sContext = getApplicationContext();
+    }
+
+    public Context getsContext(){
+        if(sContext == null){
+            sContext = getApplicationContext(); //kan være null i noen tilfeller.
+        }
+        return sContext;
+    }
+
+    public void InitVars(){
+
     }
 
     //Pending intents will start This again(i think).
@@ -163,14 +181,30 @@ public class GeofenceTransitionService extends Service implements
         super.onStartCommand(intent, flags, startId);
         Log.d(TAG,"onStartCommand(intent, flag,startId) ##################################################");
 
-        Log.d(TAG,intent.toString());
-        // we can also check wether the action is from the GeofenceClass or simply starting up the service again.
+        InitVars();
+
+        // we can also check wheter the action is from the GeofenceClass or simply starting up the service again.
         if(intent.getAction().equalsIgnoreCase(START_GEOFENCE)){ //dersom vi starter servicen med hensikt å starte lokasjons håndtering
             Log.d(TAG,"Start LocationRequests fra servicen  ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤");
             if(createGoogleApi()){
 
             }
         }
+
+        switch (intent.getAction()){
+            case START_GEOFENCE: //når vi trykker på knappen for å starte opp locationRequests og slike ting.
+                Log.d(TAG,"Start LocationRequests fra servicen  ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤");
+                //TODO: opprette Geofencene og lagre hvor vi er innefor og slikt.
+                break;
+            case RESTART_GEOFENCES:
+                //TODO: reRegistrer Geofencene fra databasen, og sørg for at vi forsatt får hentet ut Location en gang i blandt.
+                break;
+
+            default:
+                //Dette vill si at vi servicen starter opp av seg selv, eller at vi simpelten starter den opp i bakgrunn.
+                break;
+        }
+
         //this can create Error the first time this service is started. We will have to figure out what to do.
         GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent); //henter Geofencet fra intent viss intent kommer fra et GeofenceClass.
                 //ellers så er det bare at vi starter Servicen fra hvilket som helst annet sted.
@@ -218,6 +252,50 @@ public class GeofenceTransitionService extends Service implements
         return START_STICKY; //When service is killed by the system, it will start up again.
     }
 
+/*
+*   Vi må lage en oversikt over de ulike Geofence og derese IDer, samt oppdatere denne oversikten hver gang et Geofence Event framkommer.
+* */
+
+    public static void getGeofences(){ //denne skal lagre alle IDer til geofencec, og lage en oversikt over hvilken vi er innefor.
+
+    }
+
+    /*
+    *   Tar et geofence og oppdaterer statusen basert på denne
+    * */
+    public void updateGeofenceStatus(GeofencingEvent geofencingEvent){
+        if(geofencingEvent == null){//antar det ikke er null og faktisk er et godkjent geofenceEvent.
+            Log.e(TAG,"Error GeofenceEvent er NULL");
+        }else if(geofencingEvent.hasError()){
+            //Dersom det har en error, må vi finne ut hva denne er
+            Log.e(TAG,"############Geofence Error######## :"+geofencingEvent.getErrorCode());
+            /*
+            *   Er 3 forskjellige Statusmeldinger:
+            *           GEOFENCE_NOT_AVAILABLE : Geofence service is not available now.
+            *           GEOFENCE_TOO_MANY_GEOFENCES : Your app has registered more than 100 geofences.
+            *           GEOFENCE_TOO_MANY_PENDING_INTENTS : You have provided more than 5 different PendingIntents to
+            *                               the addGeofences(GoogleApiClient, GeofencingRequest, PendingIntent) call.
+            * */
+
+        }else //viss vi har kommet hit så er alt OK.
+        {
+            geofencingEvent.getGeofenceTransition();
+            //Må først sjekke hva som har skjedd
+            switch (geofencingEvent.getGeofenceTransition()){
+
+                case Geofence.GEOFENCE_TRANSITION_ENTER:
+
+                    break;
+
+                case Geofence.GEOFENCE_TRANSITION_EXIT:
+                    break;
+
+            }
+            //Henter lokasjon, dersom vi bruker Google Play services 5.0 SDK eller nyere.
+            geofencingEvent.getTriggeringLocation();
+
+        }
+    }
 
     public void testing(){
         Geofence geofence = createGeofence(new LatLng(0.1412421,12412412),1231.14f);
@@ -235,9 +313,6 @@ public class GeofenceTransitionService extends Service implements
     /*
     *   GoogleApiClient connection
     * */
-
-
-
 
     private boolean createGoogleApi() {
         Log.d(TAG, "createGoogleApi()");
@@ -283,8 +358,6 @@ public class GeofenceTransitionService extends Service implements
 
         //TODO: loop igjennom Databasen og hent alle geofencer, og gjør disse om til geofence objecter.
 
-
-
         return geofenceList;
     }
 
@@ -292,9 +365,8 @@ public class GeofenceTransitionService extends Service implements
      *  End GeofenceClass
      * */
 
-
     /*  ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
-    *   GeofenceRequest STARt
+    *   GeofenceRequest START
     *   ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
     * */
 
@@ -329,6 +401,51 @@ public class GeofenceTransitionService extends Service implements
     *   GeofenceRequest END
     *   ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
     * */
+
+
+    /*
+    *   Legg til GeofenceRequest til device monitoring list.
+    *
+    * */
+/*
+    private void addGeofence(GeofencingRequest geofenceRequest) {
+        Log.d(TAG, "addGeofence()");
+        if (AppUtils.checkPermission(getsContext())) {//om vi har rettigheter til å få tilgang til Lokasjon.
+            LocationServices.GeofencingApi.addGeofences(
+                    googleApiClient,
+                    geofenceRequest,
+                    createGeofencePendingIntent()
+            ).setResultCallback(this);
+        } else
+            Log.d(TAG, "addGeofence: Manglet permission");
+    } */
+
+        /*
+        In case network location provider is disabled by the user, the geofence service will stop updating, all registered geofences
+        will be removed and an intent is generated by the provided pending intent.
+        In this case, the GeofencingEvent created from this intent represents an error event, where hasError() returns true and getErrorCode() returns GEOFENCE_NOT_AVAILABLE.
+        * */
+
+    private int GEOFENCE_REQ_CODE = 0;
+    private PendingIntent geoFencePendingIntent;
+
+            /* Intent for servicen som skal håndtere Geofence eventene */
+    private PendingIntent createGeofencePendingIntent() {
+        Log.d(TAG, "createGeofencePendingIntent()");
+        //gjenbruker Pendingintentet vårt dersom der alt er laget.
+        if (geoFencePendingIntent != null) {
+            return geoFencePendingIntent;
+        }
+
+        Intent intent = new Intent(this, GeofenceTransitionService.class); //The intent wich will be called when events trigger.
+
+        //FLAG_UPDATE_CURRENT slik at vi får samme Pending intent tilbake når vi kaller addGeofence eller Remove Geofence.
+        return PendingIntent.getService(this, GEOFENCE_REQ_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        //PendingIntent.getService returnerer PendingIntent som skal starte servicen
+        /*Retrieve a PendingIntent that will start a service, like calling Context.startService(). The start arguments given to the service will come from the extras of the Intent.
+        * */
+    }
+
 
     //Generer detaljert melding om geofence
     private String getGeofenceTransitionDetails(int geoFenceTransition, List<Geofence> triggeredeGeofences)
@@ -375,9 +492,9 @@ public class GeofenceTransitionService extends Service implements
         PendingIntent pendingInlogging = PendingIntent.getActivity(this,0,loggInIntent,PendingIntent.FLAG_UPDATE_CURRENT);
 
 
-
+        //Intent for å sette KioskMode til OFF/kunn for testing.
         Intent stopKiosk = new Intent(STOP_KIOSK);
-        PendingIntent pendingStopKiosk = PendingIntent.getBroadcast(getApplicationContext(),0,stopKiosk,PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingStopKiosk = PendingIntent.getBroadcast(getsContext(),0,stopKiosk,PendingIntent.FLAG_UPDATE_CURRENT);
 
         //TODO: koble opp mot Innlogging, gjøres ved å ta ibruk
 
@@ -385,7 +502,6 @@ public class GeofenceTransitionService extends Service implements
         notificationBuilder.addAction(R.drawable.login_48, "Log Inn", pendingInlogging );
         notificationBuilder.addAction(R.drawable.unlock_50, "Stop Kioks Mode",pendingStopKiosk);
         //PendingIntent resultPendingIntent = PendingIntent.getActivities(context, 0, logginIntent, 0);
-
 
         startForeground(mId, notificationBuilder.build()); //Start showing the notification on the (Action)/task bar.
     }
@@ -482,6 +598,36 @@ public class GeofenceTransitionService extends Service implements
         }
     }
 
+    //###############################LOCATION UPDATE STARTING############################
+
+    private LocationRequest locationRequest;
+
+    /*
+    *   setPriority: PRIORITY_BALANCED_POWER_ACCURACY : request "block" level accuracy.
+    *                PRIORITY_HIGH_ACCURACY : request the most accurate locations available.
+    *                PRIORITY_LOW_POWER : request "city" level accuracy.
+                     PRIORITY_NO_POWER : request the best accuracy possible with zero additional power consumption.
+    * */
+
+
+
+    //starter location updates.
+    public void startLocationUpdates(Context context) {//TODO: Bytt til GPS kordinater, fremfor Wifi etc.
+        Log.i(TAG, "startLocationUpdates()");
+        locationRequest = locationRequest.create()
+                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY) //request the most accurate locations available. (tror dette alltid er GPS).
+                .setInterval(PreferenceUtils.getPrefGeofenceUpdateInterval(context))
+                .setFastestInterval(PreferenceUtils.getPrefGeofenceFastestUpdateInterval(context));
+
+        if (AppUtils.checkPermission(context)) {
+            //starter å hente lokasjonen med requesten.
+            Log.d(TAG, "startLocationUpdate() checkPermission: true");
+            LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this);
+        }
+        //locationRequest.
+    }
+
+/*
     public void wakeUpDevice(){
         PowerManager powerManager = ((PowerManager) getSystemService(Context.POWER_SERVICE));
         PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.PARTIAL_WAKE_LOCK  ,"tag");
@@ -505,8 +651,10 @@ public class GeofenceTransitionService extends Service implements
         }
         return wakeLock;
     }
+    */
 
-    PowerManager.WakeLock fullWakeLock;
+    PowerManager.WakeLock fullWakeLock; //Holder på Wakelocken. Viss vi trenger den til senere.
+
     public PowerManager.WakeLock getFullWakeLock(){
 
         PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);

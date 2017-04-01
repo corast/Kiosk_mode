@@ -19,6 +19,13 @@ public class PreferenceUtils {
     private static final String PREF_ADMIN_DEVICE = "pref_admin_device";
     private static final String PREF_KIOSK_APP = "pref_kiosk_application";
 
+    private static final String PREF_GEOFENCE_UPDATE_INTERVAL = "pref_kiosk_geofence_update_interval";
+    private static final String PREF_GEOFENCE_FASTEST_UPDATE_INTERVAL = "pref_kiosk_geofence_fastest_update_interval";
+
+    public static final int ONE_MINUTE_IN_MILIS = 1000*60;
+
+    private static final int DEFAULT_PREF_GEOFENCE_UPDATE_INTERVAL = 5*ONE_MINUTE_IN_MILIS; //5 minutter
+    private static final int DEFAULT_GEOFENCE_FASTEST_UPDATE_INTERVAL = ONE_MINUTE_IN_MILIS; //1 minutt
     private static final String DEFAULT_APP = "com.android.chrome"; //VI setter Chrome nå i starten for å teste.
 
     public static boolean isKioskModeActivated(final Context context){
@@ -28,7 +35,6 @@ public class PreferenceUtils {
         *   Dette må ses på senere. Dersom vi kjører en factory reset, så mister vi alt uansett, Ikke noe vi får gjordt der ifra.
         * */
     }
-
 
     //TODO:finn ut hvem som kan faktisk forandre på denne.
     public static void setKioskModeActive( final Context context, boolean active){
@@ -61,9 +67,7 @@ public class PreferenceUtils {
 
     public static void setPrefkioskModeApp(final String appPackage,final Context context){
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        if(sharedPreferences.edit().putString(PREF_KIOSK_APP, appPackage).commit()){
-
-        }
+        sharedPreferences.edit().putString(PREF_KIOSK_APP, appPackage).apply();
     }
 
     public static String getPrefkioskModeApp(final Context context){
@@ -78,4 +82,31 @@ public class PreferenceUtils {
         }
         return DEFAULT_APP; //Da bare returnere vi Default app stringen, siden den vet vi eksiterer.
     }
+
+/*
+*   Metoder for å hente ut og sette oppdatersings tid på LocationRequests.
+* */
+
+    public static void setPrefGeofenceUpdateInterval(int UPDATE_INTERVAL, final Context context){
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        sharedPreferences.edit().putInt(PREF_GEOFENCE_UPDATE_INTERVAL, UPDATE_INTERVAL).apply();
+    }
+    public static int getPrefGeofenceUpdateInterval(final Context context){
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        //Henter ut Int verdien til update_interval.
+        return sharedPreferences.getInt(PREF_GEOFENCE_FASTEST_UPDATE_INTERVAL,DEFAULT_PREF_GEOFENCE_UPDATE_INTERVAL );
+    }
+
+
+    public static void setPrefGeofenceFastestUpdateInterval(int FASTEST_UPDATE_INTERVAL, final Context context){
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        sharedPreferences.edit().putInt(PREF_GEOFENCE_FASTEST_UPDATE_INTERVAL, FASTEST_UPDATE_INTERVAL).apply();
+    }
+
+    public static int getPrefGeofenceFastestUpdateInterval(final Context context){
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        return sharedPreferences.getInt(PREF_GEOFENCE_FASTEST_UPDATE_INTERVAL,DEFAULT_GEOFENCE_FASTEST_UPDATE_INTERVAL);
+    }
+
+
 }
