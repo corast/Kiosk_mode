@@ -1,7 +1,6 @@
-package com.sondreweb.kiosk_mode_alpha.Database;
+package com.sondreweb.kiosk_mode_alpha.database;
 
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 /**

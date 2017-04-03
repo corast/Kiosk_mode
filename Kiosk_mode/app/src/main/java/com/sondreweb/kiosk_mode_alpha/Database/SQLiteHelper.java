@@ -1,4 +1,4 @@
-package com.sondreweb.kiosk_mode_alpha.Database;
+package com.sondreweb.kiosk_mode_alpha.database;
 
 import android.content.ContentValues;
 import android.content.Context;
