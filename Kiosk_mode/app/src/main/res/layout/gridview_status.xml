@@ -3,17 +3,19 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="120dp"
-    android:layout_height="wrap_content"
+    android:layout_height="120dp"
     android:paddingLeft="5dp"
     android:paddingRight="5dp"
     android:paddingTop="5dp"
     android:paddingBottom="5dp"
-    android:id="@+id/relative_layout_grid_status">
+    android:id="@+id/relative_layout_grid_status"
+    android:focusableInTouchMode="false"
+    android:focusable="false">
 
     <!-- Perfekt bilde størrelse er 50x50 PNG 32 bit color -->
 
-    <ImageButton
-        android:id="@+id/grid_status_image_button"
+    <ImageView
+        android:id="@+id/grid_status_image"
         android:src="@drawable/common_google_signin_btn_icon_light"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -26,7 +28,7 @@
         android:id="@+id/grid_status_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/grid_status_image_button"
+        android:layout_below="@id/grid_status_image"
         android:layout_centerVertical="true"
         android:layout_marginRight="0dp"
         android:maxWidth="100dp"

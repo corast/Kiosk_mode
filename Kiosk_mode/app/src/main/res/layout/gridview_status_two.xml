@@ -4,7 +4,10 @@
     android:orientation="vertical"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:id="@+id/relative_layout_grid_status">
+    android:descendantFocusability="blocksDescendants"
+    android:id="@+id/relative_layout_grid_status"
+    android:focusableInTouchMode="false"
+    android:focusable="false">
 
     <!-- Perfekt bilde størrelse er 50x50 PNG 32 bit color -->
 

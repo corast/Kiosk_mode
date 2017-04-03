@@ -3,6 +3,7 @@ package com.sondreweb.kiosk_mode_alpha.activities;
 import android.app.ActivityManager;
 import android.app.UiModeManager;
 import android.app.admin.DevicePolicyManager;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -12,6 +13,7 @@ import android.content.res.Configuration;
 import android.graphics.PixelFormat;
 import android.os.BatteryManager;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -57,6 +59,8 @@ public class HomeActivity extends FragmentActivity implements
     public final static String TAG = HomeActivity.class.getSimpleName();
     private final static String APP = "com.sondreweb.geofencingalpha";
 
+
+    final float BATTERY_LIMIT = 80f; //hvor mange proset batteriet må minst være på.
     private TextView statusText, googleClientText;
 
     private GridView gridView;
@@ -79,6 +83,10 @@ public class HomeActivity extends FragmentActivity implements
         Log.d(TAG,"Static tag kjører........................................................................................................");
     }
 
+    private BatteryBroadcastReceiver batteryBroadcastReceiver;
+
+    private StatusAdapter statusAdapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG,"onCreate()");
@@ -88,12 +96,7 @@ public class HomeActivity extends FragmentActivity implements
 
         gridView = (GridView)findViewById(R.id.grid_status_view);
         gridView.setGravity(Gravity.FILL_HORIZONTAL);
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Log.d(TAG,"onItemClick listerner er trykket" + view.toString());
-            }
-        });
+
         startKioskButton = (Button) findViewById(R.id.button_start_kiosk);
 
         googleClientText = (TextView) findViewById(R.id.text_googleApiConnection);
@@ -132,6 +135,42 @@ public class HomeActivity extends FragmentActivity implements
         startAccessibilityService();
         //isAppInstalled(this, "testing");
         startConsumeView();
+
+
+        batteryBroadcastReceiver = new BatteryBroadcastReceiver();
+
+        //lager statusAdapteret vi trenger til senere.
+        statusAdapter = new StatusAdapter(HomeActivity.this);
+
+
+        gridView.setOnItemClickListener(new OnStatusItemClickListener());
+    }
+
+        /*
+        *   OnItemClickListnener for GridViewet med statuser.
+        * */
+    public class OnStatusItemClickListener implements AdapterView.OnItemClickListener{
+         private final String TAG = "HomeActivity:"+OnStatusItemClickListener.class.getSimpleName();
+         StatusInfo statusInfo = null;
+
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            //TODO: gjør de ulike tingene.
+            Log.d(TAG,parent.getItemAtPosition(position).toString());
+            Log.d(TAG,"Class: "+parent.getItemAtPosition(position).getClass() );
+            try {
+
+                statusInfo = (StatusInfo) parent.getItemAtPosition(position);
+                //Tilfelle det er feil klasse, men dette skal strengt tatt aldri skje, siden adaptere kunn legger ut StatusInfo objecter.
+            }catch (ClassCastException e){
+                Log.e(TAG,e.getLocalizedMessage());
+            }
+
+            Log.d(TAG,statusInfo.getName());
+            //enten så må vi sendes til settings.
+
+            //eller vi må simpelten skru på noe.
+        }
     }
 
     //Create GoogleApiClient Instance
@@ -155,24 +194,35 @@ public class HomeActivity extends FragmentActivity implements
           return null;
     }
 
-
     /*
     *   Liste som holder på alle statusene våre. Denne må oppdateres kontinuelig, ved forandring på systemet.
     * */
     public ArrayList<StatusInfo> statusList = new ArrayList<>() ;
 
-
-    /*
+    /* ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤STATUS¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
     *   Lager en Liste med Statuser, som inneholder navn og en bool
     *   hvor boolen forteller om statusen er klar.
     *   Når alt er klart kan vi begynne Vandringen(MonumentVandring).
     * */
     public void createAndUpdateStatusList(){
-        if(! statusList.isEmpty()){
+        if(! statusList.isEmpty()){//dersom den ikke er tom.
+            Log.d(TAG,"statusList ikke tom");
             statusList = new ArrayList<>(); //tømmer listen.
         }
-        //Må først sjekke
-            StatusInfo status; //status objekt som vi bare kan bruke, mulig dette er litt dårlig, siden vi får samme objekt med ulike parametere.
+
+        /*
+        *   Tester med
+        * */
+
+        String AccessibilitySettings = android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS;
+        String DeviceAdminSettings = Settings.ACTION_SECURITY_SETTINGS;
+        String DeviceAdminSettingsTest = "com.android.settings.DeviceAdminSettings";
+
+        String LocationSettings = Settings.ACTION_LOCATION_SOURCE_SETTINGS;
+
+
+
+        StatusInfo status; //status objekt som vi bare kan bruke, mulig dette er litt dårlig, siden vi får samme objekt med ulike parametere.
 
         status = new StatusInfo("Google Play Services");
         if(AppUtils.isGooglePlayServicesAvailable(this)){
@@ -207,21 +257,47 @@ public class HomeActivity extends FragmentActivity implements
         }
         statusList.add(status);
 
-        //
+
+        //Må sjekke at Location er enabled
+        status = new StatusInfo("Location Enabled");
+        if(AppUtils.checkPermission(this)){
+            status.setStatus(true);
+        }else{
+            status.setStatus(false);
+        }
+
+        statusList.add(status);
+
+
+        /*
+        *   Dette kan ha problemer med tanke på at under bruk vill vi stupe under.
+        * */
+        //Må sjekke at Location er enabled
+        status = new StatusInfo("Battery ");
+        if(HomeActivity.getLevel() >= BATTERY_LIMIT ){
+            status.setStatus(true);
+        }else{
+            status.setStatus(false);
+        }
+        statusList.add(status);
+
 
         Log.d(TAG, statusList.toString());
 
 
-        StatusAdapter statusAdapter = new StatusAdapter(HomeActivity.this);
+        if(!statusAdapter.isEmpty()){ //Må tømme AraryAdaptere for items, dersom vi gjør forandringer i ArrayListen.
+            statusAdapter.clear();
+        }
+
         statusAdapter.setData(statusList);
         gridView.setAdapter(statusAdapter);
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Log.d(TAG,view.toString());
-            }
-        });
+
+        //TODO: Onclick på GridView eventene.
     }
+
+
+    //TODO: logikk på om vi er klare til å starte.
+    //Noen ting kan vi faktisk bare sette på selv, som TouchViewet ivertfall.
 
     public boolean allStatusTrue(){
         for(StatusInfo s : statusList){
@@ -243,32 +319,26 @@ public class HomeActivity extends FragmentActivity implements
     @Override
     protected void onStart() {//Ved onstart burde vi sjekke ulike ting.
         Log.d(TAG,"onStart()");
+
+        //Registerer BroadcastRecievern for battery med IntentFilter ACTION_BATTERY_CHANGED.
+        Intent intent = registerReceiver(batteryBroadcastReceiver,new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+
+        //Henter ut nåværende verdi om batteriet.
+        try {
+            level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1); //Nåværende battery level. fra 0 til scale.
+            scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1); //Maximun battery level
+        }catch (NullPointerException e){
+            Log.e(TAG, e.toString());
+        }
+
         createGoogleApi(); //Tilfelle det er null.
 
         createAndUpdateStatusList(); //oppdaterer listen.
 
-        if(PreferenceUtils.isAppDeviceAdmin(this)){
-            statusText.setText("Vi er device admin");
-        }else{
-            statusText.setText("Vi er IKKE device admin");
-        }
-
-        if(AppUtils.isDeviceOwner(this)){
-            statusText.append(" | Vi er Device Owner");
-        }else{
-            statusText.append(" | Vi er IKKE Device Owner");
-        }
-
-        if(AppUtils.isAccessibilitySettingsOn(this)){
-            statusText.append(" | Accessibillity service er på");
-        }else{
-            statusText.append(" | Accessibility service er IKKE på");
-        }
-
         if(AppUtils.isServiceRunning(GeofenceTransitionService.class,this)){
-            statusText.append("\nGeofenceTransitionService kjører");
+            statusText.setText("GeofenceTransitionService kjører");
         }else{
-            statusText.append("\nGeofenceTransitionService er IKKE startet");
+            statusText.setText("GeofenceTransitionService er IKKE startet");
         }
 
         if(AppUtils.isGooglePlayServicesAvailable(this)){
@@ -314,7 +384,7 @@ public class HomeActivity extends FragmentActivity implements
 
         float batteryLevel = ((float)level / (float)scale) * 100.0f;
         if(level == -1 || scale == -1){
-
+            //error tror jeg?
         }else
         {
             statusText.append("\n Battery nivå: " + batteryLevel + " %");
@@ -606,13 +676,19 @@ public class HomeActivity extends FragmentActivity implements
         ActivityManager activityManager = (ActivityManager) getApplicationContext()
                 .getSystemService(Context.ACTIVITY_SERVICE);
 
+        //TODO: queryBroadcastReceivers
+        try { //unregister reciever dersom den forsatt er registert.
+            unregisterReceiver(batteryBroadcastReceiver); //unregisterer recievern, siden vi ikke er interesert i batteri nivået lenger.
+        }catch(IllegalArgumentException e){
+            Log.e(TAG,e.getMessage());
+        }
         //activityManager.moveTaskToFront(getTaskId(),0);
 
         ComponentName cn = this.getComponentName();
         Log.d(TAG,cn.toString());
 
         //Husker ikke hva denne var for, muligens Recent button problemer.
-        if(cn != null && ! cn.getClassName().equals(getClass().getName())){
+        if(! cn.getClassName().equals(getClass().getName())){
             Log.d(TAG, "CN true, er recent button");
             activityManager.moveTaskToFront(getTaskId(), 0);
         }
@@ -657,6 +733,7 @@ public class HomeActivity extends FragmentActivity implements
         //TODO: Hopp til MonumentVandring
 
         Intent intent = getPackageManager().getLaunchIntentForPackage(PreferenceUtils.getPrefkioskModeApp(context));
+
         if(intent != null){
             this.startActivity(intent);
         }else{ //dersom intent er null, så har vi et problem
@@ -777,6 +854,45 @@ public class HomeActivity extends FragmentActivity implements
     public void unlockScreenNow(){
         if(PreferenceUtils.isAppDeviceAdmin(this)) {
             DevicePolicyManager devicePolicyManager = (DevicePolicyManager) this.getSystemService(Context.DEVICE_POLICY_SERVICE);
+        }
+    }
+
+    /*
+    *   Broadcast reciever
+    * */
+    public static int level = -1;
+    public static int scale = -1;
+
+
+    public static float getLevel(){
+        float batteryLevel = ((float)level / (float)scale) * 100.0f;
+        if(level == -1 || scale == -1){
+            //error tror jeg?
+            return 0;
+        }else
+        {
+            return batteryLevel;
+        }
+    }
+
+    //Indre classe som tar hånd om å hente ut batterinivået når det forandres.
+    /*
+     *  IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+     */
+
+    public class BatteryBroadcastReceiver extends BroadcastReceiver{
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            //denne skal oppdatere variablene våre, når det er nødvendig.
+            level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1); //Nåværende battery level. fra 0 til scale.
+            scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1); //Maximun battery level
+            Log.d(TAG+"Battery", "level: "+((float)level/(float)scale*100.0f) );
+
+            //Oppdaterer GridView listen.
+            createAndUpdateStatusList();
+
+            //TODO: update status listen.
         }
     }
 }

@@ -6,9 +6,11 @@ import android.app.ActivityManager;
 import android.app.admin.DevicePolicyManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.net.Uri;
+import android.os.BatteryManager;
 import android.os.Environment;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
@@ -305,6 +307,23 @@ public class AppUtils{
 
     public static boolean isNotificationMenuLocked(){ //denne må sjekke om touchEvent Viewet eksisterer og er synelig.
         return true;
+    }
+
+    public float getBatteryLevel(Context context){
+        Intent batteryIntent = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        int level = batteryIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1); //Nåværende battery level. fra 0 til scale.
+        int scale = batteryIntent.getIntExtra(BatteryManager.EXTRA_SCALE, -1); //Maximun battery level
+
+        float batteryLevel = ((float)level / (float)scale) * 100.0f;
+        if(level == -1 || scale == -1){
+            //error tror jeg?
+            return 0;
+        }else
+        {
+            return batteryLevel;
+            //statusText.append("\n Battery nivå: " + batteryLevel + " %");
+        }
+
     }
 
 }

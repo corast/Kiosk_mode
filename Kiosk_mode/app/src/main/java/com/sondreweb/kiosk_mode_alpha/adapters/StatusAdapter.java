@@ -1,6 +1,7 @@
 package com.sondreweb.kiosk_mode_alpha.adapters;
 
 import android.content.Context;
+import android.media.Image;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -9,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -37,7 +39,8 @@ public class StatusAdapter extends ArrayAdapter<StatusInfo>{
     }
 
     private static class ViewHolder{
-        ImageButton icon;
+
+        ImageView icon;
         TextView label;
         RelativeLayout rLayout;
     }
@@ -73,8 +76,9 @@ public class StatusAdapter extends ArrayAdapter<StatusInfo>{
             viewHolder = new StatusAdapter.ViewHolder();
             convertView = inflater.inflate(R.layout.gridview_status, parent,false);
 
-            viewHolder.icon = (ImageButton) convertView.findViewById(R.id.grid_status_image_button);
+            viewHolder.icon = (ImageView) convertView.findViewById(R.id.grid_status_image);
             viewHolder.label = (TextView) convertView.findViewById(R.id.grid_status_name);
+
             viewHolder.rLayout = (RelativeLayout) convertView.findViewById(R.id.relative_layout_grid_status);
 
             convertView.setTag(viewHolder);
