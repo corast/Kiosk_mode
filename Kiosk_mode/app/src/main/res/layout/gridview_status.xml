@@ -2,8 +2,8 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
-    android:layout_width="120dp"
-    android:layout_height="120dp"
+    android:layout_width="130dp"
+    android:layout_height="130dp"
     android:paddingLeft="5dp"
     android:paddingRight="5dp"
     android:paddingTop="5dp"
@@ -12,9 +12,24 @@
     android:focusableInTouchMode="false"
     android:focusable="false">
 
+
+    <TextView
+        android:id="@+id/grid_status_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_marginRight="0dp"
+        android:maxWidth="120dp"
+        android:paddingRight="0dp"
+        android:text="Navnet på statusen"
+        android:textAlignment="center"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:textColor="@color/colorPrimaryDark" />
     <!-- Perfekt bilde størrelse er 50x50 PNG 32 bit color -->
 
     <ImageView
+        android:layout_below="@id/grid_status_name"
         android:id="@+id/grid_status_image"
         android:src="@drawable/common_google_signin_btn_icon_light"
         android:layout_width="wrap_content"
@@ -25,15 +40,15 @@
         android:padding="0dp"/>
 
     <TextView
-        android:id="@+id/grid_status_name"
+        android:id="@+id/grid_status_info"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/grid_status_image"
         android:layout_centerVertical="true"
         android:layout_marginRight="0dp"
-        android:maxWidth="100dp"
+        android:maxWidth="120dp"
         android:paddingRight="0dp"
-        android:text="testing mass tekst"
+        android:text="Masse tekst som beskriver statuse i mer detalj."
         android:textAlignment="center"
         android:layout_centerInParent="true"
         android:textColor="@color/colorPrimaryDark" />

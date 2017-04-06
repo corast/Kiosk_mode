@@ -38,22 +38,15 @@
         android:horizontalSpacing="10dp"
         android:verticalSpacing="10dp"
         android:columnWidth="120dp"
+        android:gravity="fill_horizontal"
         />
-
-
-    <TextView
-        android:id="@+id/text_googleApiConnection"
-        android:layout_width="wrap_content"
-        android:text=" Not Connected"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/grid_status_view"/>
 
     <Button
         android:id="@+id/button_start_kiosk"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_below="@id/text_googleApiConnection"
+        android:layout_below="@id/grid_status_view"
         android:text="Start Kiosk mode"
         android:onClick="startKioskMode"
         />
@@ -101,7 +94,8 @@
         android:layout_height="wrap_content"
         android:layout_above="@+id/button_stop_kiosk"
         android:text="Togle touchView"
-        android:onClick="toogleTouchView"/>
+        android:onClick="toogleTouchView"
+        android:visibility="gone"/>
 
     <Button
         android:id="@+id/button_stop_kiosk"

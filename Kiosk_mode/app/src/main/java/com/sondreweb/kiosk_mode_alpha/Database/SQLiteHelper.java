@@ -8,6 +8,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.model.LatLng;
+import com.sondreweb.kiosk_mode_alpha.classes.GeofenceClass;
+import com.sondreweb.kiosk_mode_alpha.services.GeofenceTransitionService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,9 +22,9 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
     public static final String TAG = SQLiteHelper.class.getName();
 
-    private static final String REQUEST_ID_HEAD = "geofence_";
+    private static final String id_HEAD = "geofence_";
 
-    public static final int DATABASE_VERSION  = 1; //ved forandring av database schemet må vi forandre denne.
+    private static final int DATABASE_VERSION  = 1; //ved forandring av database schemet må vi forandre denne.
     //realistisk sett, så burde egentlig hele databasen byttes ut ved forandring, ivertfall ikke der hvor profil data ligger.
 
     private static SQLiteHelper instance; //viss databasen er åpen kan vi bare bruke denne.
@@ -32,7 +34,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     public static final String DATABASE_NAME = "geofence.db";
 
     //dette er samme som FeedReaderDbHelper fra developer.android om databaser.
-    public SQLiteHelper(Context context) {
+    private SQLiteHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
@@ -71,7 +73,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
         ArrayList<Geofence> geofenceArrayList = new ArrayList<>();
 
-        String selectQuery = "SELECT * FROM "+GeofenceTable.TABLE_GEOFENCE;
+        String selectQuery = "SELECT * FROM "+GeofenceTable.TABLE_NAME;
 
         Cursor cursor = db.rawQuery(selectQuery, null);
 
@@ -82,7 +84,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
                         .setCircularRegion(cursor.getDouble(cursor.getColumnIndex(GeofenceTable.COLUMN_LATITUDE)),
                                 cursor.getDouble(cursor.getColumnIndex(GeofenceTable.COLUMN_LONGITUDE)),
                                 cursor.getFloat(cursor.getColumnIndex(GeofenceTable.COLUMN_RADIUS)))
-                        .setRequestId(REQUEST_ID_HEAD+cursor.getString(cursor.getColumnIndex(GeofenceTable.COLUMN_GEOFENCE_ID)))
+                        .setRequestId(id_HEAD+cursor.getString(cursor.getColumnIndex(GeofenceTable.COLUMN_GEOFENCE_ID)))
                         .build());
 
             }while (cursor.moveToNext());
@@ -104,8 +106,51 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         values.put(GeofenceTable.COLUMN_LONGITUDE, latLng.longitude);
         values.put(GeofenceTable.COLUMN_RADIUS, radius);
 
-        return db.insertOrThrow(GeofenceTable.TABLE_GEOFENCE, null, values); //vi får en ID tilbake, eller så kaster vi en error.
+        return db.insertOrThrow(GeofenceTable.TABLE_NAME, null, values); //vi får en ID tilbake, eller så kaster vi en error.
     }
+
+    /*
+    *   Vider utvikling, legge til flere typer Geofence, foreksempel en egen for Vandring.
+    * */
+
+    //legg til et array av Geofence med en gang, og fjern de gamle?
+    public List<Long> addGeofences(List<Geofence> geofences){
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+
+        //TODO: legg til flere geofence samtidig.
+
+        return new ArrayList<>();
+    }
+
+    //TODO sjekk gamel versjon av databasen, for om den trenger syncing eller ikke.
+
+    //For syncing av databasen.
+    public boolean replaceGeofences(List<GeofenceClass> geofences){
+        SQLiteDatabase db = this.getWritableDatabase();
+        //TODO lagre en kopi av gamel data også
+
+        //Slette all data fra databasen.
+        db.execSQL("DELETE FROM "+GeofenceTable.TABLE_NAME);
+
+        for (GeofenceClass geofence:
+                geofences) {
+            //Legger til alle Geofence objektene.
+            addGeofence(geofence.getLatLng(), geofence.getRadius());
+        }
+
+        for (GeofenceClass geofence:
+             geofences) {
+            //Legger til alle Geofence objektene.
+            addGeofence(geofence.getLatLng(), geofence.getRadius());
+        }
+
+
+
+        return true;
+    }
+
 
 
 }
