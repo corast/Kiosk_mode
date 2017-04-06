@@ -1,5 +1,7 @@
 package com.sondreweb.kiosk_mode_alpha.classes;
 
+import com.google.android.gms.maps.model.LatLng;
+
 import java.util.List;
 
 /**
@@ -16,17 +18,36 @@ public class GeofenceClass {
 
     private static List<GeofenceClass> geofenceList;
 
-    String id; //ID to diffentiate the geofences.
+    String requestId; //ID to diffentiate the geofences.
     double latitude; //Placement in Lat
     double longitude; //Placement in lon
     float radius; //Radius of the GeofenceClass.
 
-    public GeofenceClass(String id, double latitude, double longitude, float radius){
-        this.id = id;
+    public GeofenceClass(String requestId, double latitude, double longitude, float radius){
+        this.requestId = requestId;
         this.latitude = latitude;
         this.longitude = longitude;
         this.radius = radius;
     }
 
+    //For når vi skal legge geofence til database, da trenger vi ikke bry oss om annet en LatLng og radius, siden det lages en request id ved insetting.
+    public GeofenceClass(double latitude, double longitude, float radius){
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.radius = radius;
+    }
+
+    public String getRequestId(){
+        return requestId;
+    }
+
+    public LatLng getLatLng(){
+        //lager et LatLng object av dette.
+       return new LatLng(latitude, longitude);
+    }
+
+    public float getRadius(){
+        return radius;
+    }
 
 }

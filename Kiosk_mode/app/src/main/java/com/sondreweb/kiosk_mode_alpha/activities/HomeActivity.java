@@ -53,8 +53,7 @@ import java.util.ArrayList;
  * TODO: Ta i bruk SettingsApi, ved å først koble til Google Api Client.
  */
 public class HomeActivity extends FragmentActivity implements
-        ActivityCompat.OnRequestPermissionsResultCallback, GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener{
+        ActivityCompat.OnRequestPermissionsResultCallback{
 
     public final static String TAG = HomeActivity.class.getSimpleName();
     private final static String APP = "com.sondreweb.geofencingalpha";
@@ -95,11 +94,9 @@ public class HomeActivity extends FragmentActivity implements
         //this.startActivity(intent);
 
         gridView = (GridView)findViewById(R.id.grid_status_view);
-        gridView.setGravity(Gravity.FILL_HORIZONTAL);
 
         startKioskButton = (Button) findViewById(R.id.button_start_kiosk);
 
-        googleClientText = (TextView) findViewById(R.id.text_googleApiConnection);
         statusText = (TextView) findViewById(R.id.home_text);
         //Lager en ny Component Indentifier fra en classe. Men hvorfor?
             //TODO: finn ut hva dette faktisk gjør.
@@ -120,7 +117,7 @@ public class HomeActivity extends FragmentActivity implements
 
         /* Initalize google API client.(Trenger ikke nyeste Versjon av Servicen for dette)
         * */
-        createGoogleApi();
+
 
         /*if(AppUtils.isGooglePlayServicesAvailableAndPoll(this,this)){
             //createGoogleApi(); //lager GoogleApiClienten vår.
@@ -159,7 +156,6 @@ public class HomeActivity extends FragmentActivity implements
             Log.d(TAG,parent.getItemAtPosition(position).toString());
             Log.d(TAG,"Class: "+parent.getItemAtPosition(position).getClass() );
             try {
-
                 statusInfo = (StatusInfo) parent.getItemAtPosition(position);
                 //Tilfelle det er feil klasse, men dette skal strengt tatt aldri skje, siden adaptere kunn legger ut StatusInfo objecter.
             }catch (ClassCastException e){
@@ -168,24 +164,23 @@ public class HomeActivity extends FragmentActivity implements
 
             Log.d(TAG,statusInfo.getName());
             //enten så må vi sendes til settings.
+            if(statusInfo.getName().equalsIgnoreCase("TouchView")){
+                //dersom vi har trykket på TouchView så må vi toggle TouchViewet.
+                toogleTouchView(null);
+            }
 
             //eller vi må simpelten skru på noe.
+
+            //Må gjøre en oppdatering på Statuslisten.
+            //Siden vi ikke faktisk gør en forandring på Arrayet, som er egentlig det vi burde.
+
+            createAndUpdateStatusList();
+
         }
+
+
     }
 
-    //Create GoogleApiClient Instance
-    private boolean createGoogleApi() {
-        Log.d(TAG, "createGoogleApi()");
-        if (googleApiClient == null) {
-            googleApiClient = new GoogleApiClient.Builder(this)
-                    .addConnectionCallbacks(this)
-                    .addOnConnectionFailedListener(this)
-                    .addApi(LocationServices.API)
-                    .build();
-            Log.d(TAG,"googleApiClient: "+googleApiClient.toString());
-        }
-        return true;
-    }
 
     public static GoogleApiClient createGoogleApiClient(){
         if(googleApiClient != null){
@@ -211,13 +206,12 @@ public class HomeActivity extends FragmentActivity implements
         }
 
         /*
-        *   Tester med
+        *   Tester med ulike settings.
         * */
 
         String AccessibilitySettings = android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS;
         String DeviceAdminSettings = Settings.ACTION_SECURITY_SETTINGS;
         String DeviceAdminSettingsTest = "com.android.settings.DeviceAdminSettings";
-
         String LocationSettings = Settings.ACTION_LOCATION_SOURCE_SETTINGS;
 
 
@@ -260,7 +254,7 @@ public class HomeActivity extends FragmentActivity implements
 
         //Må sjekke at Location er enabled
         status = new StatusInfo("Location Enabled");
-        if(AppUtils.checkPermission(this)){
+        if(AppUtils.checkLocationPermission(this)){
             status.setStatus(true);
         }else{
             status.setStatus(false);
@@ -280,6 +274,43 @@ public class HomeActivity extends FragmentActivity implements
             status.setStatus(false);
         }
         statusList.add(status);
+
+        /*
+        *   Status på om vi er HOME launcher.
+        * */
+
+        status = new StatusInfo("Home ");
+        if(AppUtils.isDefault(this,this.getComponentName())){
+            status.setStatus(true);
+        }else{
+            status.setStatus(false);
+        }
+        statusList.add(status);
+
+
+        status = new StatusInfo("Status 1");
+        status.setStatus(true);
+        statusList.add(status);
+
+        status = new StatusInfo("Status 2");
+        status.setStatus(true);
+        statusList.add(status);
+
+        status = new StatusInfo("Status 3");
+        status.setStatus(true);
+        statusList.add(status);
+
+        status = new StatusInfo("Status 4");
+        status.setStatus(true);
+        statusList.add(status);
+        status = new StatusInfo("Status ...");
+        status.setStatus(true);
+        statusList.add(status);
+
+        status = new StatusInfo("Status n ");
+        status.setStatus(true);
+        statusList.add(status);
+
 
 
         Log.d(TAG, statusList.toString());
@@ -331,7 +362,7 @@ public class HomeActivity extends FragmentActivity implements
             Log.e(TAG, e.toString());
         }
 
-        createGoogleApi(); //Tilfelle det er null.
+
 
         createAndUpdateStatusList(); //oppdaterer listen.
 
@@ -347,13 +378,15 @@ public class HomeActivity extends FragmentActivity implements
             statusText.append(" | Google Play Services er IKKE tilgjengelig med gammel utgave");
         }
 
-        if(AppUtils.checkPermission(this)){
+        if(AppUtils.checkLocationPermission(this)){
             statusText.append("\nVi har rettigheter til Lokasjon tilgjengelig");
         }else
         {
-            AppUtils.askPermission(this);
+            AppUtils.askLocationPermission(this);
             statusText.append("\nVi har IKKE rettigheter til Lokasjon tilgjengelig");
         }
+
+
 
         if(AppUtils.isGpsProviderAvailable(this)){
             statusText.append("\nLocation GPS provider er enabled");
@@ -369,13 +402,6 @@ public class HomeActivity extends FragmentActivity implements
         }else
         {
             statusText.append("\nLocation Network provider er disabled");
-        }
-
-        if(googleApiClient.isConnected()){
-            googleClientText.setText("googleApiClienten er connected");
-        }else
-        {
-            googleClientText.setText("googleApiClienten er IKKE connected");
         }
 
         Intent batteryIntent = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
@@ -530,18 +556,26 @@ public class HomeActivity extends FragmentActivity implements
         if(touchView != null){
             touchView.setVisibility(View.VISIBLE);
         }
-
     }
 
     private boolean toogle = true;
 
     public void toogleTouchView(View view){
+        /*
         if(toogle){
             disableTouchView();
             toogle = false;
         }else {
             enableTouchView();
             toogle = true;
+        } */
+
+        if(touchView != null){
+            if(touchView.getVisibility() == View.GONE){
+                touchView.setVisibility(View.VISIBLE);
+            }else {
+                touchView.setVisibility(View.GONE);
+            }
         }
     }
 
@@ -619,6 +653,7 @@ public class HomeActivity extends FragmentActivity implements
         }
 
         super.onResume();
+        createAndUpdateStatusList();
         Log.d(TAG,"onResume()");
 
         hideSystemUiTest();
@@ -789,54 +824,6 @@ public class HomeActivity extends FragmentActivity implements
         }
     }
 
-    /*                                 CALLBACKS                                        */
-    /*¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤GoogleApiClient.ConnectionCallbacks¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤*/
-
-    /**
-     *  Når Google Clienten connecter successfully kjøres denne.
-     */
-
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        Log.d(TAG,"Vi er Connected med GoogleAPiClienten");
-        googleClientText.setText("googleApiClienten er connected");
-    }
-
-    /**
-     * Når Google Client minster forbindelsne kjørere denne.
-     */
-
-    @Override
-    public void onConnectionSuspended(int i) {
-        Log.d(TAG,"Mister connection med GoogleApiClienten");
-        googleClientText.setText("googleApiclienten: onConnectionSuspended");
-    }
-
-    /*#######################GoogleApiClient.ConnectionCallbacks#######################*/
-    /*                                   END                                           */
-
-    /*                                 CALLBACKS                                        */
-    /*¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤GoogleApiClient.OnConnectionFailedListener¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤*/
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.d(TAG,"Failed to connect googleAPiClient"); //Muligens Gammel Versjon av
-        //TODO: Finn ut hva problemet kan være og koble til på nytt.
-
-        //TODO: Be bruker oppdatere GooglePlayService, dersom gammel versjon.
-        googleClientText.setText("googleApiClienten on ConnectionFailed");
-    }
-
-/*#######################END oogleApiClient.OnConnectionFailedListener###############*/
-
-    /* GET FUNCTIONS */
-    public GoogleApiClient getGoogleApiClient(){
-        if(googleApiClient != null){
-            return googleApiClient;
-        }
-        this.createGoogleApi();
-        return googleApiClient;
-    }
     /* SET FUNCTIONS*/
 
     public void stopKioskMode(View view){
@@ -862,8 +849,9 @@ public class HomeActivity extends FragmentActivity implements
     * */
     public static int level = -1;
     public static int scale = -1;
+    public String id;
 
-
+    //Regn ut batteri nivået i prosent.
     public static float getLevel(){
         float batteryLevel = ((float)level / (float)scale) * 100.0f;
         if(level == -1 || scale == -1){
@@ -873,6 +861,7 @@ public class HomeActivity extends FragmentActivity implements
         {
             return batteryLevel;
         }
+
     }
 
     //Indre classe som tar hånd om å hente ut batterinivået når det forandres.

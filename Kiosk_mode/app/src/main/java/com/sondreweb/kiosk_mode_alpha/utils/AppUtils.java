@@ -1,9 +1,11 @@
 package com.sondreweb.kiosk_mode_alpha.utils;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.admin.DevicePolicyManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -11,6 +13,7 @@ import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.BatteryManager;
+import android.os.Build;
 import android.os.Environment;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
@@ -26,6 +29,7 @@ import com.google.android.gms.location.LocationServices;
 import com.sondreweb.kiosk_mode_alpha.services.AccessibilityService;
 
 import java.io.File;
+import java.util.ArrayList;
 
 /**
  * Created by sondre on 03-Mar-17.
@@ -212,16 +216,16 @@ public class AppUtils{
 
 
     //Sjekker om vi har permission for å få tak i FINE_LOCATION (accurate location), Dette vill si at vi kan bruke GPS og WIFI for å finne lokasjon.
-    public static boolean checkPermission(Context context) {
+    public static boolean checkLocationPermission(Context context) {
         boolean permissionGranted = ContextCompat.checkSelfPermission(context,
                 Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
-        Log.d(TAG, "checkPermission() result: "+permissionGranted);
+        Log.d(TAG, "checkLocationPermission() result: "+permissionGranted);
         return permissionGranted;
     }
 
     //spør om permission viss det ikke er gitt på å få tak i Fine location.
-    public static void askPermission(Activity activity) {
-        Log.d(TAG, "askPermission()");
+    public static void askLocationPermission(Activity activity) {
+        Log.d(TAG, "askLocationPermission()");
         ActivityCompat.requestPermissions(activity,
                 new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                 REQ_PERMISSION
@@ -236,7 +240,7 @@ public class AppUtils{
     //sjekker GoogleApiClienteten om den faktisk klarere p hente Location.
     public static boolean checkLocationAvailabillity(Context context,GoogleApiClient googleApiClient) { //Denne returnere true dersom vi har Location enabled og faktisk driver å henter locationfra google clientent.
         Log.d(TAG,"checkLocationAvailabillity "+ LocationServices.FusedLocationApi.getLocationAvailability(googleApiClient).isLocationAvailable());
-        if(checkPermission(context)) { //sjekker om vi har rettigheter først og fremst(forhindrer Error dersom vi har mistet de underveis av en eller annen grunn).
+        if(checkLocationPermission(context)) { //sjekker om vi har rettigheter først og fremst(forhindrer Error dersom vi har mistet de underveis av en eller annen grunn).
             return LocationServices.FusedLocationApi.getLocationAvailability(googleApiClient).isLocationAvailable();
             //sjekker location er tilgjenngelig.
         }
@@ -325,5 +329,27 @@ public class AppUtils{
         }
 
     }
+
+    public static boolean isDefault(Context context,ComponentName component) {
+        ArrayList<ComponentName> components = new ArrayList<ComponentName>();
+        ArrayList<IntentFilter> filters = new ArrayList<IntentFilter>();
+        context.getPackageManager().getPreferredActivities(filters, components, null);
+        return components.contains(component);
+    }
+
+/*
+    public static boolean canWriteSettings(Context context){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.System.canWrite(context)) {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:" + context.getPackageName()));
+                context.startActivity(intent, 200);
+                context.startActivityForResult
+                return true;
+            }
+        }
+        return false;
+    } */
+
+
 
 }

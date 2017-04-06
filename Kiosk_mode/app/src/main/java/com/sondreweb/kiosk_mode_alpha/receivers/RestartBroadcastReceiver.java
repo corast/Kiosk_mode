@@ -15,13 +15,9 @@ import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
  * WakefulBroadcastReciever slik at telefonen ikke kan gå i sleepmode før denne er ferdig å kjøre.
  */
 
-public class RestartBroadcastReciever extends WakefulBroadcastReceiver {
+public class RestartBroadcastReceiver extends WakefulBroadcastReceiver {
 
-    private final static String TAG = RestartBroadcastReciever.class.getSimpleName();
-
-    /*Broadcast Cases som vi bruker*/
-    private final static String BOOT_COMPLETED = "android.intent.action.BOOT_COMPLETED";
-    private final static String SCREEN_OFF = "android.intent.action.BOOT_COMPLETED";
+    private final static String TAG = RestartBroadcastReceiver.class.getSimpleName();
 
     //denne lytter kunn til com.sondreweb.GeoFencingAlpha.Activity.RestartGeofencing.
     @Override
@@ -35,7 +31,9 @@ public class RestartBroadcastReciever extends WakefulBroadcastReceiver {
             case Intent.ACTION_BOOT_COMPLETED:
                 //TODO: re-registrer Geofencet igjenn.
                 //sendToast(context);
-                checkIfGeofenceIsAlive(context);
+                //checkIfGeofenceIsAlive(context);
+
+                checkIfServiceRunning(context);
                 sendToast(context);
                 break;
             case Intent.ACTION_SCREEN_OFF:
@@ -57,9 +55,26 @@ public class RestartBroadcastReciever extends WakefulBroadcastReceiver {
             if(PreferenceUtils.isKioskModeActivated(context)) { //Dersom Kiosk Mode er activatet, så kan vi også starte Servicen vår.
                 //dersom servicen vår ikke kjører, så starter vi den.
                 //TODO Legg til actions viss det trengs å vite hvor servicen startet fra.
-                Intent GeofenceTransitionService = new Intent(context, GeofenceTransitionService.class);
-                GeofenceTransitionService.setAction("RESTART"); //slik at vi vet at det mobilen har blir resatt, vi må då muligens gå direkte til MonumentVandring.
-                context.startService(GeofenceTransitionService);
+                Intent GeofenceTransitionServiceIntent = new Intent(context, GeofenceTransitionService.class);
+                GeofenceTransitionServiceIntent.setAction(GeofenceTransitionService.RESTART_GEOFENCES); //slik at vi vet at det mobilen har blir resatt, vi må då muligens gå direkte til MonumentVandring.
+                context.startService(GeofenceTransitionServiceIntent);
+            }
+        }
+    }
+
+    public void checkIfServiceRunning(Context context){
+        if(! AppUtils.isServiceRunning(GeofenceTransitionService.class, context)){
+            if(AppUtils.isGooglePlayServicesAvailable(context)){
+                //Servicen kjører ikke, men googlePlayService er tilgjengelig.
+                Intent GeofenceTransitionServiceIntent = new Intent(context, GeofenceTransitionService.class);
+                GeofenceTransitionServiceIntent.setAction(GeofenceTransitionService.RESTART_GEOFENCES); //slik at vi vet at det mobilen har blir resatt, vi må då muligens gå direkte til MonumentVandring.
+                context.startService(GeofenceTransitionServiceIntent);
+            }
+            else
+            {
+                Intent GeofenceTransitionServiceIntent = new Intent(context, GeofenceTransitionService.class);
+                GeofenceTransitionServiceIntent.setAction(GeofenceTransitionService.START_SERVICE); //slik at vi vet at det mobilen har blir resatt, vi må då muligens gå direkte til MonumentVandring.
+                context.startService(GeofenceTransitionServiceIntent);
             }
         }
     }

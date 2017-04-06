@@ -18,6 +18,8 @@ public class StatusInfo {
     //Navn på statusen
     private String name;
 
+    private String info;
+
     //Hvor vi kan sende brukeren for å skru på dette, dersom det er mulig.
     private String settingInfo;
     
@@ -35,6 +37,11 @@ public class StatusInfo {
 
     public void setStatus(boolean status){
             this.status = status;
+    }
+
+    //setter Infoen.
+    public void setInfo(String info){
+        this.info = info;
     }
 
     //TODO: koble opp alle statuser til egne iconer. Som battery til Battery icon osv.

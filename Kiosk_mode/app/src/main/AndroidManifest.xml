@@ -75,10 +75,14 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
 
     <uses-permission android:name="android.permission.PREVENT_POWER_KEY" />
-    
+    <!-- G -->
     <uses-permission android:name="android.permission.WRITE_SETTINGS"/>
 
+    <!-- Gir oss tillatelse til å lese av Intentene som har med når mobilen er ferdig påskrudd(boot completed) -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETE"/>
+
+    <!-- Git oss tilates for å få enheten til å vibrere -->
+    <uses-permission android:name="android.permission.VIBRATE"/>
 
     <application
         android:allowBackup="true"
@@ -168,7 +172,7 @@
         <service android:name="com.sondreweb.kiosk_mode_alpha.services.GeofenceTransitionService"
             android:enabled="true"/>
 
-        <receiver android:name="com.sondreweb.kiosk_mode_alpha.receivers.RestartBroadcastReciever"
+        <receiver android:name="com.sondreweb.kiosk_mode_alpha.receivers.RestartBroadcastReceiver"
             android:enabled="true"
             android:exported="true"
             android:label="RestartServiceWhenStopped">
