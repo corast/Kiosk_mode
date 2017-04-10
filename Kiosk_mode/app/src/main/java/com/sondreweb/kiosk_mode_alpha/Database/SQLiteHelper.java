@@ -9,6 +9,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.model.LatLng;
 import com.sondreweb.kiosk_mode_alpha.classes.GeofenceClass;
+import com.sondreweb.kiosk_mode_alpha.classes.GeofenceStatus;
 import com.sondreweb.kiosk_mode_alpha.services.GeofenceTransitionService;
 
 import java.util.ArrayList;
@@ -38,6 +39,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
+    //SingelTon object av instansen til denne klassen.
     //så vi kan slippe å close databasen og bare la den stå oppe, og bruke denn viss ledig.
     public static synchronized SQLiteHelper getInstance(Context context){
         if(instance == null){
@@ -56,6 +58,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
+        //Må lage alle Tabellen dersom det ikke er gjordt.
         GeofenceTable.onCreate(db);
     }
 
@@ -91,6 +94,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         }
         cursor.close();
         return geofenceArrayList;
+        //TODO Lag en liste med GeofenceStatus objecter utifra dette vi returneren her.
     }
 
     /*
@@ -150,7 +154,5 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
         return true;
     }
-
-
 
 }

@@ -115,6 +115,14 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".activities.MapsActivity"/>
+
+        <activity
+            android:name=".activities.LoginAdminActivity"
+            android:label="@string/title_activity_login_admin"
+            android:excludeFromRecents="true"
+            android:noHistory="true"/>
+
         <!-- EXPORTED: Whether or not components of other applications can invoke the service or interact with it —
         "true" if they can, and "false" if not. When the value is "false", only components of
         the same application or applications with the same user ID can start the service or bind to it. -->
@@ -128,7 +136,9 @@
             </intent-filter>
         </service>
 
-        <activity android:name=".activities.MapsActivity"/>
+        <!-- enable: whether or not the service can be instantiatet by the system -->
+        <service android:name="com.sondreweb.kiosk_mode_alpha.services.GeofenceTransitionService"
+            android:enabled="true"/>
 
         <receiver
             android:name=".deviceAdministator.DeviceAdminKiosk"
@@ -162,15 +172,9 @@
             </intent-filter>
         </receiver>
 
-        <activity
-            android:name=".activities.LoginAdminActivity"
-            android:label="@string/title_activity_login_admin"
-            android:excludeFromRecents="true"
-            android:noHistory="true"/>
 
-        <!-- enable: whether or not the service can be instantiatet by the system -->
-        <service android:name="com.sondreweb.kiosk_mode_alpha.services.GeofenceTransitionService"
-            android:enabled="true"/>
+
+
 
         <receiver android:name="com.sondreweb.kiosk_mode_alpha.receivers.RestartBroadcastReceiver"
             android:enabled="true"
@@ -195,5 +199,21 @@
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
+
+        <!--
+                ContentProvider som tar gjør slik at flere apper har tingang til de samme dataene.
+
+                android:authorities : A list of one or more URI authorities that identify data offered by the content provider.
+                 Multiple authorities are listed by separating their names with a semicolon. To avoid conflicts, authority names should use a Java-style naming convention.
+                android:exported : Whether the content provider is available for other applications to use
+
+        -->
+
+        <provider
+            android:name=".storage.CustomContentProvider"
+            android:authorities="com.sondreweb.kiosk_mode_alpha.storage.ContentProvider"
+            android:exported="true"
+            />
+
     </application>
 </manifest>
