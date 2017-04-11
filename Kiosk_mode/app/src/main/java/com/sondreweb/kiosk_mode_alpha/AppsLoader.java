@@ -71,9 +71,8 @@ public class AppsLoader extends AsyncTaskLoader<ArrayList<AppModel>> {
 
             //kunn de som er lauchable/kjørbare intents vi er interresert i
             if(packageManager.getLaunchIntentForPackage(packageName) != null){
-
                     //tester med 3 apper som vi vill kanskje ha.
-                    Log.d(TAG,"PackageName: " +packageName);
+                //Log.d(TAG,"PackageName: " +packageName);
                 if( packageName.equalsIgnoreCase("com.android.settings") || packageName.equalsIgnoreCase("com.sondreweb.geofencingalpha") || packageName.equalsIgnoreCase("com.android.chrome")
                         || packageName.equalsIgnoreCase("com.android.deskclock") || packageName.equalsIgnoreCase("com.android.gallery")){
                     Log.d(TAG,"Legg til app: "+ packageName);

@@ -340,16 +340,27 @@ public class HomeActivity extends FragmentActivity implements
     }
 
     public boolean allStatusTrueTest(){
+        Log.d(TAG,"PrefUtils.isKiosk: "+PreferenceUtils.isKioskModeActivated(context));
+        Log.d(TAG,"AppUtils.isAccesibillitySettingsOn: "+AppUtils.isAccessibilitySettingsOn(context));
        if(PreferenceUtils.isKioskModeActivated(context) && AppUtils.isAccessibilitySettingsOn(context)){
            return true;
        }
         return false;
     }
 
+    static final int PICK_CONTANCT_RQEUST = 1;
 
     @Override
     protected void onStart() {//Ved onstart burde vi sjekke ulike ting.
         Log.d(TAG,"onStart()");
+        if(allStatusTrueTest()){
+            //dette betyr av vi egentlig skal gå til MonumentVandring.
+            String prefApp = PreferenceUtils.getPrefkioskModeApp(context);
+            Toast.makeText(this.getApplicationContext(), "Går til app med navn: "+prefApp, Toast.LENGTH_SHORT).show();
+            Intent launcherIntent = getPackageManager().getLaunchIntentForPackage(prefApp);
+            Log.d(TAG,launcherIntent.toString());
+            startActivity(launcherIntent);
+        }
 
         //Registerer BroadcastRecievern for battery med IntentFilter ACTION_BATTERY_CHANGED.
         Intent intent = registerReceiver(batteryBroadcastReceiver,new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
@@ -435,7 +446,11 @@ public class HomeActivity extends FragmentActivity implements
     }
 
 
-
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d(TAG,"Resultcode: "+resultCode);
+        super.onActivityResult(requestCode, resultCode, data);
+    }
 
     /**
      * Opdater Bruker grense snittet, slik at når vi gjør forandringer, så skal det synes her.
@@ -645,13 +660,11 @@ public class HomeActivity extends FragmentActivity implements
             String prefApp = PreferenceUtils.getPrefkioskModeApp(context);
             Toast.makeText(this.getApplicationContext(), "Går til app med navn: "+prefApp, Toast.LENGTH_SHORT).show();
             Intent launcherIntent = getPackageManager().getLaunchIntentForPackage(prefApp);
-            if(launcherIntent != null){
-                startActivity(launcherIntent);
-            }else{
-                Log.e(TAG,"Error starting KioskMode fra Launcher");
-            }
+            Log.d(TAG,launcherIntent.toString());
+            startActivity(launcherIntent);
         }
 
+        Log.d(TAG,"Forbi startActivity %:%:%:%:%:%:%:%:%");
         super.onResume();
         createAndUpdateStatusList();
         Log.d(TAG,"onResume()");
@@ -826,11 +839,6 @@ public class HomeActivity extends FragmentActivity implements
 
     /* SET FUNCTIONS*/
 
-    public void stopKioskMode(View view){
-        PreferenceUtils.setKioskModeActive(this,false);
-        updateStartKioskGui();
-    }
-
     public void lockScreenNow(View view){
         if(PreferenceUtils.isAppDeviceAdmin(this)) {
             DevicePolicyManager devicePolicyManager = (DevicePolicyManager) this.getSystemService(Context.DEVICE_POLICY_SERVICE);
@@ -838,6 +846,7 @@ public class HomeActivity extends FragmentActivity implements
         }
     }
 
+    //Går ikke...
     public void unlockScreenNow(){
         if(PreferenceUtils.isAppDeviceAdmin(this)) {
             DevicePolicyManager devicePolicyManager = (DevicePolicyManager) this.getSystemService(Context.DEVICE_POLICY_SERVICE);

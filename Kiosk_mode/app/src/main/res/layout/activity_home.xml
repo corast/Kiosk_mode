@@ -85,24 +85,9 @@
         android:text="Lock Screen test"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/button_touch_view"
-        android:onClick="lockScreenNow"/>
-
-    <Button
-        android:id="@+id/button_touch_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/button_stop_kiosk"
-        android:text="Togle touchView"
-        android:onClick="toogleTouchView"
+        android:layout_alignParentBottom="true"
+        android:onClick="lockScreenNow"
         android:visibility="gone"/>
 
-    <Button
-        android:id="@+id/button_stop_kiosk"
-        android:text="stop Kiosk mode now"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:onClick="stopKioskMode"/>
 
 </RelativeLayout>

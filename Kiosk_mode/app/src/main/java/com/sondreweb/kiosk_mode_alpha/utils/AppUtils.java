@@ -35,6 +35,7 @@ import java.util.ArrayList;
  * Created by sondre on 03-Mar-17.
  *
  * Globale funksjoner som kan brukes flere steder i systemet.
+ * Noen krever kunn en Context mens andre trenger tillatelse for å tegne på skjermen og trenger og dermen en Activity.
  */
 
 public class AppUtils{
@@ -238,7 +239,7 @@ public class AppUtils{
  *  If the client isn't connected to Google Play services and the request times out, null is returned.
  * */
     //sjekker GoogleApiClienteten om den faktisk klarere p hente Location.
-    public static boolean checkLocationAvailabillity(Context context,GoogleApiClient googleApiClient) { //Denne returnere true dersom vi har Location enabled og faktisk driver å henter locationfra google clientent.
+    public static boolean checkLocationAvailabillity(Context context,GoogleApiClient googleApiClient) { //Denne returnere true dersom vi har Location enabled og faktisk driver å henter location fra google clientent.
         Log.d(TAG,"checkLocationAvailabillity "+ LocationServices.FusedLocationApi.getLocationAvailability(googleApiClient).isLocationAvailable());
         if(checkLocationPermission(context)) { //sjekker om vi har rettigheter først og fremst(forhindrer Error dersom vi har mistet de underveis av en eller annen grunn).
             return LocationServices.FusedLocationApi.getLocationAvailability(googleApiClient).isLocationAvailable();
@@ -309,7 +310,8 @@ public class AppUtils{
     * */
 
 
-    public static boolean isNotificationMenuLocked(){ //denne må sjekke om touchEvent Viewet eksisterer og er synelig.
+    public static boolean isNotificationMenuLocked(){
+        //denne må sjekke om touchEvent Viewet eksisterer og er synelig.
         return true;
     }
 

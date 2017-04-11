@@ -19,6 +19,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -42,6 +43,8 @@ import static android.Manifest.permission.READ_CONTACTS;
  */
 public class LoginAdminActivity extends AppCompatActivity implements LoaderCallbacks<Cursor> {
 
+    private static final String TAG = LoginAdminActivity.class.getSimpleName();
+
     /**
      * Id to identity READ_CONTACTS permission request.
      */
@@ -54,6 +57,11 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
     private static final String[] DUMMY_CREDENTIALS = new String[]{
             "foo@example.com:hello", "bar@example.com:world"
     };
+
+    private static final String[] DYMMY_CREDENTUALS_PASSWORDS = new String[]{
+      "passord123","SASDASD","FORGOTPASSWORD"
+    };
+
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
@@ -74,8 +82,8 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login_admin);
         // Set up the login form.
-        mNameView = (AutoCompleteTextView) findViewById(R.id.email);
-        populateAutoComplete();
+        //mNameView = (AutoCompleteTextView) findViewById(R.id.email);
+        //populateAutoComplete();
 
         mPasswordView = (EditText) findViewById(R.id.password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -173,16 +181,18 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
      */
     private void attemptLogin() {
         if (mAuthTask != null) {
+            Log.d(TAG, "mAutTask er null");
             return;
         }
 
         // Reset errors.
-        mNameView.setError(null);
+        //mNameView.setError(null);
         mPasswordView.setError(null);
 
         // Store values at the time of the login attempt.
-        String email = mNameView.getText().toString();
+        //String email = mNameView.getText().toString();
         String password = mPasswordView.getText().toString();
+        Log.d(TAG,"password: "+password);
 
         boolean cancel = false;
         View focusView = null;
@@ -192,8 +202,11 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
             mPasswordView.setError(getString(R.string.error_invalid_password));
             focusView = mPasswordView;
             cancel = true;
+            Log.d(TAG,"password Invalid: true");
+            Log.d(TAG,"isPassordValid: "+isPasswordValid(password));
         }
 
+        /*
         // Check for a valid email address.
         if (TextUtils.isEmpty(email)) {
             mNameView.setError(getString(R.string.error_field_required));
@@ -204,7 +217,7 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
             focusView = mNameView;
             cancel = true;
         }
-
+        */
 
         if (cancel) {
             // There was an error; don't attempt login and focus the first
@@ -214,7 +227,7 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true);
-            mAuthTask = new UserLoginTask(email, password);
+            mAuthTask = new UserLoginTask(password);
             mAuthTask.execute((Void) null);
         }
     }
@@ -226,7 +239,9 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
 
     private boolean isPasswordValid(String password) {
         //TODO: Replace this with your own logic
-        return password.length() > R.integer.passwordLength;
+        //vill si at passorder må større eller lik denne verdien i lengde.
+        return password.length() >= getApplicationContext().getResources().getInteger(R.integer.passwordLength);
+
     }
 
     /**
@@ -257,7 +272,6 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
                 }
             });
     }
-
 
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
@@ -299,9 +313,8 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
                 new ArrayAdapter<>(LoginAdminActivity.this,
                         android.R.layout.simple_dropdown_item_1line, emailAddressCollection);
 
-        mNameView.setAdapter(adapter);
+        //mNameView.setAdapter(adapter);
     }
-
 
     private interface ProfileQuery {
         String[] PROJECTION = {
@@ -319,11 +332,9 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
      */
     public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
 
-        private final String mEmail;
         private final String mPassword;
 
-        UserLoginTask(String email, String password) {
-            mEmail = email;
+        UserLoginTask( String password) {
             mPassword = password;
         }
 
@@ -338,12 +349,10 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
                 return false;
             }
 
-            for (String credential : DUMMY_CREDENTIALS) {
-                String[] pieces = credential.split(":");
-                if (pieces[0].equals(mEmail)) {
+            //Looper gjennom alle passord, og ser at de stemmer.
+            for (String credential : DYMMY_CREDENTUALS_PASSWORDS) {
                     // Account exists, return true if the password matches.
-                    return pieces[1].equals(mPassword);
-                }
+                    return credential.equals(mPassword);
             }
 
             // TODO: register the new account here.
@@ -356,6 +365,14 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
             showProgress(false);
 
             if (success) {
+                Log.d(TAG,"Vi er ferdige");
+
+                /*
+                *   Når vi da har logget inn, så må vi gjøre noe her.
+                * */
+
+                //TODO: gå til Admin panelet vårt.
+
                 finish();
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
@@ -370,52 +387,5 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
         }
     }
 
-    /**
-     * Represents an asynchronous login/registration task used to authenticate
-     * the user.
-     */
-    /*public class AdminLoginTask extends AsyncTask<Void, Void, Boolean> {
-
-        private final String mPassword;
-
-        AdminLoginTask( String password ) {//Passorder vi får fra formen.
-            mPassword = password;
-        }
-
-        @Override
-        protected Boolean doInBackground(Void... params) {
-
-
-            for (String credential : DUMMY_CREDENTIALS) {
-                String[] pieces = credential.split(":");
-                    // Account exists, return true if the password matches.
-                 return pieces[1].equals(mPassword);
-
-            }
-
-            // TODO: register the new account here.
-            return true;
-        }
-
-        @Override
-        protected void onPostExecute(final Boolean success) {
-            mAuthAdminTask = null;
-            showProgress(false);
-
-            if (success) {
-                finish();
-            } else {
-                mPasswordView.setError(getString(R.string.error_incorrect_password));
-                mPasswordView.requestFocus();
-            }
-        }
-
-        @Override
-        protected void onCancelled() {
-            mAuthAdminTask = null;
-            showProgress(false);
-        }
-    }
-    */
 }
 

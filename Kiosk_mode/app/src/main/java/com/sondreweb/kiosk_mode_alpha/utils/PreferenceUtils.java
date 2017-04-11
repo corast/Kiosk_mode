@@ -26,7 +26,12 @@ public class PreferenceUtils {
 
     private static final int DEFAULT_PREF_GEOFENCE_UPDATE_INTERVAL = 5*ONE_MINUTE_IN_MILIS; //5 minutter
     private static final int DEFAULT_GEOFENCE_FASTEST_UPDATE_INTERVAL = ONE_MINUTE_IN_MILIS; //1 minutt
+
+    /*
+    *   Her bør MonumentVandring Appen stå.
+    * */
     private static final String DEFAULT_APP = "com.android.chrome"; //VI setter Chrome nå i starten for å teste.
+    //private static final String DEFAULT_APP = "com.Company.Monumentvandring"; //VI setter MonumentVandring nå i starten for å teste.
 
     public static boolean isKioskModeActivated(final Context context){
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);

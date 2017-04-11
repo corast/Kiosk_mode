@@ -1,4 +1,4 @@
-package com.sondreweb.kiosk_mode_alpha.database;
+package com.sondreweb.kiosk_mode_alpha.storage;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -9,8 +9,6 @@ import android.database.sqlite.SQLiteOpenHelper;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.model.LatLng;
 import com.sondreweb.kiosk_mode_alpha.classes.GeofenceClass;
-import com.sondreweb.kiosk_mode_alpha.classes.GeofenceStatus;
-import com.sondreweb.kiosk_mode_alpha.services.GeofenceTransitionService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,9 +33,10 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     public static final String DATABASE_NAME = "geofence.db";
 
     //dette er samme som FeedReaderDbHelper fra developer.android om databaser.
-    private SQLiteHelper(Context context) {
+    public SQLiteHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
+
 
     //SingelTon object av instansen til denne klassen.
     //så vi kan slippe å close databasen og bare la den stå oppe, og bruke denn viss ledig.
@@ -60,6 +59,8 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         //Må lage alle Tabellen dersom det ikke er gjordt.
         GeofenceTable.onCreate(db);
+
+        StatisticsTable.onCreate(db);
     }
 
     @Override

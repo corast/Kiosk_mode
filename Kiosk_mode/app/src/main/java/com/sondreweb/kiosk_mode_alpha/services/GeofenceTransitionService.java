@@ -22,7 +22,6 @@ import android.os.Vibrator;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
-import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -47,7 +46,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.sondreweb.kiosk_mode_alpha.R;
 import com.sondreweb.kiosk_mode_alpha.activities.LoginAdminActivity;
 import com.sondreweb.kiosk_mode_alpha.classes.GeofenceStatus;
-import com.sondreweb.kiosk_mode_alpha.database.SQLiteHelper;
+import com.sondreweb.kiosk_mode_alpha.storage.SQLiteHelper;
 import com.sondreweb.kiosk_mode_alpha.utils.AppUtils;
 import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
 
@@ -225,21 +224,22 @@ public class GeofenceTransitionService extends Service implements
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
-        Log.d(TAG,"onStartCommand(intent, flag,startId) ##################################################");
+        Log.d(TAG,"onStartCommand: intentAction: "+ intent.getAction()+" ##################################################");
 
         // we can also check wheter the action is from the GeofenceClass or simply starting up the service again.
          //dersom vi starter servicen med hensikt å starte lokasjons håndtering
 
         GeofencingEvent geofencingEvent = null;
         //Switcher på hvilke Action vi har fått inn på intent.
-        switch (intent.getAction()){
+        switch (intent.getAction()) {
+
             case START_GEOFENCE: //når vi trykker på knappen for å starte opp locationRequests og slike ting.
-                Log.d(TAG,"Start LocationRequests fra servicen  ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤");
+                Log.d(TAG, "Start LocationRequests fra servicen  ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤");
                 //TODO: opprette Geofencene og lagre hvor vi er innefor og slikt.
-                if(createGoogleApi()){
-                    if( ! googleApiClient.isConnected()){
+                if (createGoogleApi()) {
+                    if (!googleApiClient.isConnected()) {
                         googleApiClient.connect(); //Connecter til googleApiClient.
-                    }else{ //Dersom man allerede er connectet så må man sjekke om vi må refreshe GeofenceListen vår.
+                    } else { //Dersom man allerede er connectet så må man sjekke om vi må refreshe GeofenceListen vår.
                         //TODO: hent alle geofence vi har nå og hent en ny list fra database, dersom de er like så er det ikke noe å gjøre annet å sjekke at vi forsatt monitorere de.
                     }
                 }
@@ -251,9 +251,22 @@ public class GeofenceTransitionService extends Service implements
             case TRIGGERED_GEOFENCE: //betyr at vi er kommet hit pga et eller flere Geofence er triggered.
                 //TODO: gjør oppdatering på geofencene.
                 geofencingEvent = GeofencingEvent.fromIntent(intent); //henter Geofencet fra intent viss intent kommer fra et GeofenceClass.
+                if (geofencingEvent.hasError()) {
+                    /*
+                    *   Er 3 forskjellige Error meldinger:
+                    *           GEOFENCE_NOT_AVAILABLE : Geofence service is not available now.
+                    *           GEOFENCE_TOO_MANY_GEOFENCES : Your app has registered more than 100 geofences.
+                    *           GEOFENCE_TOO_MANY_PENDING_INTENTS : You have provided more than 5 different PendingIntents to
+                    *                               the addGeofences(GoogleApiClient, GeofencingRequest, PendingIntent) call.
+                    * */
+                    if( ! AppUtils.checkLocationAvailabillity(getsContext(),getGoogleApiClient())){
+                        //Betyr at vi ikke har Location eller GoogleAPiClient ikke har Location tilgjengelig.
+                        Log.e(TAG,"Vi har ikke location tilgjengelig");
+                    }
+                } else {
                 //sender event videre.
                 updateGeofenceStatus(geofencingEvent.getGeofenceTransition(), geofencingEvent.getTriggeringGeofences());
-
+                }
                 break;
             case START_SERVICE:
 
@@ -359,13 +372,16 @@ public class GeofenceTransitionService extends Service implements
 
     private void updateGeofenceStatus(int geofenceTransition,List<Geofence> triggeredeGeofences){
 
+        //Lager en itterator for å gå gjennom en liste. Men er dette idet hele tatt nødvendig?
         final ListIterator<GeofenceStatus> geofenceStatusListItterator = geofenceStatusList.listIterator();
 
-
-        for (Geofence geofence : triggeredeGeofences) //For hvert Geofence som triggere må vi finne tilsvarende GeofenceStatus og oppdatere denne.
-        {       //tar listen med Geofence og sammenligner, når vi finner lik RequestId, så kan vi oppdater statusen.
+        //For hvert Geofence som triggere må vi finne tilsvarende GeofenceStatus og oppdatere denne.
+        for (Geofence geofence : triggeredeGeofences)
+        {
+            //tar listen med Geofence og sammenligner, når vi finner lik RequestId, så kan vi oppdater statusen.
             while(geofenceStatusListItterator.hasNext()){
                 //lopper gjennom hele listen til vi finner et med samme requestId, for så å oppdatere denne.
+
                 if(geofenceStatusListItterator.next().getGeofence().getRequestId().equalsIgnoreCase(geofence.getRequestId())){
                     //Oppdatere statusen til denne utifra geofenceTransition koden.
                     geofenceStatusListItterator.next().setStatus(geofenceTransition);
@@ -386,6 +402,7 @@ public class GeofenceTransitionService extends Service implements
         //Må sjekke om alle er false.
         //altså vi må sjekke om minst et er true, så kan vi returne.
         for (GeofenceStatus geofenceStatus: geofenceStatusList) {
+            //geofenceStatus returnere True dersom siste trigger er ENTER på geofencet.
             if(geofenceStatus.getInsideStatus()){
                 return true;
             }
@@ -403,28 +420,6 @@ public class GeofenceTransitionService extends Service implements
 
     }
 
-    //Generer detaljert melding om geofence TIDLIGER KODE§§§§§§§§§§!!
-    private String getGeofenceTransitionDetails(int geoFenceTransition, List<Geofence> triggeredeGeofences)
-    {
-        //henter IDen til hver av geofencene.
-        ArrayList<String> triggeredGeofenceList = new ArrayList<>();
-
-        for (Geofence geofence : triggeredeGeofences ){
-            triggeredGeofenceList.add( geofence.getRequestId() );
-        }
-
-        String status = null;
-        if( geoFenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER){
-            status = "Entering";
-        }else if( geoFenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT ){
-            status = "Exiting";
-        }
-
-        Log.d(TAG, "status: "+status + TextUtils.join(", ", triggeredGeofenceList));
-        return status +" "+ TextUtils.join(", ", triggeredGeofenceList);
-    }
-
-
     /*
     *   Tar et geofence og oppdaterer statusen basert på denne
     * */
@@ -434,13 +429,6 @@ public class GeofenceTransitionService extends Service implements
         }else if(geofencingEvent.hasError()){
             //Dersom det har en error, må vi finne ut hva denne er
             Log.e(TAG,"############Geofence Error######## :"+geofencingEvent.getErrorCode());
-            /*
-            *   Er 3 forskjellige Statusmeldinger:
-            *           GEOFENCE_NOT_AVAILABLE : Geofence service is not available now.
-            *           GEOFENCE_TOO_MANY_GEOFENCES : Your app has registered more than 100 geofences.
-            *           GEOFENCE_TOO_MANY_PENDING_INTENTS : You have provided more than 5 different PendingIntents to
-            *                               the addGeofences(GoogleApiClient, GeofencingRequest, PendingIntent) call.
-            * */
 
         }else //viss vi har kommet hit så er alt OK.
         {
@@ -468,17 +456,12 @@ public class GeofenceTransitionService extends Service implements
         //TODO: tenk ut hvordan vi gjør det med å sjekke om vi er innefor et geofence, dersom eventet har forekommet før vi har lagt denne listen?
     }
 
-
     /*
     *   LAG LISTEN MED GEOFENCE OVERSIKT FØR VI BEGYNNER Å LAGE GEOFENCENE OSV, FOR IKKE Å MISTE EVENTER OM HVOR VI ER!!!
     *
     *   vi kan hente alle Geofence ut ifra GeofenceRequest objecter. Og lagre denne listen.
     *
     * */
-
-
-
-
 
     //For når brukere bevegers seg utenfor Geofence og vi trenger å få deres oppmerksomhet.
     public void vibratePhone(int time){
@@ -527,31 +510,9 @@ public class GeofenceTransitionService extends Service implements
         return googleApiClient;
     }
 
-    /**
-     *  ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
-     *      Create GeofenceList  IKKE I BRUK.
-     *  ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
-     * **/
-
-    private List<Geofence> createGeofences(){
-
-        long expire = Geofence.NEVER_EXPIRE;
-        int event = Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT;
-        //setRequestID = Database.ID.
-
-        ArrayList<Geofence> geofenceList = new ArrayList<Geofence>();
-
-        //TODO: loop igjennom Databasen og hent alle geofencer, og gjør disse om til geofence objecter.
-        return geofenceList;
-    }
-
-    /***
-     *  End GeofenceClass
-     * */
 
     /*  ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
     *   GeofenceRequest START
-    *
     *
     *   GeofenceBuilder.setInitialTrigger: Sets the geofence notification behavior at the moment when the geofences are added.
     *   Vi setter GeofencingRequest.INITIAL_TRIGGER_ENTER | GeofencingRequest.INITIAL_TRIGGER_EXIT , som betyr:
@@ -839,8 +800,18 @@ public class GeofenceTransitionService extends Service implements
     * */
 
     @Override
-    public void onConnectionSuspended(int i) {
+    public void onConnectionSuspended(int cause) {
+        if(PreferenceUtils.isKioskModeActivated(getsContext())){
+            //Dersom vi forsatt skal egentlig være connected, så er dette et problem.
 
+        }
+
+        /*
+        * Called when the client is temporarily in a disconnected state.
+        * This can happen if there is a problem with the remote service (e.g. a crash or resource problem causes it to be killed by the system).
+         * When called, all requests have been canceled and no outstanding listeners will be executed. GoogleApiClient will automatically attempt to restore the connection.
+        * Applications should disable UI components that require the service, and wait for a call to onConnected(Bundle) to re-enable them.
+        * */
     }
 
 
@@ -861,7 +832,8 @@ public class GeofenceTransitionService extends Service implements
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
+        //TODO: be activity som motar meldingen starte
+        //connectionResult.startResolutionForResult();
     }
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

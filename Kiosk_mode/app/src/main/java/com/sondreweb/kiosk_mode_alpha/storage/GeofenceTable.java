@@ -1,4 +1,4 @@
-package com.sondreweb.kiosk_mode_alpha.database;
+package com.sondreweb.kiosk_mode_alpha.storage;
 
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
@@ -11,7 +11,7 @@ public class GeofenceTable{
 
     public static final String TAG = GeofenceTable.class.getName();
 
-    public static final String TABLE_NAME ="GeofenceClass";
+    public static final String TABLE_NAME ="Geofences";
 
     public static final String COLUMN_GEOFENCE_ID="geofence_id"; //requestId String
 

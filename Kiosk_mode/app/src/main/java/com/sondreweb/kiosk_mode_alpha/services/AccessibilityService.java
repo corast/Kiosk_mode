@@ -23,12 +23,19 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
     //WHITELISTED APPS:
     protected final String GeofencingApp = "com.sondreweb.geofencingAlpha";
     protected final String LauncherApp = "com.sondreweb.kiosk_mode_alpha";
+    protected final String SystemUI = "com.android.systemui";
+    protected final String LogInnAdmin = "com.sondreweb.kiosk_mode_alpha.activities";
 
     //BLACK LIST
     protected final String Settings = "com.android.settings";
 
     //WHITELIST LIST
-    ArrayList<String> WhiteList = new ArrayList<String>(Arrays.asList(GeofencingApp, LauncherApp)); //populate med appene vi tillater i kiosk mode.
+    ArrayList<String> WhiteList = new ArrayList<String>(
+            Arrays.asList(
+                    GeofencingApp,
+                    LauncherApp,
+                    SystemUI
+            )); //populate med appene vi tillater i kiosk mode.
 
     private static final String TAG = AccessibilityService.class.getSimpleName();
 
@@ -72,13 +79,23 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
             Log.d(TAG,"event: "+event.toString());
             Log.d(TAG,"Event classname: "+event.getClassName());
             Log.d(TAG,"Event packagename: "+event.getPackageName());
-            Log.d(TAG,"---------------------------------------------");
+
         }
 
         if( event != null && event.getPackageName()!= null ){
+
             if(event.getEventType() == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED){
                 Log.d(TAG,"Event: "+ event.toString());
             }
+            //gammeKodeTesting(event);
+            checkIfOkayWindowState(event);
+        }
+    }
+
+    public void gammeKodeTesting(AccessibilityEvent event){
+        if(event.getEventType() == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED){
+            Log.d(TAG,"Event: "+ event.toString());
+        }
         //TODO check Whitelist
         if(checkIfWhiteListed(event.getPackageName())){
             Log.d(TAG,"Denne appen er grei");
@@ -104,13 +121,121 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
                     this.performGlobalAction(GLOBAL_ACTION_BACK);
                     //1this.performGlobalAction(GLOBAL_ACTION_HOME);
 
-                    }
-                    else if(event.getClassName().equals("com.android.systemui.recent.RecentsActivity")){
+                }
+                else if(event.getClassName().equals("com.android.systemui.recent.RecentsActivity")){
                     /*
                     *   Siden vi ikke tillater Recent button å bli clikket, må vi disable denne "appen".
                     *   Dersom vi går GLOBAL_ACTION_BACK her så havner vi i default launcheren, og ut av vår egen.
                     *   Må dermed passe på at denne går tilbake til HOME.
                     * */
+                    this.performGlobalAction(GLOBAL_ACTION_HOME);
+                }
+                else{
+                    Log.d(TAG, "Ikke en godkjent event:");
+
+
+                    if(event.getPackageName().toString().equalsIgnoreCase("com.android.keyguard")){
+                        Log.d(TAG,"com.android.keyguard prøver å gjøre noe");
+                        this.performGlobalAction(GLOBAL_ACTION_BACK);
+                    }else if(event.getPackageName().toString().equalsIgnoreCase("android")){ //tar alt fra systemet.
+                        Log.d(TAG,"android prøver å gjøre noe");
+                        this.performGlobalAction(GLOBAL_ACTION_BACK);
+                    }else if(event.getClassName().equals("com.android.systemui.recent.RecentsActivity")){
+                        this.performGlobalAction(GLOBAL_ACTION_HOME);
+                    }else if(event.getClassName().equals("android.widget.FrameLayout") && event.getPackageName().equals("com.android.keyguard")){
+                        this.performGlobalAction(GLOBAL_ACTION_BACK);
+                    }else if(event.getClassName().equals("com.android.launcher")){
+                        this.performGlobalAction(GLOBAL_ACTION_HOME);
+                    }
+                            /*event.getPackageName().equals("com.android.systemui"*/
+                }
+            }
+        }
+    }
+
+
+
+
+    public void checkIfOkayWindowState(AccessibilityEvent event){
+
+        if(event.getPackageName().equals(PreferenceUtils.getPrefkioskModeApp(getApplicationContext()))){
+            Log.d(TAG,"Denne appen er grei");
+        }
+        else if(checkIfWhiteListed(event.getPackageName())) {
+            Log.d(TAG,"Denne Appen er grei"); //TODO: finn ut om packagename gjelder for hele appen min, og ikke hver aktivitet.
+        }else{
+            if(PreferenceUtils.isKioskModeActivated(getApplicationContext())){
+                //Må gjøre noe med vinduet, 2 spesial tilfeller.
+                if(event.getClassName().equals("com.android.systemui.recent.RecentsActivity")){
+                    this.performGlobalAction(GLOBAL_ACTION_HOME);
+                }else if(event.getClassName().equals("com.android.launcher")){
+                    this.performGlobalAction(GLOBAL_ACTION_HOME);
+                }else{
+                    Log.d(TAG,"Global_action_back <<<<<<<<<<<<<<<<<<<<");
+                    this.performGlobalAction(GLOBAL_ACTION_BACK);
+                }
+            }
+            Log.d(TAG,"denne Appen er Ikke grei");
+            Log.d(TAG,"---------------------------------------------");
+        }
+    }
+
+
+
+    public void checkIfOkayWindowStateTest(AccessibilityEvent event){
+        if(event.getPackageName().equals(PreferenceUtils.getPrefkioskModeApp(getApplicationContext()))){
+            Log.d(TAG,"Denne appen er grei");
+        }
+        else if(checkIfWhiteListed(event.getPackageName())) {
+            Log.d(TAG,"Denne Appen er grei"); //TODO: finn ut om packagename gjelder for hele appen min, og ikke hver aktivitet.
+        }else{
+            if(PreferenceUtils.isKioskModeActivated(getApplicationContext())){
+                //Må gjøre noe med vinduet, 2 spesial tilfeller.
+                if(event.getClassName().equals("com.android.systemui.recent.RecentsActivity")){
+                    this.performGlobalAction(GLOBAL_ACTION_HOME);
+                }else if(event.getClassName().equals("com.android.launcher")){
+                    this.performGlobalAction(GLOBAL_ACTION_HOME);
+                }else{
+                    //Noe galt her
+
+                    this.performGlobalAction(GLOBAL_ACTION_BACK);
+                }
+            }
+        }
+    }
+
+
+    /*      GAMMEL KODE
+    *       /*
+                if(event.getPackageName().toString().equalsIgnoreCase(Settings)){
+                    //Log.d(TAG,"ActivityManager "+getActivityManager().toString());
+                    //getActivityManager().killBackgroundProcesses(event.getPackageName().toString());
+                    //getActivityManager().killBackgroundProcesses(event.getPackageName().toString());
+                    //HomeActivity.KillProcess(event.getPackageName().toString());
+                    //TODO: Finn ut hvordan vi forhinder noen aktiviter å starte. Muligens vi bare kontrollerer menuen med passord innlogging for å starte blackListed Aplications.
+                    Log.d(TAG, "stop Settings test");
+                    //Intent stopIntent = new Intent("com.android.settings");
+                    //stopIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    //stopIntent.setFlags(Intent.FLAG_RECEIVER_REPLACE_PENDING);
+                    //startActivity(stopIntent);
+                    //(stopIntent);
+                    Intent app = new Intent("com.sondreweb.kiosk_mode_alpha.activities.MapsActivity");
+                    //startActivity(app);
+                    WindowManager windowManager;
+                    this.performGlobalAction(GLOBAL_ACTION_BACK);
+                    //1this.performGlobalAction(GLOBAL_ACTION_HOME);
+
+                    }
+                    else if(event.getClassName().equals("com.android.systemui.recent.RecentsActivity")){
+                    */
+
+                    /*
+                    *   Siden vi ikke tillater Recent button å bli clikket, må vi disable denne "appen".
+                    *   Dersom vi går GLOBAL_ACTION_BACK her så havner vi i default launcheren, og ut av vår egen.
+                    *   Må dermed passe på at denne går tilbake til HOME.
+                    * */
+
+                    /*
                         this.performGlobalAction(GLOBAL_ACTION_HOME);
                     }
                     else{
@@ -123,31 +248,18 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
                             }else if(event.getPackageName().toString().equalsIgnoreCase("android")){ //tar alt fra systemet.
                                 Log.d(TAG,"android prøver å gjøre noe");
                                 this.performGlobalAction(GLOBAL_ACTION_BACK);
-                            }else if(event.getClassName().equals("com.android.systemui.recent.RecentsActivity")){
-                                this.performGlobalAction(GLOBAL_ACTION_HOME);
                             }else if(event.getClassName().equals("android.widget.FrameLayout") && event.getPackageName().equals("com.android.keyguard")){
                                 this.performGlobalAction(GLOBAL_ACTION_BACK);
                             }else if(event.getClassName().equals("com.android.launcher")){
                                 this.performGlobalAction(GLOBAL_ACTION_HOME);
                             }
-                            /*event.getPackageName().equals("com.android.systemui"*/
-                        }
-                    }
-            }
-        }
-    }
 
-    /*
-    public void initiateWhitelist(){
-        WhiteList.add("com.sondreweb.geofencingAlpha");
-        WhiteList.add("com.sondreweb.kiosk_mode_alpha");
-    } */
+                        }
+                    } */
 
 
     @Override
-    public void onInterrupt() {
-
-    }
+    public void onInterrupt() {}
 
     public void WhiteList(){
         String WhiteList = "com.sondreweb.geofencingApha";
