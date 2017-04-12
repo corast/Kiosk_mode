@@ -8,8 +8,8 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.sondreweb.kiosk_mode_alpha.activities.LoginAdminActivity"
-    android:fitsSystemWindows="true">
+    android:fitsSystemWindows="true"
+    tools:context="com.sondreweb.kiosk_mode_alpha.activities.LoginAdminActivity">
 
     <!-- Login progress -->
     <ProgressBar
@@ -34,22 +34,6 @@
 
             <android.support.design.widget.TextInputLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:visibility="gone">
-
-                <AutoCompleteTextView
-                    android:id="@+id/email"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/prompt_email"
-                    android:inputType="textEmailAddress"
-                    android:maxLines="1"
-                    android:singleLine="true" />
-
-            </android.support.design.widget.TextInputLayout>
-
-            <android.support.design.widget.TextInputLayout
-                android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
                 <EditText
@@ -66,15 +50,35 @@
 
             </android.support.design.widget.TextInputLayout>
 
-            <Button
-                android:id="@+id/email_sign_in_button"
-                style="?android:textAppearanceSmall"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="@string/action_sign_in"
-                android:textStyle="bold" />
-
+                android:weightSum="20"
+                android:orientation="horizontal"
+                android:layout_marginTop="18dp">
+                <Button
+                    android:id="@+id/email_sign_in_button"
+                    style="?android:textAppearanceSmall"
+                    android:layout_width="0dp"
+                    android:layout_height="64dp"
+                    android:text="@string/action_sign_in"
+                    android:textStyle="bold"
+                    android:textSize="@dimen/text_sign_in"
+                    android:layout_weight="16"/>
+                <View
+                    android:layout_width="20dp"
+                    android:layout_height="wrap_content"
+                    android:visibility="invisible"
+                    android:layout_weight="1"/>
+                <ImageButton
+                    android:id="@+id/login_back_button"
+                    android:layout_gravity="end"
+                    android:src="@drawable/industry_advance_icon_64"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:layout_weight="2"
+                    android:onClick="login_back"/>
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

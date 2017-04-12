@@ -4,7 +4,7 @@
 
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
-    <string name="prompt_password">Admin Password</string>
+    <string name="prompt_password"><font size="24">Admin Password</font></string>
     <string name="action_sign_in">Sign in</string>
     <string name="action_sign_in_short">Sign in</string>
     <string name="error_invalid_email">This email address is invalid</string>
@@ -14,4 +14,9 @@
     <string name="permission_rationale">"Contacts permissions are needed for providing email
         completions."
     </string>
+
+
+    <!-- Accessibility service Strings -->
+
+    <string name="accessibility_service_description">Test description for accesibility service</string>
 </resources>

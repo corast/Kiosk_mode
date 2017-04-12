@@ -202,7 +202,7 @@ public class AppUtils{
                 }
             }
         } else {
-            Log.v(TAG, "***ACCESSIBILITY IS DISABLED***");
+            //Log.v(TAG, "***ACCESSIBILITY IS DISABLED***");
         }
 
         return false;
@@ -220,13 +220,13 @@ public class AppUtils{
     public static boolean checkLocationPermission(Context context) {
         boolean permissionGranted = ContextCompat.checkSelfPermission(context,
                 Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
-        Log.d(TAG, "checkLocationPermission() result: "+permissionGranted);
+       // Log.d(TAG, "checkLocationPermission() result: "+permissionGranted);
         return permissionGranted;
     }
 
     //spør om permission viss det ikke er gitt på å få tak i Fine location.
     public static void askLocationPermission(Activity activity) {
-        Log.d(TAG, "askLocationPermission()");
+        //Log.d(TAG, "askLocationPermission()");
         ActivityCompat.requestPermissions(activity,
                 new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                 REQ_PERMISSION
@@ -332,6 +332,9 @@ public class AppUtils{
 
     }
 
+    /*
+    *   Sjekker hva som er Default appen på system, denne bør være vår egen.
+    * */
     public static boolean isDefault(Context context,ComponentName component) {
         ArrayList<ComponentName> components = new ArrayList<ComponentName>();
         ArrayList<IntentFilter> filters = new ArrayList<IntentFilter>();

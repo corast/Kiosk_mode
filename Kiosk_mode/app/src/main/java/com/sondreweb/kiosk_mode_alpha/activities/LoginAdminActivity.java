@@ -32,6 +32,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.sondreweb.kiosk_mode_alpha.R;
+import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,7 +60,7 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
     };
 
     private static final String[] DYMMY_CREDENTUALS_PASSWORDS = new String[]{
-      "passord123","SASDASD","FORGOTPASSWORD"
+      "passord123","FORGOTPASSWORD","password"
     };
 
     /**
@@ -81,6 +82,7 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login_admin);
+        setTitle("Sign inn screen");
         // Set up the login form.
         //mNameView = (AutoCompleteTextView) findViewById(R.id.email);
         //populateAutoComplete();
@@ -352,7 +354,11 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
             //Looper gjennom alle passord, og ser at de stemmer.
             for (String credential : DYMMY_CREDENTUALS_PASSWORDS) {
                     // Account exists, return true if the password matches.
-                    return credential.equals(mPassword);
+                Log.d(TAG,credential + " == " + mPassword + " -> " + credential.equals(mPassword));
+                if(credential.equals(DUMMY_CREDENTIALS)){
+                    continue;
+                }
+                return credential.equals(mPassword);
             }
 
             // TODO: register the new account here.
@@ -366,13 +372,11 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
 
             if (success) {
                 Log.d(TAG,"Vi er ferdige");
-
                 /*
                 *   Når vi da har logget inn, så må vi gjøre noe her.
                 * */
-
                 //TODO: gå til Admin panelet vårt.
-
+                PreferenceUtils.setKioskModeActive(getApplicationContext(),false); //skrur av Kiosk mode.
                 finish();
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
@@ -386,6 +390,10 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
             showProgress(false);
         }
     }
+
+   public void login_back(View view){
+       this.onBackPressed();
+   }
 
 }
 

@@ -5,4 +5,6 @@
     <dimen name="screen_width_landscape">960dp</dimen>
     <dimen name="screen_width_half">10dp</dimen>
     <dimen name="screen_heigth_landscape">527dp</dimen>
+    <dimen name="text_sign_in">24sp</dimen>
+    <dimen name="text_field">24sp</dimen>
 </resources>

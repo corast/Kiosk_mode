@@ -617,6 +617,7 @@ public class GeofenceTransitionService extends Service implements
                 .setPriority(NotificationCompat.PRIORITY_MAX);//Makes the system prioritize this notification over the others(or the same as other with max
 
         //For å starte opp Loggin activity.
+        Log.d(TAG,"LoginAdminActivity.class : "+ LoginAdminActivity.class);
         Intent loggInIntent = new Intent(this,LoginAdminActivity.class);
         loggInIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent pendingInlogging = PendingIntent.getActivity(this,0,loggInIntent,PendingIntent.FLAG_UPDATE_CURRENT);

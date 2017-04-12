@@ -73,8 +73,11 @@ public class AppsLoader extends AsyncTaskLoader<ArrayList<AppModel>> {
             if(packageManager.getLaunchIntentForPackage(packageName) != null){
                     //tester med 3 apper som vi vill kanskje ha.
                 //Log.d(TAG,"PackageName: " +packageName);
-                if( packageName.equalsIgnoreCase("com.android.settings") || packageName.equalsIgnoreCase("com.sondreweb.geofencingalpha") || packageName.equalsIgnoreCase("com.android.chrome")
-                        || packageName.equalsIgnoreCase("com.android.deskclock") || packageName.equalsIgnoreCase("com.android.gallery")){
+                if( packageName.equalsIgnoreCase("com.android.settings")
+                        || packageName.equalsIgnoreCase("com.sondreweb.geofencingalpha")
+                        || packageName.equalsIgnoreCase("com.android.chrome")
+                        || packageName.equalsIgnoreCase("com.android.deskclock")
+                        || packageName.equalsIgnoreCase("com.android.calculator2")){
                     Log.d(TAG,"Legg til app: "+ packageName);
                     AppModel app = new AppModel(context, apps.get(i));
                     app.loadLabel(context);

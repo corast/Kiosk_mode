@@ -15,12 +15,15 @@ public class PreferenceUtils {
 
     private static final String TAG = PreferenceUtils.class.getSimpleName();
     //KEY som brukes for å hente ut en verdi fra Preferancene i systemet. Denne er viktig kun denne appen har tilgang til.
-    private static final String PREF_KIOSK_MODE = "pref_kiosk_mode";
+
+    public static final String PREF_KIOSK_MODE = "pref_kiosk_mode";
+
     private static final String PREF_ADMIN_DEVICE = "pref_admin_device";
-    private static final String PREF_KIOSK_APP = "pref_kiosk_application";
+
 
     private static final String PREF_GEOFENCE_UPDATE_INTERVAL = "pref_kiosk_geofence_update_interval";
     private static final String PREF_GEOFENCE_FASTEST_UPDATE_INTERVAL = "pref_kiosk_geofence_fastest_update_interval";
+
 
     public static final int ONE_MINUTE_IN_MILIS = 1000*60;
 
@@ -30,7 +33,12 @@ public class PreferenceUtils {
     /*
     *   Her bør MonumentVandring Appen stå.
     * */
+
+    private static final String PREF_KIOSK_APP = "com.android.chrome";
+
     private static final String DEFAULT_APP = "com.android.chrome"; //VI setter Chrome nå i starten for å teste.
+    private static final String DEFAULT_APP_TEST = "com.android.calculator2"; //VI setter Chrome nå i starten for å teste.
+
     //private static final String DEFAULT_APP = "com.Company.Monumentvandring"; //VI setter MonumentVandring nå i starten for å teste.
 
     public static boolean isKioskModeActivated(final Context context){
@@ -53,7 +61,6 @@ public class PreferenceUtils {
 
     //For å sjekke om vi har DeviceAdmin rettigheter eller ikke.
     public static boolean isAppDeviceAdmin(final Context context){
-        Log.d(TAG,"isAppDeviceAdmin :");
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         return sharedPreferences.getBoolean(PREF_ADMIN_DEVICE,false);
         //Default value er False, siden det betyr at DEVICE amin ikke er satt uansett.
@@ -78,7 +85,7 @@ public class PreferenceUtils {
     public static String getPrefkioskModeApp(final Context context){
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         //TODO: check if package is installed
-        String kiosk_app = sharedPreferences.getString(PREF_KIOSK_APP, DEFAULT_APP);
+        String kiosk_app = sharedPreferences.getString(PREF_KIOSK_APP, DEFAULT_APP_TEST);
         /*
         *   En kjapp test på om Packagen som vi faktisk har er installert på enheten.
         * */

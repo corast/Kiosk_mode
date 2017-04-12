@@ -82,6 +82,8 @@
     <!-- Git oss tilates for å få enheten til å vibrere -->
     <uses-permission android:name="android.permission.VIBRATE" />
 
+    <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE"/>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -114,8 +116,10 @@
             </intent-filter>
         </activity>
         <activity android:name=".activities.MapsActivity" />
+
         <activity
             android:name=".activities.LoginAdminActivity"
+            android:parentActivityName=".activities.HomeActivity"
             android:excludeFromRecents="true"
             android:label="@string/title_activity_login_admin"
             android:noHistory="true" />
@@ -133,7 +137,11 @@
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
         </service>
+
 
         <!-- enable: whether or not the service can be instantiatet by the system -->
         <service
