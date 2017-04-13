@@ -10,6 +10,7 @@ import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -36,7 +37,8 @@ import java.util.HashMap;
 public class CustomContentProvider extends ContentProvider {
 
     //Navn på provideren vår.
-    static final String PROVIDER_NAME = "com.sondreweb.kiosk_mode_alpha.storage.CustomContentProvider";
+    static final String PROVIDER_NAME =
+            "com.sondreweb.kiosk_mode_alpha.storage.CustomContentProvider";
 
 
     /*
@@ -55,53 +57,47 @@ public class CustomContentProvider extends ContentProvider {
     *    video files and images using different paths for each of these types of media.
     *    This way a content provider can support different types of data that are nevertheless related.
     *    For totally unrelated data though you should use different content providers – and thus different authorities.
+    *    This is usually the table name with which queries will interact to which this content URI is passed.
     *    ID: if present – must be numeric. The id is used whenever you want to access a single record (e.g. a specific video file).
     * */
 
 
-
     //Helper constants for use with the UriMatcher.
     private static final int STATISTIKK_ID = 1;
+
     private static final int STATISTIKK_LIST = 2;
 
 
-
+        //Vi har allerede dette i en annen fil.
     static final String id = "id";
     static final String name = "name";
+
     static final int uriCode = 1; //kode som vi bruker til et eller annet.
 
-    static final String URL = "content://" + PROVIDER_NAME + "/cpcontent";
-    static final Uri CONTENT_URL = Uri.parse(URL);
+    //content://authority/optionalPath/optionalId
+    static final String URL = "content://" + PROVIDER_NAME + "/"+StatisticsTable.TABLE_NAME;
+
+    static final Uri CONTENT_URL = Uri.parse(URL); //Hva brukes denne til TODO: finn ut hva CONTENT_URI brukes til
+
 
     private static HashMap<String, String> values; //TODO: Funn ut hva dette faktisk er(hashmap).
-
-
     /*
     *   Tror dette er verdiene vi skal sette inn, vi har ikke bare Stringer men..
     * */
-
-    @Override
-    public void onLowMemory() {
-        //Når vi har lite med minne, hva gjør vi da?
-        /*
-        *   Ved lite minne, må vi be brukeren gå tilbake til Resepsjonen og bytte ut enheten, siden denne må restartet slik at Cashe kan cleares.
-        * */
-        super.onLowMemory();
-    }
-
     //lager root noden for URI treet.
-    static final UriMatcher URI_MATCHER;
 
+    static final UriMatcher URI_MATCHER;
     static{
         URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
-        URI_MATCHER.addURI(PROVIDER_NAME,"cpcontent",uriCode);
-        URI_MATCHER.addURI(PROVIDER_NAME,
+        URI_MATCHER.addURI(
+                PROVIDER_NAME,
                 "statistikk",
                 STATISTIKK_ID
         );
 
-        URI_MATCHER.addURI(PROVIDER_NAME,
-                "statistikk/#",//# vill si direktorat.
+        URI_MATCHER.addURI(
+                PROVIDER_NAME,
+                "statistikk/#",//# vill si flere
                 STATISTIKK_LIST
         );
 
@@ -111,6 +107,8 @@ public class CustomContentProvider extends ContentProvider {
     }
 
     private SQLiteHelper sqLiteHelper = null;
+    private SQLiteDatabase sqLiteDatabaseW = null;
+    private SQLiteDatabase sqLiteDatabaseR = null;
 
     private final ThreadLocal<Boolean> mIsInBatchMode = new ThreadLocal<Boolean>();
 
@@ -122,9 +120,24 @@ public class CustomContentProvider extends ContentProvider {
     public boolean onCreate() {
         //initialisere databasen vår.
         sqLiteHelper = SQLiteHelper.getInstance(getContext()); //lager databasen dersom det ikke er gjordt.
+        sqLiteDatabaseW = sqLiteHelper.getWritableDatabase();
+        sqLiteDatabaseR = sqLiteHelper.getReadableDatabase();
+        /*
+        *   A content provider is created when its hosting process is created,
+        *   and remains around for as long as the process does, so there is no need to close the database --
+        *   it will get closed as part of the kernel cleaning up the process's resources when the process is killed.
+        * */
         return true;
     }
 
+    @Override
+    public void onLowMemory() {
+        //Når vi har lite med minne, hva gjør vi da?
+        /*
+        *   Ved lite minne, må vi be brukeren gå tilbake til Resepsjonen og bytte ut enheten, siden denne må restartet slik at Cashe kan cleares.
+        * */
+        super.onLowMemory();
+    }
 
     /*
     *   Returns the MIME type for this URI
@@ -133,12 +146,18 @@ public class CustomContentProvider extends ContentProvider {
     @Override
     public String getType(@NonNull Uri uri) {
         switch (URI_MATCHER.match(uri)){
-            case STATISTIKK_ID:
+            case STATISTIKK_LIST ://dersom vi skal ha tak i en eller flere rader i tabellen.
+                /*  CURSOR_DIR_BASE_TYPE= vnd.android.cursor.dir
+                *   "vnd.android.cursor.dir/com.sondreweb.kiosk_mode_alpha.storage.statisticsItems"
+                *    "vnd.android.cursor.dir/vnd.com.androidcontentproviderdemo.androidcontentprovider.provider.images";*/
                 return StatisticsItems.CONTENT_TYPE;
-            case STATISTIKK_LIST:
+            case STATISTIKK_ID: //Dersom vi skal ha tak i en rad
+                /*  CURSOR_ITEM_BASE_TYPE= vnd.android.cursor.item
+                *   "vnd.android.cursor.item/com.sondreweb.kiosk_mode_alpha.storage.statisticsItems
+                * */
                 return StatisticsItems.CONTENT_ITEM_TYPE;
             default:
-                return null;
+                throw new IllegalArgumentException("Unsupported URI "+uri);
         }
     }
 
@@ -149,14 +168,40 @@ public class CustomContentProvider extends ContentProvider {
     @Nullable
     @Override
     public Uri insert(@NonNull Uri uri, @Nullable ContentValues values) {
-        if(URI_MATCHER.match(uri) != STATISTIKK_LIST){
+
+        switch (URI_MATCHER.match(uri)) {
+            case STATISTIKK_ID:
+                long id = sqLiteDatabaseW.insert(
+                        StatisticsTable.TABLE_NAME,
+                        null,
+                        values);
+                return getUriForId(id, uri);
+            case STATISTIKK_LIST:
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown URI");
+        }
+        return uri;
+    }
+
+
+
+    /*  GAMMEL KODE, MEN ER SÅ FIN.
+    *     if(URI_MATCHER.match(uri) != STATISTIKK_ID){
             throw new IllegalArgumentException(
                     "Unsupported URI for insertion: "+uri);
         }
 
-
         SQLiteDatabase db = sqLiteHelper.getWritableDatabase();
-        if(URI_MATCHER.match(uri) == STATISTIKK_LIST){
+        switch (URI_MATCHER.match(uri)){
+            case STATISTIKK_LIST:
+                long id = db.insert(
+                        StatisticsTable.TABLE_NAME,
+                        null,
+                        values);
+                return getUriForId(id,uri);
+        }
+        if(URI_MATCHER.match(uri) == STATISTIKK_ID){ //Legge til en rad.
             long id = db.insert(
                     StatisticsTable.TABLE_NAME,
                     null,
@@ -165,8 +210,12 @@ public class CustomContentProvider extends ContentProvider {
         }
 
         return null;
-    }
+    * */
 
+
+    //Hva gjør denne?
+
+    //Sjekker at vi fikk lagt til i databasen riktig, og returnere Uri adressen på denne.
     private Uri getUriForId(long id, Uri uri){
         if(id > 0) {
             Uri itemUri = ContentUris.withAppendedId(uri,id);
@@ -182,8 +231,8 @@ public class CustomContentProvider extends ContentProvider {
     }
 
     /*
-    *   Modifies data
-    * */
+        *   Modifies data
+        * */
     @Override
     public int update(@NonNull Uri uri, @Nullable ContentValues values, @Nullable String selection, @Nullable String[] selectionArgs) {
         return 0;
@@ -195,10 +244,13 @@ public class CustomContentProvider extends ContentProvider {
     @Nullable
     @Override
     public Cursor query(@NonNull Uri uri, @Nullable String[] projection, @Nullable String selection, @Nullable String[] selectionArgs, @Nullable String sortOrder) {
-        return null;
+
+        String id = null;
+        if(URI_MATCHER.match(uri) == STATISTIKK_ID){
+            id = uri.getPathSegments().get(1);
+        }
+        return sqLiteHelper.getStatistics(id,projection,selection,selectionArgs,sortOrder);
     }
-
-
 
 
     /*
@@ -210,6 +262,9 @@ public class CustomContentProvider extends ContentProvider {
     }
 
 
+    /*
+    *   For å legge til flere enn en value/rad. Men aner ikke hvordan operations fungerer.
+    * */
     @NonNull
     @Override
     public ContentProviderResult[] applyBatch(
@@ -237,8 +292,35 @@ public class CustomContentProvider extends ContentProvider {
 
 
 
+    @Override
+    public int bulkInsert(@NonNull Uri uri, @NonNull ContentValues[] values) {
+        SQLiteDatabase db = sqLiteHelper.getWritableDatabase();
 
-    /*  ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤JOB SCHEDULER¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
+
+        switch (URI_MATCHER.match(uri)){
+            case STATISTIKK_LIST:
+                int numberInserted = 0;
+                db.beginTransaction();
+                try {
+                    //Inserter en value for hver av de.
+                    for (ContentValues value : values ) {
+                        db.insert(StatisticsTable.TABLE_NAME,
+                                null,
+                                value);
+                    }
+                    db.setTransactionSuccessful();
+                    numberInserted = values.length;
+                } finally {
+                    db.endTransaction();
+                }
+                return numberInserted;
+
+            default:
+                throw new UnsupportedOperationException("unsupported uri: " + uri);
+        }
+    }
+
+/*  ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤JOB SCHEDULER¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
     *   JobScheduling av Syncing.
     * */
 
@@ -281,6 +363,7 @@ public class CustomContentProvider extends ContentProvider {
                 .build();
 
         dispatcher.mustSchedule(myJob);
+        dispatcher.schedule(myJob);
     }
 
 }

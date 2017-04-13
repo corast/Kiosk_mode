@@ -5,12 +5,14 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.database.sqlite.SQLiteQueryBuilder;
 
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.model.LatLng;
 import com.sondreweb.kiosk_mode_alpha.classes.GeofenceClass;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -65,12 +67,18 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        //Oppgaderer tabellene, ved å slette gamle versjoner og lage nye.
         GeofenceTable.onUpgrade(db, oldVersion, newVersion);
+        StatisticsTable.onUpgrade(db,oldVersion,newVersion);
+
+        onCreate(db);//lager databasen på nytt igjenn med ny utgave.
     }
 
     /*
     *   Metode for hente ut alle Geofence og sende de tilbake som en Liste.
     * */
+
+
 
     public List<Geofence> getAllGeofences(){
         SQLiteDatabase db = this.getReadableDatabase();
@@ -151,9 +159,71 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             addGeofence(geofence.getLatLng(), geofence.getRadius());
         }
 
-
-
         return true;
     }
+
+    /*
+    *   ¤¤¤¤¤¤¤¤¤¤¤¤StatisticsTable Funskjoner¤¤¤¤¤¤¤¤¤¤¤¤
+    * */
+
+    public Cursor getStatistics(String id, String[] projection, String selection, String[] selectionArgs, String sortOrder){
+        SQLiteQueryBuilder sqLiteQueryBuilder = new SQLiteQueryBuilder();
+        sqLiteQueryBuilder.setTables(StatisticsTable.TABLE_NAME);
+
+        if(id != null){ //TODO: denne vill ikke fungere, siden vi har 3 primary keys
+            sqLiteQueryBuilder.appendWhere(StatisticsTable.COLUMN_VISITOR_ID+" = "+id);
+        }
+
+        if(sortOrder == null || sortOrder.equalsIgnoreCase("")){
+            sortOrder = StatisticsTable.COLUMN_DATE;
+        }
+
+        Cursor cursor = sqLiteQueryBuilder.query(getReadableDatabase(),
+                projection,
+                selection,
+                selectionArgs,
+                null,
+                null,
+                sortOrder);
+
+        return cursor;
+    }
+
+    /*
+    *   Insert funksjoner.
+    *   insert(table,
+    *       nullColumnHack,
+    *       values);
+    * */
+
+    public long addNewStastistic(ContentValues value){
+        long id = getWritableDatabase().insert(
+                StatisticsTable.TABLE_NAME,
+                null,
+                value);
+
+        return id;
+    }
+
+    public ArrayList<Long> addAllNewStatics(ContentValues[] values){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ArrayList<Long> idList = new ArrayList<>();
+        db.beginTransaction();
+        try{
+            //For hver value, må vi inserte
+            for (ContentValues value : values) {
+                idList.add(db.insert(StatisticsTable.TABLE_NAME,
+                        null,
+                        value));
+            }
+            //Når alle er forsøkt lagt til
+            db.setTransactionSuccessful();
+        }finally {
+            db.endTransaction();
+        }
+        return idList; //Dersom listen inneholde noen som er mindre enn 0, så er det error.
+    }
+
+
 
 }

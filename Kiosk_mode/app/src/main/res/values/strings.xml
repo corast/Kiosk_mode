@@ -17,6 +17,8 @@
 
 
     <!-- Accessibility service Strings -->
+    <string name="accessibility_service_description">Lås ned enheten slik at kunn er mulig å bruke satt
+        applikasjon på enheten så lenge dette er på.</string>
 
-    <string name="accessibility_service_description">Test description for accesibility service</string>
+    <!--Mer stringer kommer her TODO:lag flere stringer. -->
 </resources>

@@ -17,6 +17,9 @@ public final class StatisticsItemsContract {
     public static final Uri CONTENT_URI = Uri.parse("content://"+AUTHORITY);
 
 
+    //TODO: lage denne slik at det er enkelt for Martin å bruke ContentProvideren.
+
+
 
     //Constant for the statistics Table of
 }

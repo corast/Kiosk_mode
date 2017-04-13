@@ -47,11 +47,8 @@ public class GeofenceTable{
 
     //upgrade database strukturen.
     public static void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion){
-
         Log.v(TAG, "Removes all data from table:"+ TABLE_NAME +" Upgrade table from version:"+oldVersion+" To: "+newVersion);
-
         database.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME +";"); //drop table og bytter ut med no annet, viss vi forandrer versjonen
-        //onCreate(database); //lager en ny tabell.
     }
 
 }

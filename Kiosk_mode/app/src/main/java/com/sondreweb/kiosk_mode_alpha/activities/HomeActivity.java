@@ -5,6 +5,7 @@ import android.app.UiModeManager;
 import android.app.admin.DevicePolicyManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -21,6 +22,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.util.TimeUtils;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -38,12 +40,18 @@ import com.sondreweb.kiosk_mode_alpha.classes.StatusInfo;
 import com.sondreweb.kiosk_mode_alpha.adapters.StatusAdapter;
 import com.sondreweb.kiosk_mode_alpha.deviceAdministator.DeviceAdminKiosk;
 import com.sondreweb.kiosk_mode_alpha.services.GeofenceTransitionService;
+import com.sondreweb.kiosk_mode_alpha.storage.CustomContentProvider;
+import com.sondreweb.kiosk_mode_alpha.storage.StatisticsItems;
+import com.sondreweb.kiosk_mode_alpha.storage.StatisticsItemsContract;
+import com.sondreweb.kiosk_mode_alpha.storage.StatisticsTable;
 import com.sondreweb.kiosk_mode_alpha.utils.AppUtils;
 import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
 import com.sondreweb.kiosk_mode_alpha.R;
 import com.sondreweb.kiosk_mode_alpha.services.AccessibilityService;
 
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Random;
 
 /**
  * Created by sondre on 16-Feb-17.
@@ -889,6 +897,28 @@ public class HomeActivity extends FragmentActivity implements
         Intent intent = new Intent(this, LoginAdminActivity.class);
         startActivity(intent);
     }
+
+    public void testingStatisticsAdding(){
+
+        //Må lage et monument tall
+        //Må lage en random id
+        //Må lage en dato
+        //Må lage en tid
+
+        int monumentId = 2;
+        Random rn = new Random();
+        int date = rn.nextInt(200)+1; //fra 1-200
+
+        int time = rn.nextInt(10000)+1; //Fra 1 ms til 10000
+
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(StatisticsTable.COLUMN_MONUMENT, monumentId);
+        contentValues.put(StatisticsTable.COLUMN_DATE, date);
+        contentValues.put(StatisticsTable.COLUMN_TIME, time);
+
+        
+    }
+
 
     /*
     *   Callback for når vi requester permission for å hente ut lokasjon.
