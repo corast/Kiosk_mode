@@ -34,10 +34,12 @@ public class PreferenceUtils {
     *   Her bør MonumentVandring Appen stå.
     * */
 
-    private static final String PREF_KIOSK_APP = "com.android.chrome";
+    private static final String PREF_KIOSK_APP = "com.android.calculator2"; //Dette er Appen som vi skal starte opp.
 
     private static final String DEFAULT_APP = "com.android.chrome"; //VI setter Chrome nå i starten for å teste.
-    private static final String DEFAULT_APP_TEST = "com.android.calculator2"; //VI setter Chrome nå i starten for å teste.
+
+    //private static final String DEFAULT_APP_TEST = "com.Company.Monumentvandring"; //VI setter Chrome nå i starten for å teste.
+
 
     //private static final String DEFAULT_APP = "com.Company.Monumentvandring"; //VI setter MonumentVandring nå i starten for å teste.
 
@@ -85,11 +87,12 @@ public class PreferenceUtils {
     public static String getPrefkioskModeApp(final Context context){
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         //TODO: check if package is installed
-        String kiosk_app = sharedPreferences.getString(PREF_KIOSK_APP, DEFAULT_APP_TEST);
+        String kiosk_app = sharedPreferences.getString(PREF_KIOSK_APP, DEFAULT_APP);
         /*
         *   En kjapp test på om Packagen som vi faktisk har er installert på enheten.
         * */
-        if(AppUtils.isPacketInstalled(kiosk_app,context)){//True dersom den eksiterer
+        Log.d(TAG,"isPacketInnstalled : "+kiosk_app +" -> "+ AppUtils.isPacketInstalled(kiosk_app,context));
+        if(AppUtils.isPacketInstalled(kiosk_app,context)){//True dersom den eksitere
             return kiosk_app;
         }
         return DEFAULT_APP; //Da bare returnere vi Default app stringen, siden den vet vi eksiterer.

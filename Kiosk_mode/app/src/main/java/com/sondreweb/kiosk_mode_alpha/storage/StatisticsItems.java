@@ -15,7 +15,7 @@ public class StatisticsItems implements BaseColumns {
      */
     public static final Uri CONTENT_URI =
             Uri.withAppendedPath(
-                    StatisticsItemsContract.CONTENT_URI,
+                    KioskDbContract.CONTENT_URI,
                     "statisticsItems"
             );
 
@@ -44,6 +44,7 @@ public class StatisticsItems implements BaseColumns {
                     _ID
             };
 
+            //ORDER BY _ID ASC.
     public static final String SORT_ORDER_DEFAULT =
             _ID + " ASC";
 }

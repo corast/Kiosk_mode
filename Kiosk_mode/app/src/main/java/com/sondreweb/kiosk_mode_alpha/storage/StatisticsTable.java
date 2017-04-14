@@ -24,11 +24,25 @@ public class StatisticsTable {
 
     public static final String DATABASE_CREATE_STATISTICS =
             "create table "+ TABLE_NAME + "(" +
-                    COLUMN_TIME
-            ;
+                    COLUMN_MONUMENT +" integer not null, " +
+                    COLUMN_VISITOR_ID +" integer not null, " +
+                    COLUMN_DATE + " integer not null, " +
+                    COLUMN_TIME + " integer not null, " +
+                    " PRIMARY KEY("+ COLUMN_MONUMENT+", "+COLUMN_VISITOR_ID+", "+COLUMN_DATE+")"+
+                    ");";
+    /*
+    *   create table Statistics(
+    *       monument integer not null,
+    *       visitor_nr integer not null,
+    *       date integer not null,
+    *       time integer not null,
+    *       PRIMARY KEY(monument, visitor_nr, date)
+    *       );
+    * */
 
     public static void onCreate(SQLiteDatabase database){
         database.execSQL(DATABASE_CREATE_STATISTICS);
+        Log.d(TAG, "onCreate StatisticsTable");
     }
 
     public static void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion){

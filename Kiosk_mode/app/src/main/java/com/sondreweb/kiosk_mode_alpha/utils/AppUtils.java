@@ -42,6 +42,7 @@ public class AppUtils{
 
     private static final String TAG = AppUtils.class.getSimpleName()+"_custom";
 
+    public static final boolean DEBUG = true;
 
     public final static int REQ_PERMISSION = 200;
 
@@ -185,7 +186,7 @@ public class AppUtils{
         TextUtils.SimpleStringSplitter mStringColonSplitter = new TextUtils.SimpleStringSplitter(':');
 
         if (accessibilityEnabled == 1) {
-            //Log.v(TAG, "***ACCESSIBILITY IS ENABLED*** -----------------");
+            Log.v(TAG, "***ACCESSIBILITY IS ENABLED*** -----------------");
             String settingValue = Settings.Secure.getString(
                     mContext.getApplicationContext().getContentResolver(),
                     Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
@@ -202,7 +203,7 @@ public class AppUtils{
                 }
             }
         } else {
-            //Log.v(TAG, "***ACCESSIBILITY IS DISABLED***");
+            Log.v(TAG, "***ACCESSIBILITY IS DISABLED***----------------");
         }
 
         return false;

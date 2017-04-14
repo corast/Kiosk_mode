@@ -2,8 +2,10 @@ package com.sondreweb.kiosk_mode_alpha.services;
 
 import android.accessibilityservice.AccessibilityServiceInfo;
 import android.app.ActivityManager;
+import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.support.annotation.IntDef;
 import android.util.Log;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
@@ -43,7 +45,7 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
                     LauncherApp
             )); //populate med appene vi tillater i kiosk mode.
 
-   ArrayList<String> WhiteListedClasses = new ArrayList<>(
+    ArrayList<String> WhiteListedClasses = new ArrayList<>(
            Arrays.asList(
                    LogInnAdmin
            ));
@@ -60,7 +62,7 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
     * */
     @Override
     protected void onServiceConnected() {
-        Log.d(TAG,TAG+" started");
+        Log.d(TAG,TAG+" started  €€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€");
         AccessibilityServiceInfo info = new AccessibilityServiceInfo();
         //initiateWhitelist();
             //Vi er på utkikk etter alle eventer som har med å forandre Window state

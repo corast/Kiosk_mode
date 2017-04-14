@@ -1,5 +1,6 @@
 package com.sondreweb.kiosk_mode_alpha.storage;
 
+import android.annotation.TargetApi;
 import android.content.ContentProvider;
 import android.content.ContentProviderOperation;
 import android.content.ContentProviderResult;
@@ -10,11 +11,14 @@ import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteStatement;
+import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
+import android.util.Log;
 
 import com.firebase.jobdispatcher.Constraint;
 import com.firebase.jobdispatcher.FirebaseJobDispatcher;
@@ -24,6 +28,8 @@ import com.firebase.jobdispatcher.Lifetime;
 import com.firebase.jobdispatcher.RetryStrategy;
 import com.firebase.jobdispatcher.Trigger;
 import com.sondreweb.kiosk_mode_alpha.jobscheduler.CustomJobService;
+import com.sondreweb.kiosk_mode_alpha.utils.AppUtils;
+import com.sondreweb.kiosk_mode_alpha.storage.KioskDbContract.Statistics;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,6 +41,8 @@ import java.util.HashMap;
  */
 
 public class CustomContentProvider extends ContentProvider {
+
+    private static final String TAG = CustomContentProvider.class.getSimpleName();
 
     //Navn på provideren vår.
     static final String PROVIDER_NAME =
@@ -64,15 +72,8 @@ public class CustomContentProvider extends ContentProvider {
 
     //Helper constants for use with the UriMatcher.
     private static final int STATISTIKK_ID = 1;
-
     private static final int STATISTIKK_LIST = 2;
 
-
-        //Vi har allerede dette i en annen fil.
-    static final String id = "id";
-    static final String name = "name";
-
-    static final int uriCode = 1; //kode som vi bruker til et eller annet.
 
     //content://authority/optionalPath/optionalId
     static final String URL = "content://" + PROVIDER_NAME + "/"+StatisticsTable.TABLE_NAME;
@@ -101,14 +102,25 @@ public class CustomContentProvider extends ContentProvider {
                 STATISTIKK_LIST
         );
 
-        URI_MATCHER.addURI(StatisticsItemsContract.AUTHORITY,
+        URI_MATCHER.addURI(KioskDbContract.AUTHORITY,
                 "statistikk",+
                         STATISTIKK_ID);
+
+        URI_MATCHER.addURI(
+                PROVIDER_NAME,
+                KioskDbContract.Statistics.TABLE_NAME,
+                STATISTIKK_ID
+        );
+        URI_MATCHER.addURI(
+                PROVIDER_NAME,
+                KioskDbContract.Statistics.TABLE_NAME,
+                STATISTIKK_LIST
+        );
     }
 
     private SQLiteHelper sqLiteHelper = null;
-    private SQLiteDatabase sqLiteDatabaseW = null;
-    private SQLiteDatabase sqLiteDatabaseR = null;
+    private SQLiteDatabase sqLiteDatabaseWriteable = null;
+    private SQLiteDatabase sqLiteDatabaseReadable = null;
 
     private final ThreadLocal<Boolean> mIsInBatchMode = new ThreadLocal<Boolean>();
 
@@ -120,8 +132,9 @@ public class CustomContentProvider extends ContentProvider {
     public boolean onCreate() {
         //initialisere databasen vår.
         sqLiteHelper = SQLiteHelper.getInstance(getContext()); //lager databasen dersom det ikke er gjordt.
-        sqLiteDatabaseW = sqLiteHelper.getWritableDatabase();
-        sqLiteDatabaseR = sqLiteHelper.getReadableDatabase();
+        sqLiteDatabaseWriteable = sqLiteHelper.getWritableDatabase();
+        sqLiteDatabaseReadable = sqLiteHelper.getReadableDatabase();
+
         /*
         *   A content provider is created when its hosting process is created,
         *   and remains around for as long as the process does, so there is no need to close the database --
@@ -145,6 +158,16 @@ public class CustomContentProvider extends ContentProvider {
     @Nullable
     @Override
     public String getType(@NonNull Uri uri) {
+        // FIXME: 14-Apr-17
+        switch (URI_MATCHER.match(uri)){
+            case STATISTIKK_ID:
+                return Statistics.CONTENT_ITEM_TYPE;
+            case STATISTIKK_LIST:
+                return Statistics.CONTENT_TYPE;
+
+        }
+
+
         switch (URI_MATCHER.match(uri)){
             case STATISTIKK_LIST ://dersom vi skal ha tak i en eller flere rader i tabellen.
                 /*  CURSOR_DIR_BASE_TYPE= vnd.android.cursor.dir
@@ -161,30 +184,27 @@ public class CustomContentProvider extends ContentProvider {
         }
     }
 
+
     /*
      *   Adds records
      *   values kan komme inn som et Statistik objekt kanskje?
      * */
     @Nullable
     @Override
-    public Uri insert(@NonNull Uri uri, @Nullable ContentValues values) {
-
+    public Uri insert(@NonNull Uri uri, @NonNull ContentValues values) {
+        Log.d(TAG,"Prøver å legge til med uri: "+uri.toString());
+        Log.d(TAG,values.toString());
         switch (URI_MATCHER.match(uri)) {
             case STATISTIKK_ID:
-                long id = sqLiteDatabaseW.insert(
+                long id = sqLiteDatabaseWriteable.insert(
                         StatisticsTable.TABLE_NAME,
                         null,
                         values);
                 return getUriForId(id, uri);
-            case STATISTIKK_LIST:
-                break;
             default:
-                throw new IllegalArgumentException("Unknown URI");
+                throw new IllegalArgumentException("Unknown URI ? " + URI_MATCHER.match(uri));
         }
-        return uri;
     }
-
-
 
     /*  GAMMEL KODE, MEN ER SÅ FIN.
     *     if(URI_MATCHER.match(uri) != STATISTIKK_ID){
@@ -244,12 +264,72 @@ public class CustomContentProvider extends ContentProvider {
     @Nullable
     @Override
     public Cursor query(@NonNull Uri uri, @Nullable String[] projection, @Nullable String selection, @Nullable String[] selectionArgs, @Nullable String sortOrder) {
+        Log.d(TAG,"query Uri: "+uri.toString()+" URI_MATCHER int:" +URI_MATCHER.match(uri));
+        SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
+        boolean useAuthorityUri = false;
+        switch (URI_MATCHER.match(uri)){
+            case STATISTIKK_LIST:
+                queryBuilder.setTables(StatisticsTable.TABLE_NAME);
+                if(TextUtils.isEmpty(sortOrder)){
+                    sortOrder = StatisticsItems.SORT_ORDER_DEFAULT;
+                }
+                break;
+            case STATISTIKK_ID:
+                //TODO: Finn ut hvordan vi velger hvilket case som skal gjøres.
+                queryBuilder.setTables(StatisticsTable.TABLE_NAME);
+                //TODO: Finn ut hvordan vi best kan finne bare en data, siden dette ikk er unikt.
+                //queryBuilder.appendWhere(StatisticsTable.COLUMN_VISITOR_ID + " = " + uri.getLastPathSegment());
+                break;
+                //Hvordan vi kan legge til flere andre tabeller.
+            /*case PHOTO_LIST:
+                builder.setTables(DbSchema.TBL_PHOTOS);
+                break; */
+            /*case ENTITY_LIST:
+                builder.setTables(DbSchema.LEFT_OUTER_JOIN_STATEMENT);
+                if (TextUtils.isEmpty(sortOrder)) {
+                    sortOrder = ItemEntities.SORT_ORDER_DEFAULT;
+                }
+                useAuthorityUri = true;
+                break; */
+            default:
+                throw new IllegalArgumentException("Unsupporter Uri" + uri);
 
+        }
+
+        // logQuere for debugging.
+        logQuery(queryBuilder,  projection, selection, sortOrder);
+
+
+        Cursor cursor = queryBuilder.query(sqLiteDatabaseReadable, projection, selection, selectionArgs,
+                null, null, sortOrder);
+        // if we want to be notified of any changes to database:
+        if (useAuthorityUri) {
+            cursor.setNotificationUri(getContext().getContentResolver(), KioskDbContract.CONTENT_URI);
+        }
+        else {
+            cursor.setNotificationUri(getContext().getContentResolver(), uri);
+        }
+        return cursor;
+
+
+    /*
         String id = null;
         if(URI_MATCHER.match(uri) == STATISTIKK_ID){
             id = uri.getPathSegments().get(1);
         }
         return sqLiteHelper.getStatistics(id,projection,selection,selectionArgs,sortOrder);
+        */
+    }
+    /*
+    * Rett fra grokkingandroid sin kode
+    * https://bitbucket.org/grokkingandroid/cpsample/src/c75f7d61f80cf41f009aca8ad346eddf6b3a13e7/src/com/grokkingandroid/sampleapp/samples/data/contentprovider/provider/LentItemsProvider.java?at=master&fileviewer=file-view-default
+    * */
+
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    private void logQuery(SQLiteQueryBuilder builder, String[] projection, String selection, String sortOrder) {
+        if (AppUtils.DEBUG) {
+            Log.v("cpsample", "query: " + builder.buildQuery(projection, selection, null, null, sortOrder, null));
+        }
     }
 
 
@@ -276,7 +356,7 @@ public class CustomContentProvider extends ContentProvider {
         try {
             final ContentProviderResult[] returnResult = super.applyBatch(operations);
             db.setTransactionSuccessful();
-            getContext().getContentResolver().notifyChange(StatisticsItemsContract.CONTENT_URI, null);
+            getContext().getContentResolver().notifyChange(KioskDbContract.CONTENT_URI, null);
 
             return returnResult;
         }
@@ -295,7 +375,6 @@ public class CustomContentProvider extends ContentProvider {
     @Override
     public int bulkInsert(@NonNull Uri uri, @NonNull ContentValues[] values) {
         SQLiteDatabase db = sqLiteHelper.getWritableDatabase();
-
 
         switch (URI_MATCHER.match(uri)){
             case STATISTIKK_LIST:

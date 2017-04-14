@@ -5,7 +5,6 @@ import android.app.UiModeManager;
 import android.app.admin.DevicePolicyManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -21,8 +20,6 @@ import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.util.TimeUtils;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -40,18 +37,12 @@ import com.sondreweb.kiosk_mode_alpha.classes.StatusInfo;
 import com.sondreweb.kiosk_mode_alpha.adapters.StatusAdapter;
 import com.sondreweb.kiosk_mode_alpha.deviceAdministator.DeviceAdminKiosk;
 import com.sondreweb.kiosk_mode_alpha.services.GeofenceTransitionService;
-import com.sondreweb.kiosk_mode_alpha.storage.CustomContentProvider;
-import com.sondreweb.kiosk_mode_alpha.storage.StatisticsItems;
-import com.sondreweb.kiosk_mode_alpha.storage.StatisticsItemsContract;
-import com.sondreweb.kiosk_mode_alpha.storage.StatisticsTable;
 import com.sondreweb.kiosk_mode_alpha.utils.AppUtils;
 import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
 import com.sondreweb.kiosk_mode_alpha.R;
 import com.sondreweb.kiosk_mode_alpha.services.AccessibilityService;
 
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.Random;
 
 /**
  * Created by sondre on 16-Feb-17.
@@ -92,9 +83,9 @@ public class HomeActivity extends FragmentActivity implements
 
     private BatteryBroadcastReceiver batteryBroadcastReceiver;
 
-    private StatusAdapter statusAdapter;
+    private StatusAdapter statusAdapter; //For å pushe til GridViewet.
 
-    SharedPreferences sharedPreferences;
+    SharedPreferences sharedPreferences; //For å lytte på om SharedPreferences forandres.
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -115,19 +106,8 @@ public class HomeActivity extends FragmentActivity implements
         //Henter DevicePolicMangar, brukes for å sjekke om vi er admin osl.
         devicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
 
-        if(devicePolicyManager.isAdminActive(deviceAdmin)){
-            PreferenceUtils.setPrefAdminDevice(true, this); //dersom vi er admin, så kan vi sette at vi faktisk er det i instillingene:
-        }
-        else
-        {
-            PreferenceUtils.setPrefAdminDevice(false,this); //dersom vi ikk er admin, så lagrer vi dette til senere bruk.
-            Log.d(TAG,"vi er ikke admin");
-            statusText.setText("Vi er ikke admin");
-        }
-
         /* Initalize google API client.(Trenger ikke nyeste Versjon av Servicen for dette)
         * */
-
 
         /*if(AppUtils.isGooglePlayServicesAvailableAndPoll(this,this)){
             //createGoogleApi(); //lager GoogleApiClienten vår.
@@ -153,6 +133,21 @@ public class HomeActivity extends FragmentActivity implements
         gridView.setOnItemClickListener(new OnStatusItemClickListener());
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+
+        //Dersom servicen ikke er startet
+        if( ! AppUtils.isServiceRunning(GeofenceTransitionService.class,this)){
+            Intent GeofenceServiceIntent = new Intent(context, GeofenceTransitionService.class);
+            GeofenceServiceIntent.setAction(GeofenceTransitionService.START_SERVICE); //slik at vi vet at det mobilen har blir resatt, vi må då muligens gå direkte til MonumentVandring.
+
+            Log.d(TAG,"Starting Service GeofenceService......................................");
+            context.startService(GeofenceServiceIntent);
+        }
+
+        if(!AppUtils.isServiceRunning(AccessibilityService.class, this)){
+            Log.d(TAG,"Starting Service AccessibilityService......................................");
+            Intent AccessibilityServiceIntent = new Intent(context, AccessibilityService.class);
+            context.startService(AccessibilityServiceIntent);
+        }
     }
 
 
@@ -178,10 +173,12 @@ public class HomeActivity extends FragmentActivity implements
     private final String googlePlayServiceStatus = "Google Play Service",
             deviceAdminStatus = "Device Admin",
             accessibilityServiceStatus = "Accessibility Service",
+            accessibilityServiceRunningStatus = "Accessibility Service Running",
             touchViewStatus = "Quick Settings Restriction",
             locationEnabledStatus= "Location",
             batteryStatus = "Battery",
-            homeStatus = "Home";
+            homeStatus = "Home",
+            BackgroundServiceStatus = "Background Service";
 
     public void createAndUpdateStatusList(){
         if(! statusList.isEmpty()){//dersom den ikke er tom.
@@ -191,11 +188,7 @@ public class HomeActivity extends FragmentActivity implements
         *   Tester med ulike settings.
         * */
 
-
-
         StatusInfo status; //status objekt som vi bare kan bruke, mulig dette er litt dårlig, siden vi får samme objekt med ulike parametere.
-
-
 
         status = new StatusInfo(googlePlayServiceStatus);
         if(AppUtils.isGooglePlayServicesAvailable(this)){
@@ -220,6 +213,26 @@ public class HomeActivity extends FragmentActivity implements
             status.setStatus(false);
         }
         statusList.add(status);
+
+        status = new StatusInfo(accessibilityServiceRunningStatus);
+        if(AppUtils.isServiceRunning(AccessibilityService.class,context)){
+            status.setStatus(true);
+        }else
+        {
+            status.setStatus(false);
+        }
+        statusList.add(status);
+
+        status = new StatusInfo(BackgroundServiceStatus);
+        if(AppUtils.isServiceRunning(GeofenceTransitionService.class,context)){
+            status.setStatus(true);
+        }else
+        {
+            status.setStatus(false);
+        }
+        statusList.add(status);
+
+
 
         //sjekker touchVievet
         status = new StatusInfo(touchViewStatus);
@@ -279,17 +292,6 @@ public class HomeActivity extends FragmentActivity implements
         statusList.add(status);
 
         status = new StatusInfo("Status 3");
-        status.setStatus(true);
-        statusList.add(status);
-
-        status = new StatusInfo("Status 4");
-        status.setStatus(true);
-        statusList.add(status);
-        status = new StatusInfo("Status ...");
-        status.setStatus(true);
-        statusList.add(status);
-
-        status = new StatusInfo("Status n ");
         status.setStatus(true);
         statusList.add(status);
 
@@ -412,6 +414,7 @@ public class HomeActivity extends FragmentActivity implements
             String prefApp = PreferenceUtils.getPrefkioskModeApp(context);
             Log.d(TAG, "prefApp: " + prefApp.toString());
             Intent launcherIntent = getPackageManager().getLaunchIntentForPackage(prefApp);
+            launcherIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP); //Fjerne andre activities fra stacken.
             try {
                 Log.v(TAG,"Går til app med navn " + prefApp+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
                 Log.d(TAG, "launcherIntent: " + launcherIntent);
@@ -428,7 +431,6 @@ public class HomeActivity extends FragmentActivity implements
     }
 
     static final int PICK_CONTANCT_RQEUST = 1;
-
 
 
     @Override
@@ -449,7 +451,6 @@ public class HomeActivity extends FragmentActivity implements
         }catch (NullPointerException e){
             Log.e(TAG, e.toString());
         }
-
 
 
         createAndUpdateStatusList(); //oppdaterer listen.
@@ -679,7 +680,7 @@ public class HomeActivity extends FragmentActivity implements
             localLayoutParams.format = PixelFormat.TRANSLUCENT; //litt gjennomsiktig. PixelFormat.TRANSLUCENT;
             CustomView view = new CustomView(this);
             //Bare slik at jeg kunne se Viewet.
-            view.setBackgroundColor(ContextCompat.getColor(context, R.color.transparent_red));
+            //view.setBackgroundColor(ContextCompat.getColor(context, R.color.transparent_red));
             view.setId(R.id.view_notification);
             view.setAlpha(0.1f);
             touchView = view; //lagrere Viewet i en variabel;
@@ -752,15 +753,8 @@ public class HomeActivity extends FragmentActivity implements
     public void startAccessibilityService(){
         Log.d(TAG,"startAccessibilityService");
         Intent accessibilityServiceIntent = new Intent(this,AccessibilityService.class);
+        Log.d(TAG,"starting :"+accessibilityServiceIntent.toString());
         startService(accessibilityServiceIntent);
-
-        if(! AppUtils.isServiceRunning(GeofenceTransitionService.class,this)){
-            Intent GeofenceServiceIntent = new Intent(context, GeofenceTransitionService.class);
-            GeofenceServiceIntent.setAction(GeofenceTransitionService.START_SERVICE); //slik at vi vet at det mobilen har blir resatt, vi må då muligens gå direkte til MonumentVandring.
-
-            Log.d(TAG,"Starting Service GeofenceService......................................");
-            context.startService(GeofenceServiceIntent);
-        }
     }
 
     public void showApps(View v) {
@@ -898,26 +892,7 @@ public class HomeActivity extends FragmentActivity implements
         startActivity(intent);
     }
 
-    public void testingStatisticsAdding(){
 
-        //Må lage et monument tall
-        //Må lage en random id
-        //Må lage en dato
-        //Må lage en tid
-
-        int monumentId = 2;
-        Random rn = new Random();
-        int date = rn.nextInt(200)+1; //fra 1-200
-
-        int time = rn.nextInt(10000)+1; //Fra 1 ms til 10000
-
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(StatisticsTable.COLUMN_MONUMENT, monumentId);
-        contentValues.put(StatisticsTable.COLUMN_DATE, date);
-        contentValues.put(StatisticsTable.COLUMN_TIME, time);
-
-        
-    }
 
 
     /*

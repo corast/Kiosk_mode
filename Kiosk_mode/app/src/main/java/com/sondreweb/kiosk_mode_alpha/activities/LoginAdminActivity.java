@@ -3,6 +3,7 @@ package com.sondreweb.kiosk_mode_alpha.activities;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -60,7 +61,7 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
     };
 
     private static final String[] DYMMY_CREDENTUALS_PASSWORDS = new String[]{
-      "passord123","FORGOTPASSWORD","password"
+      "passord123","FORGOTPASSWORD","password","12345"
     };
 
     /**
@@ -355,14 +356,13 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
             for (String credential : DYMMY_CREDENTUALS_PASSWORDS) {
                     // Account exists, return true if the password matches.
                 Log.d(TAG,credential + " == " + mPassword + " -> " + credential.equals(mPassword));
-                if(credential.equals(DUMMY_CREDENTIALS)){
-                    continue;
+                if(credential.equals(mPassword)){
+                    return true;
                 }
-                return credential.equals(mPassword);
             }
 
             // TODO: register the new account here.
-            return true;
+            return false;
         }
 
         @Override
@@ -373,10 +373,11 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
             if (success) {
                 Log.d(TAG,"Vi er ferdige");
                 /*
-                *   Når vi da har logget inn, så må vi gjøre noe her.
+                *   Når vi da har logget inn, så må vi bevege oss til Admin panelet.
                 * */
-                //TODO: gå til Admin panelet vårt.
-                PreferenceUtils.setKioskModeActive(getApplicationContext(),false); //skrur av Kiosk mode.
+                Intent intent = new Intent(getApplicationContext(), AdminPanelActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
                 finish();
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));

@@ -82,7 +82,9 @@
     <!-- Git oss tilates for å få enheten til å vibrere -->
     <uses-permission android:name="android.permission.VIBRATE" />
 
+    <!--
     <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE"/>
+    -->
 
     <application
         android:allowBackup="true"
@@ -123,6 +125,11 @@
             android:excludeFromRecents="true"
             android:label="@string/title_activity_login_admin"
             android:noHistory="true" />
+
+        <activity android:name=".activities.AdminPanelActivity"
+            android:noHistory="true"
+            android:label="AdminPanel"
+            android:excludeFromRecents="true" />
 
         <!--
         EXPORTED: Whether or not components of other applications can invoke the service or interact with it —
