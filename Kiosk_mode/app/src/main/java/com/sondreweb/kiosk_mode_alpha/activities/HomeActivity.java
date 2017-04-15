@@ -409,25 +409,34 @@ public class HomeActivity extends FragmentActivity implements
         return false;
     }
 
-    private void startPrefKioskModeApp(){ //Er noe galt her...
+    private boolean startPrefKioskModeApp(){ //Er noe galt her...
         if(PreferenceUtils.isKioskModeActivated(context)) {//vi skal bare gjøre noe dersom KiosMode er satt til True.
             String prefApp = PreferenceUtils.getPrefkioskModeApp(context);
             Log.d(TAG, "prefApp: " + prefApp.toString());
             Intent launcherIntent = getPackageManager().getLaunchIntentForPackage(prefApp);
-            launcherIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP); //Fjerne andre activities fra stacken.
+
+            //TODO: finn ut hva vi gjør når packages ikke er innstalert.
+            //launcherIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP); //Fjerne andre activities fra stacken.
             try {
                 Log.v(TAG,"Går til app med navn " + prefApp+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
                 Log.d(TAG, "launcherIntent: " + launcherIntent);
                 //Denne er null...
                 startActivity(launcherIntent);
                //startActivityForResult(launcherIntent,0);
-            } catch (NullPointerException e) {
-                Log.e(TAG, e.getMessage());
+            }
+            catch (NullPointerException e) {
+                //TODO: gjør noe når packagenen ikke er installert.
+                Log.d(TAG,"Intent er null");
+                //Log.e(TAG, e.getMessage());
+                Toast.makeText(context, "Packagen "+prefApp +" er ikke installert", Toast.LENGTH_SHORT).show();
+                return false;
             }
 
         }else{
             Log.d(TAG,"Kiosk mode er off");
+
         }
+        return true;
     }
 
     static final int PICK_CONTANCT_RQEUST = 1;
@@ -610,9 +619,14 @@ public class HomeActivity extends FragmentActivity implements
         Log.d(TAG,"????????????????????Resultcode: "+resultCode);
         if(resultCode == RESULT_CANCELED){
             //VI må starte aktiviteten på nytt?
-            startActivity(getPackageManager().getLaunchIntentForPackage(PreferenceUtils.getPrefkioskModeApp(context)));
-        }
+            //TODO: kan være null
+            if(startPrefKioskModeApp()){
 
+            }else{
+                Toast.makeText(context,"Kan ikke starte Kiosk mode appen.",Toast.LENGTH_LONG).show();
+            }
+            //startActivity(getPackageManager().getLaunchIntentForPackage(PreferenceUtils.getPrefkioskModeApp(context)));
+        }
     }
 
     /**
@@ -855,6 +869,7 @@ public class HomeActivity extends FragmentActivity implements
     public void startKioskMode(View view){
         if( ! kioskModeReady() ){
             //Da kan vi ikke starte KioskModen.
+            Log.d(TAG, "Kiosk mode not ready");
             return;
         }
 
@@ -864,7 +879,12 @@ public class HomeActivity extends FragmentActivity implements
 
         //TODO: Hopp til MonumentVandring
 
-        startPrefKioskModeApp();
+        if(startPrefKioskModeApp()){
+
+        }else{
+            setKioskMode(false);
+        }
+        updateStartKioskGui();
     }
 
     /*
@@ -891,9 +911,6 @@ public class HomeActivity extends FragmentActivity implements
         Intent intent = new Intent(this, LoginAdminActivity.class);
         startActivity(intent);
     }
-
-
-
 
     /*
     *   Callback for når vi requester permission for å hente ut lokasjon.

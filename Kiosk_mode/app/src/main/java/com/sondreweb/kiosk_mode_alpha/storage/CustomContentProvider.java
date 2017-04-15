@@ -71,8 +71,14 @@ public class CustomContentProvider extends ContentProvider {
 
 
     //Helper constants for use with the UriMatcher.
-    private static final int STATISTIKK_ID = 1;
-    private static final int STATISTIKK_LIST = 2;
+    private static final int STATISTIKK_ID = 1; //For å lese ut en verdi.
+    private static final int STATISTIKK_LIST = 2; //For å inserte en eller flere verdier eller lese ut.
+    /*
+    *   Eksempel viss vi har flere Tabeller vi vill dele data fra.
+    *   private static final int TABEL_NAME_ID = 3
+    *   private static final int TABEL_NAME_LIST = 4
+    * */
+
 
 
     //content://authority/optionalPath/optionalId
@@ -90,7 +96,7 @@ public class CustomContentProvider extends ContentProvider {
     static final UriMatcher URI_MATCHER;
     static{
         URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
-        URI_MATCHER.addURI(
+        /*URI_MATCHER.addURI(
                 PROVIDER_NAME,
                 "statistikk",
                 STATISTIKK_ID
@@ -101,21 +107,28 @@ public class CustomContentProvider extends ContentProvider {
                 "statistikk/#",//# vill si flere
                 STATISTIKK_LIST
         );
+        */
 
+        /*
         URI_MATCHER.addURI(KioskDbContract.AUTHORITY,
                 "statistikk",+
                         STATISTIKK_ID);
+        */
+        //Når vi skal ha tak i kunn ett element med en ID.
 
-        URI_MATCHER.addURI(
-                PROVIDER_NAME,
-                KioskDbContract.Statistics.TABLE_NAME,
-                STATISTIKK_ID
-        );
+
         URI_MATCHER.addURI(
                 PROVIDER_NAME,
                 KioskDbContract.Statistics.TABLE_NAME,
                 STATISTIKK_LIST
         );
+
+        URI_MATCHER.addURI(
+                PROVIDER_NAME,
+                KioskDbContract.Statistics.TABLE_NAME+"/#",
+                STATISTIKK_ID
+        );
+
     }
 
     private SQLiteHelper sqLiteHelper = null;
@@ -159,52 +172,37 @@ public class CustomContentProvider extends ContentProvider {
     @Override
     public String getType(@NonNull Uri uri) {
         // FIXME: 14-Apr-17
+        Log.d(TAG,"getType: "+uri);
         switch (URI_MATCHER.match(uri)){
             case STATISTIKK_ID:
+                Log.d(TAG,"getType: case: "+STATISTIKK_ID);
                 return Statistics.CONTENT_ITEM_TYPE;
             case STATISTIKK_LIST:
+                Log.d(TAG,"getType: case: "+STATISTIKK_LIST);
                 return Statistics.CONTENT_TYPE;
-
-        }
-
-
-        switch (URI_MATCHER.match(uri)){
-            case STATISTIKK_LIST ://dersom vi skal ha tak i en eller flere rader i tabellen.
-                /*  CURSOR_DIR_BASE_TYPE= vnd.android.cursor.dir
-                *   "vnd.android.cursor.dir/com.sondreweb.kiosk_mode_alpha.storage.statisticsItems"
-                *    "vnd.android.cursor.dir/vnd.com.androidcontentproviderdemo.androidcontentprovider.provider.images";*/
-                return StatisticsItems.CONTENT_TYPE;
-            case STATISTIKK_ID: //Dersom vi skal ha tak i en rad
-                /*  CURSOR_ITEM_BASE_TYPE= vnd.android.cursor.item
-                *   "vnd.android.cursor.item/com.sondreweb.kiosk_mode_alpha.storage.statisticsItems
-                * */
-                return StatisticsItems.CONTENT_ITEM_TYPE;
             default:
                 throw new IllegalArgumentException("Unsupported URI "+uri);
         }
-    }
 
+        /*
+        switch (URI_MATCHER.match(uri)){
+            case STATISTIKK_LIST ://dersom vi skal ha tak i en eller flere rader i tabellen.
+                /*  CURSOR_DIR_BASE_TYPE= vnd.android.cursor.dir
+                //   "vnd.android.cursor.dir/com.sondreweb.kiosk_mode_alpha.storage.statisticsItems"
+                //   "vnd.android.cursor.dir/vnd.com.androidcontentproviderdemo.androidcontentprovider.provider.images";
+                //return StatisticsItems.CONTENT_TYPE;
+            case STATISTIKK_ID: //Dersom vi skal ha tak i en rad
+                /*  CURSOR_ITEM_BASE_TYPE= vnd.android.cursor.item
+                  // "vnd.android.cursor.item/com.sondreweb.kiosk_mode_alpha.storage.statisticsItems
 
-    /*
-     *   Adds records
-     *   values kan komme inn som et Statistik objekt kanskje?
-     * */
-    @Nullable
-    @Override
-    public Uri insert(@NonNull Uri uri, @NonNull ContentValues values) {
-        Log.d(TAG,"Prøver å legge til med uri: "+uri.toString());
-        Log.d(TAG,values.toString());
-        switch (URI_MATCHER.match(uri)) {
-            case STATISTIKK_ID:
-                long id = sqLiteDatabaseWriteable.insert(
-                        StatisticsTable.TABLE_NAME,
-                        null,
-                        values);
-                return getUriForId(id, uri);
+                //return StatisticsItems.CONTENT_ITEM_TYPE;
             default:
-                throw new IllegalArgumentException("Unknown URI ? " + URI_MATCHER.match(uri));
-        }
+                throw new IllegalArgumentException("Unsupported URI "+uri);
+        } */
     }
+
+
+
 
     /*  GAMMEL KODE, MEN ER SÅ FIN.
     *     if(URI_MATCHER.match(uri) != STATISTIKK_ID){
@@ -265,33 +263,33 @@ public class CustomContentProvider extends ContentProvider {
     @Override
     public Cursor query(@NonNull Uri uri, @Nullable String[] projection, @Nullable String selection, @Nullable String[] selectionArgs, @Nullable String sortOrder) {
         Log.d(TAG,"query Uri: "+uri.toString()+" URI_MATCHER int:" +URI_MATCHER.match(uri));
+
         SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
         boolean useAuthorityUri = false;
         switch (URI_MATCHER.match(uri)){
-            case STATISTIKK_LIST:
+            case STATISTIKK_LIST: //Vill si at vi skal lage en cursor hvor vi skal ha tilbake en eller flere elementer.
                 queryBuilder.setTables(StatisticsTable.TABLE_NAME);
                 if(TextUtils.isEmpty(sortOrder)){
-                    sortOrder = StatisticsItems.SORT_ORDER_DEFAULT;
+                    sortOrder = Statistics.SORT_ORDER_DEFAULT; //Sorter på visitor_id ASC.
                 }
                 break;
-            case STATISTIKK_ID:
+            case STATISTIKK_ID: //Vill si at vi skal lage en cursor hvor vi skal ha tilbake kunn et element.
                 //TODO: Finn ut hvordan vi velger hvilket case som skal gjøres.
                 queryBuilder.setTables(StatisticsTable.TABLE_NAME);
                 //TODO: Finn ut hvordan vi best kan finne bare en data, siden dette ikk er unikt.
+                //uri.getLastPathSegment() er det som kommer etter /# så altså hva som står i #, et tall for primary key eller string. Tror jeg ivetfall.
                 //queryBuilder.appendWhere(StatisticsTable.COLUMN_VISITOR_ID + " = " + uri.getLastPathSegment());
-                break;
-                //Hvordan vi kan legge til flere andre tabeller.
-            /*case PHOTO_LIST:
-                builder.setTables(DbSchema.TBL_PHOTOS);
-                break; */
-            /*case ENTITY_LIST:
-                builder.setTables(DbSchema.LEFT_OUTER_JOIN_STATEMENT);
-                if (TextUtils.isEmpty(sortOrder)) {
-                    sortOrder = ItemEntities.SORT_ORDER_DEFAULT;
+                //Vi må da sende inn de tre verdiene vi trenger å sjekke imot for å finne den uniqe raden.
+                if(selectionArgs != null && selectionArgs.length == 3){
+                    queryBuilder.appendWhere(
+                            Statistics.COLUMN_MONUMENT +" = " + selectionArgs[0] +" AND " +
+                                    Statistics.COLUMN_VISITOR_ID +" = " +selectionArgs[1] + " AND " +
+                                    Statistics.COLUMN_DATE + " = " + selectionArgs[2]);
+                }else{
+                    throw new IllegalArgumentException("Too few selectionArguments, need monunent, visitor_id and date !");
                 }
-                useAuthorityUri = true;
-                break; */
-            default:
+                break;
+            default: //Støtter kunn å hente ut hele tabellen enn så lenge.
                 throw new IllegalArgumentException("Unsupporter Uri" + uri);
 
         }
@@ -372,8 +370,30 @@ public class CustomContentProvider extends ContentProvider {
 
 
 
+    /*
+ *   Adds records
+ *   values kan komme inn som et Statistik objekt kanskje?
+ * */
+    @Nullable
     @Override
-    public int bulkInsert(@NonNull Uri uri, @NonNull ContentValues[] values) {
+    public Uri insert(@NonNull Uri uri, @NonNull ContentValues values) {
+        Log.d(TAG,"Prøver å legge til med uri: "+uri.toString());
+        Log.d(TAG,values.toString());
+        long id = 0; //Default error verdi.
+        switch (URI_MATCHER.match(uri)) {
+            case STATISTIKK_LIST: //Bruker denne for å legge til.
+                id = sqLiteDatabaseWriteable.insert(
+                        StatisticsTable.TABLE_NAME,
+                        null,
+                        values);
+                return getUriForId(id, uri);
+            default:
+                throw new IllegalArgumentException("Unknown URI ? " + URI_MATCHER.match(uri));
+        }
+    }
+
+    @Override
+    public int bulkInsert(@NonNull Uri uri, @NonNull ContentValues[] valuesList) {
         SQLiteDatabase db = sqLiteHelper.getWritableDatabase();
 
         switch (URI_MATCHER.match(uri)){
@@ -382,22 +402,28 @@ public class CustomContentProvider extends ContentProvider {
                 db.beginTransaction();
                 try {
                     //Inserter en value for hver av de.
-                    for (ContentValues value : values ) {
-                        db.insert(StatisticsTable.TABLE_NAME,
+                    for (ContentValues value : valuesList ) {
+                        if(db.insert(StatisticsTable.TABLE_NAME,
                                 null,
-                                value);
+                                value) == 0){
+                            //Dersom verdien som returneres ved insert er større enn 0,
+                                //så var det en vellykket insert settning.
+                            throw new SQLException("Failed to insert "+ value.toString() + " into uri:" + uri);
+                        }
+                        //else så er det bare å forsette å inserte.
                     }
                     db.setTransactionSuccessful();
-                    numberInserted = values.length;
+                    numberInserted = valuesList.length;
                 } finally {
                     db.endTransaction();
+                    db.close();
                 }
                 return numberInserted;
-
             default:
                 throw new UnsupportedOperationException("unsupported uri: " + uri);
         }
     }
+
 
 /*  ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤JOB SCHEDULER¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
     *   JobScheduling av Syncing.
