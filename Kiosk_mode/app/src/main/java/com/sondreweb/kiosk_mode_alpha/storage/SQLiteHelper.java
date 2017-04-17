@@ -102,6 +102,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             }while (cursor.moveToNext());
         }
         cursor.close();
+        db.close();
         return geofenceArrayList;
         //TODO Lag en liste med GeofenceStatus objecter utifra dette vi returneren her.
     }
@@ -119,6 +120,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         values.put(GeofenceTable.COLUMN_LONGITUDE, latLng.longitude);
         values.put(GeofenceTable.COLUMN_RADIUS, radius);
 
+        db.close();
         return db.insertOrThrow(GeofenceTable.TABLE_NAME, null, values); //vi får en ID tilbake, eller så kaster vi en error.
     }
 

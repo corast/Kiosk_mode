@@ -7,4 +7,9 @@
     <dimen name="screen_heigth_landscape">527dp</dimen>
     <dimen name="text_sign_in">24sp</dimen>
     <dimen name="text_field">24sp</dimen>
+
+
+    <!-- Dimentions for viewStub-->
+    <dimen name="app_size_width">48dp</dimen>
+    <dimen name="app_size_heigtt">48dp</dimen>
 </resources>

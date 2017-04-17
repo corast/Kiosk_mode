@@ -24,14 +24,18 @@ public class CustomJobService extends JobService{
             if(job.getTag().equals(CustomContentProvider.jobTag)){
                 //TODO gjør syncingen, siden vi vet at vi er på WIFI og enheten lader.
                 //Gjør denne syncingen på en tråd også.
+
+                //Hent all data fra databasen og send dette til databasen, når vi får en godkjent respons fra databasen eller hva den nå sender i respons.
+                //Kan vi slette all data fra databasen som vi nettop sendte over.
+                Log.d(TAG,"Schedulerer starter job: "+job.toString());
             }
         return false; //Trenger ikke fullføre arbeidet på en tråd, vi kan fikse dette selv.
     }
 
+    //skal aldri stoppe en Job uansett.
     @Override
     public boolean onStopJob(JobParameters job) {
         return false;
     }
-
 
 }

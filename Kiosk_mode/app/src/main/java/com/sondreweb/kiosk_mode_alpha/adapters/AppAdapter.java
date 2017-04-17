@@ -29,7 +29,7 @@ public class AppAdapter extends ArrayAdapter<AppModel> {
 
     public AppAdapter(Context context)
     {
-        super(context, R.layout.test_horizontal_layout);
+        super(context, R.layout.horizontal_layout);
 
         inflater = LayoutInflater.from(context);
 

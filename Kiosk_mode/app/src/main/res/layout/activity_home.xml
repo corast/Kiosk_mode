@@ -72,22 +72,25 @@
         android:onClick="startAdminLogin" />
 -->
     <fragment
+        android:layout_centerHorizontal="true"
+        android:layout_centerInParent="true"
         android:id="@+id/apps_grid"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/button_start_map"
         android:layout_above="@+id/button_lock_screen"
-        android:name="com.sondreweb.kiosk_mode_alpha.AppsFragment"/>
+        android:name="com.sondreweb.kiosk_mode_alpha.AppsFragment" >
+    </fragment>
 
 
     <Button
         android:id="@+id/button_lock_screen"
-        android:text="Lock Screen test"
+        android:text="Geofence Testing"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:onClick="lockScreenNow"
-        android:visibility="gone"/>
+        android:onClick="testGeofence"
+        android:visibility="visible"/>
 
 
 </RelativeLayout>

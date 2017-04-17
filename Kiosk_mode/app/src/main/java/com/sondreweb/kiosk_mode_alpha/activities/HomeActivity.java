@@ -11,6 +11,8 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.PixelFormat;
 import android.os.BatteryManager;
 import android.os.Build;
@@ -37,10 +39,13 @@ import com.sondreweb.kiosk_mode_alpha.classes.StatusInfo;
 import com.sondreweb.kiosk_mode_alpha.adapters.StatusAdapter;
 import com.sondreweb.kiosk_mode_alpha.deviceAdministator.DeviceAdminKiosk;
 import com.sondreweb.kiosk_mode_alpha.services.GeofenceTransitionService;
+import com.sondreweb.kiosk_mode_alpha.storage.SQLiteHelper;
 import com.sondreweb.kiosk_mode_alpha.utils.AppUtils;
 import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
 import com.sondreweb.kiosk_mode_alpha.R;
 import com.sondreweb.kiosk_mode_alpha.services.AccessibilityService;
+
+import com.sondreweb.kiosk_mode_alpha.storage.SQLiteHelper;
 
 import java.util.ArrayList;
 
@@ -52,7 +57,7 @@ import java.util.ArrayList;
  * TODO: Ta i bruk SettingsApi, ved å først koble til Google Api Client.
  */
 public class HomeActivity extends FragmentActivity implements
-        ActivityCompat.OnRequestPermissionsResultCallback{
+        ActivityCompat.OnRequestPermissionsResultCallback {
 
     public final static String TAG = HomeActivity.class.getSimpleName();
     private final static String APP = "com.sondreweb.geofencingalpha";
@@ -78,7 +83,7 @@ public class HomeActivity extends FragmentActivity implements
 
     static { //for passord ting.
         //System.loadLibrary("");
-        Log.d(TAG,"Static tag kjører........................................................................................................");
+        Log.d(TAG, "Static tag kjører........................................................................................................");
     }
 
     private BatteryBroadcastReceiver batteryBroadcastReceiver;
@@ -89,18 +94,18 @@ public class HomeActivity extends FragmentActivity implements
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.d(TAG,"onCreate()");
+        Log.d(TAG, "onCreate()");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
         //this.startActivity(intent);
 
-        gridView = (GridView)findViewById(R.id.grid_status_view);
+        gridView = (GridView) findViewById(R.id.grid_status_view);
 
         startKioskButton = (Button) findViewById(R.id.button_start_kiosk);
 
         statusText = (TextView) findViewById(R.id.home_text);
         //Lager en ny Component Indentifier fra en classe. Men hvorfor?
-            //TODO: finn ut hva dette faktisk gjør.
+        //TODO: finn ut hva dette faktisk gjør.
         ComponentName deviceAdmin = new ComponentName(this, DeviceAdminKiosk.class);
 
         //Henter DevicePolicMangar, brukes for å sjekke om vi er admin osl.
@@ -135,34 +140,33 @@ public class HomeActivity extends FragmentActivity implements
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 
         //Dersom servicen ikke er startet
-        if( ! AppUtils.isServiceRunning(GeofenceTransitionService.class,this)){
+        if (!AppUtils.isServiceRunning(GeofenceTransitionService.class, this)) {
             Intent GeofenceServiceIntent = new Intent(context, GeofenceTransitionService.class);
             GeofenceServiceIntent.setAction(GeofenceTransitionService.START_SERVICE); //slik at vi vet at det mobilen har blir resatt, vi må då muligens gå direkte til MonumentVandring.
 
-            Log.d(TAG,"Starting Service GeofenceService......................................");
+            Log.d(TAG, "Starting Service GeofenceService......................................");
             context.startService(GeofenceServiceIntent);
         }
 
-        if(!AppUtils.isServiceRunning(AccessibilityService.class, this)){
-            Log.d(TAG,"Starting Service AccessibilityService......................................");
+        if (!AppUtils.isServiceRunning(AccessibilityService.class, this)) {
+            Log.d(TAG, "Starting Service AccessibilityService......................................");
             Intent AccessibilityServiceIntent = new Intent(context, AccessibilityService.class);
             context.startService(AccessibilityServiceIntent);
         }
     }
 
 
-
-    public static GoogleApiClient createGoogleApiClient(){
-        if(googleApiClient != null){
+    public static GoogleApiClient createGoogleApiClient() {
+        if (googleApiClient != null) {
             return googleApiClient;
-        }else
-          return null;
+        } else
+            return null;
     }
 
     /*
     *   Liste som holder på alle statusene våre. Denne må oppdateres kontinuelig, ved forandring på systemet.
     * */
-    public ArrayList<StatusInfo> statusList = new ArrayList<>() ;
+    public ArrayList<StatusInfo> statusList = new ArrayList<>();
 
     /* ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤STATUS¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
     *   Lager en Liste med Statuser, som inneholder navn og en bool
@@ -175,13 +179,13 @@ public class HomeActivity extends FragmentActivity implements
             accessibilityServiceStatus = "Accessibility Service",
             accessibilityServiceRunningStatus = "Accessibility Service Running",
             touchViewStatus = "Quick Settings Restriction",
-            locationEnabledStatus= "Location",
+            locationEnabledStatus = "Location",
             batteryStatus = "Battery",
             homeStatus = "Home",
             BackgroundServiceStatus = "Background Service";
 
-    public void createAndUpdateStatusList(){
-        if(! statusList.isEmpty()){//dersom den ikke er tom.
+    public void createAndUpdateStatusList() {
+        if (!statusList.isEmpty()) {//dersom den ikke er tom.
             statusList = new ArrayList<>(); //tømmer listen.
         }
         /*
@@ -191,54 +195,51 @@ public class HomeActivity extends FragmentActivity implements
         StatusInfo status; //status objekt som vi bare kan bruke, mulig dette er litt dårlig, siden vi får samme objekt med ulike parametere.
 
         status = new StatusInfo(googlePlayServiceStatus);
-        if(AppUtils.isGooglePlayServicesAvailable(this)){
+        if (AppUtils.isGooglePlayServicesAvailable(this)) {
             status.setStatus(true);
-        }else{
+        } else {
             status.setStatus(false);
         }
         statusList.add(status);
 
         status = new StatusInfo(deviceAdminStatus);
-        if(PreferenceUtils.isAppDeviceAdmin(this)){
+        if (PreferenceUtils.isAppDeviceAdmin(this)) {
             status.setStatus(true);
-        }else{
+        } else {
             status.setStatus(false);
         }
         statusList.add(status);
 
         status = new StatusInfo(accessibilityServiceStatus);
-        if(AppUtils.isAccessibilitySettingsOn(this)){
+        if (AppUtils.isAccessibilitySettingsOn(this)) {
             status.setStatus(true);
-        }else{
+        } else {
             status.setStatus(false);
         }
         statusList.add(status);
 
         status = new StatusInfo(accessibilityServiceRunningStatus);
-        if(AppUtils.isServiceRunning(AccessibilityService.class,context)){
+        if (AppUtils.isServiceRunning(AccessibilityService.class, context)) {
             status.setStatus(true);
-        }else
-        {
+        } else {
             status.setStatus(false);
         }
         statusList.add(status);
 
         status = new StatusInfo(BackgroundServiceStatus);
-        if(AppUtils.isServiceRunning(GeofenceTransitionService.class,context)){
+        if (AppUtils.isServiceRunning(GeofenceTransitionService.class, context)) {
             status.setStatus(true);
-        }else
-        {
+        } else {
             status.setStatus(false);
         }
         statusList.add(status);
 
 
-
         //sjekker touchVievet
         status = new StatusInfo(touchViewStatus);
-        if(isTouchViewVisible()){
+        if (isTouchViewVisible()) {
             status.setStatus(true);
-        }else{
+        } else {
             status.setStatus(false);
         }
         statusList.add(status);
@@ -246,9 +247,9 @@ public class HomeActivity extends FragmentActivity implements
 
         //Må sjekke at Location er enabled
         status = new StatusInfo(locationEnabledStatus);
-        if(AppUtils.checkLocationPermission(this)){
+        if (AppUtils.checkLocationPermission(this)) {
             status.setStatus(true);
-        }else{
+        } else {
             status.setStatus(false);
         }
 
@@ -260,9 +261,9 @@ public class HomeActivity extends FragmentActivity implements
         * */
         //Må sjekke at Location er enabled
         status = new StatusInfo(batteryStatus);
-        if(HomeActivity.getLevel() >= BATTERY_LIMIT ){
+        if (HomeActivity.getLevel() >= BATTERY_LIMIT) {
             status.setStatus(true);
-        }else{
+        } else {
             status.setStatus(false);
         }
         statusList.add(status);
@@ -272,9 +273,9 @@ public class HomeActivity extends FragmentActivity implements
         * */
 
         status = new StatusInfo(homeStatus);
-        if(AppUtils.isDefault(this,this.getComponentName())){
+        if (AppUtils.isDefault(this, this.getComponentName())) {
             status.setStatus(true);
-        }else{
+        } else {
             status.setStatus(false);
         }
         statusList.add(status);
@@ -296,11 +297,10 @@ public class HomeActivity extends FragmentActivity implements
         statusList.add(status);
 
 
-
         Log.d(TAG, statusList.toString());
 
 
-        if(!statusAdapter.isEmpty()){ //Må tømme AraryAdaptere for items, dersom vi gjør forandringer i ArrayListen.
+        if (!statusAdapter.isEmpty()) { //Må tømme AraryAdaptere for items, dersom vi gjør forandringer i ArrayListen.
             statusAdapter.clear();
         }
 
@@ -314,29 +314,28 @@ public class HomeActivity extends FragmentActivity implements
     private final String DeviceAdminSettingsTest = "com.android.settings.DeviceAdminSettings";
     private final String HomeSettings = Settings.ACTION_HOME_SETTINGS;
     private final String LocationSettings = Settings.ACTION_LOCATION_SOURCE_SETTINGS;
+
     /*
     *   OnItemClickListnener for GridViewet med statuser.
     * */
-    public class OnStatusItemClickListener implements AdapterView.OnItemClickListener{
+    public class OnStatusItemClickListener implements AdapterView.OnItemClickListener {
         private final String TAG = OnStatusItemClickListener.class.getSimpleName();
 
         StatusInfo statusInfo = null;
 
 
-
-
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             //TODO: gjør de ulike tingene.
-            Log.d(TAG, parent.getItemAtPosition(position).getClass().toString() );
+            Log.d(TAG, parent.getItemAtPosition(position).getClass().toString());
             try {
                 statusInfo = (StatusInfo) parent.getItemAtPosition(position);
                 //Tilfelle det er feil klasse, men dette skal strengt tatt aldri skje, siden adaptere kunn legger ut StatusInfo objecter.
-            }catch (ClassCastException e){
-                Log.e(TAG,e.getLocalizedMessage());
+            } catch (ClassCastException e) {
+                Log.e(TAG, e.getLocalizedMessage());
             }
             //TODO gå til de ulike klassene.
-            switch (statusInfo.getName()){
+            switch (statusInfo.getName()) {
                 case googlePlayServiceStatus:
                     break;
                 case deviceAdminStatus:
@@ -356,9 +355,9 @@ public class HomeActivity extends FragmentActivity implements
 
                     break;
                 case homeStatus:
-                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         startActivity(new Intent(HomeSettings));
-                    }else{
+                    } else {
                         startActivity(new Intent(Settings.ACTION_SETTINGS));
                     }
 
@@ -367,7 +366,7 @@ public class HomeActivity extends FragmentActivity implements
             //Intent intent = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
 
             //enten så må vi sendes til settings.
-            if(statusInfo.getName().equalsIgnoreCase("TouchView")){
+            if (statusInfo.getName().equalsIgnoreCase("TouchView")) {
                 //dersom vi har trykket på TouchView så må vi toggle TouchViewet.
                 //toogleTouchView();
             }
@@ -384,33 +383,32 @@ public class HomeActivity extends FragmentActivity implements
     }
 
 
-
     //TODO: logikk på om vi er klare til å starte.
     //Noen ting kan vi faktisk bare sette på selv, som TouchViewet ivertfall.
 
-    public boolean allStatusTrue(){
-        for(StatusInfo s : statusList){
-            if(! s.getStatus()){ //dersom det failer en gang, så er det ikke klart til å starte.
+    public boolean allStatusTrue() {
+        for (StatusInfo s : statusList) {
+            if (!s.getStatus()) { //dersom det failer en gang, så er det ikke klart til å starte.
                 return false;
             }
         }
         return true;
     }
 
-    public boolean allStatusTrueTest(){
-        Log.d(TAG,"PrefUtils.isKiosk: "+PreferenceUtils.isKioskModeActivated(context));
-        Log.d(TAG,"AppUtils.isAccesibillitySettingsOn: "+AppUtils.isAccessibilitySettingsOn(context));
+    public boolean allStatusTrueTest() {
+        Log.d(TAG, "PrefUtils.isKiosk: " + PreferenceUtils.isKioskModeActivated(context));
+        Log.d(TAG, "AppUtils.isAccesibillitySettingsOn: " + AppUtils.isAccessibilitySettingsOn(context));
 
 
-       if(PreferenceUtils.isKioskModeActivated(context) && AppUtils.isAccessibilitySettingsOn(context) && AppUtils.isDefault(context,this.getComponentName() )){
-           //Dersom Accessibility service er på og KioskModeActivated og isDefault, så kan vi faktisk starte.
-           return true;
-       }
+        if (PreferenceUtils.isKioskModeActivated(context) && AppUtils.isAccessibilitySettingsOn(context) && AppUtils.isDefault(context, this.getComponentName())) {
+            //Dersom Accessibility service er på og KioskModeActivated og isDefault, så kan vi faktisk starte.
+            return true;
+        }
         return false;
     }
 
-    private boolean startPrefKioskModeApp(){ //Er noe galt her...
-        if(PreferenceUtils.isKioskModeActivated(context)) {//vi skal bare gjøre noe dersom KiosMode er satt til True.
+    private boolean startPrefKioskModeApp() { //Er noe galt her...
+        if (PreferenceUtils.isKioskModeActivated(context)) {//vi skal bare gjøre noe dersom KiosMode er satt til True.
             String prefApp = PreferenceUtils.getPrefkioskModeApp(context);
             Log.d(TAG, "prefApp: " + prefApp.toString());
             Intent launcherIntent = getPackageManager().getLaunchIntentForPackage(prefApp);
@@ -418,22 +416,21 @@ public class HomeActivity extends FragmentActivity implements
             //TODO: finn ut hva vi gjør når packages ikke er innstalert.
             //launcherIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP); //Fjerne andre activities fra stacken.
             try {
-                Log.v(TAG,"Går til app med navn " + prefApp+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+                Log.v(TAG, "Går til app med navn " + prefApp + " ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
                 Log.d(TAG, "launcherIntent: " + launcherIntent);
                 //Denne er null...
                 startActivity(launcherIntent);
-               //startActivityForResult(launcherIntent,0);
-            }
-            catch (NullPointerException e) {
+                //startActivityForResult(launcherIntent,0);
+            } catch (NullPointerException e) {
                 //TODO: gjør noe når packagenen ikke er installert.
-                Log.d(TAG,"Intent er null");
+                Log.d(TAG, "Intent er null");
                 //Log.e(TAG, e.getMessage());
-                Toast.makeText(context, "Packagen "+prefApp +" er ikke installert", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, "Packagen " + prefApp + " er ikke installert", Toast.LENGTH_SHORT).show();
                 return false;
             }
 
-        }else{
-            Log.d(TAG,"Kiosk mode er off");
+        } else {
+            Log.d(TAG, "Kiosk mode er off");
 
         }
         return true;
@@ -444,61 +441,58 @@ public class HomeActivity extends FragmentActivity implements
 
     @Override
     protected void onStart() {//Ved onstart burde vi sjekke ulike ting.
-        Log.d(TAG,"onStart()");
-        if(allStatusTrueTest()){
+        Log.d(TAG, "onStart()");
+        if (allStatusTrueTest()) {
             //dette betyr av vi egentlig skal gå til MonumentVandring.
             startPrefKioskModeApp();
         }
 
         //Registerer BroadcastRecievern for battery med IntentFilter ACTION_BATTERY_CHANGED.
-        Intent intent = registerReceiver(batteryBroadcastReceiver,new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        Intent intent = registerReceiver(batteryBroadcastReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
 
         //Henter ut nåværende verdi om batteriet.
         try {
             level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1); //Nåværende battery level. fra 0 til scale.
             scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1); //Maximun battery level
-        }catch (NullPointerException e){
+        } catch (NullPointerException e) {
             Log.e(TAG, e.toString());
         }
 
 
         createAndUpdateStatusList(); //oppdaterer listen.
 
-        if(AppUtils.isServiceRunning(GeofenceTransitionService.class,this)){
+        if (AppUtils.isServiceRunning(GeofenceTransitionService.class, this)) {
             statusText.setText("GeofenceTransitionService kjører");
-        }else{
+        } else {
             statusText.setText("GeofenceTransitionService er IKKE startet");
         }
 
-        if(AppUtils.isGooglePlayServicesAvailable(this)){
+        if (AppUtils.isGooglePlayServicesAvailable(this)) {
             statusText.append(" | Google Play Servicen er oppdatert og tilgjengelig");
-        }else{
+        } else {
             statusText.append(" | Google Play Services er IKKE tilgjengelig med gammel utgave");
         }
 
-        if(AppUtils.checkLocationPermission(this)){
+        if (AppUtils.checkLocationPermission(this)) {
             statusText.append("\nVi har rettigheter til Lokasjon tilgjengelig");
-        }else
-        {
+        } else {
             AppUtils.askLocationPermission(this);
             statusText.append("\nVi har IKKE rettigheter til Lokasjon tilgjengelig");
         }
 
 
-
-        if(AppUtils.isGpsProviderAvailable(this)){
+        if (AppUtils.isGpsProviderAvailable(this)) {
             statusText.append("\nLocation GPS provider er enabled");
 
-        }else{
+        } else {
             statusText.append("\nLocation GPS provider er disabled");
-           // Intent settingsIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-           // this.startActivity(settingsIntent);
+            // Intent settingsIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+            // this.startActivity(settingsIntent);
         }
 
-        if(AppUtils.isNetworkProviderAvailable(this)){
+        if (AppUtils.isNetworkProviderAvailable(this)) {
             statusText.append("\nLocation Network provider er enabled");
-        }else
-        {
+        } else {
             statusText.append("\nLocation Network provider er disabled");
         }
 
@@ -506,11 +500,10 @@ public class HomeActivity extends FragmentActivity implements
         int level = batteryIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1); //Nåværende battery level. fra 0 til scale.
         int scale = batteryIntent.getIntExtra(BatteryManager.EXTRA_SCALE, -1); //Maximun battery level
 
-        float batteryLevel = ((float)level / (float)scale) * 100.0f;
-        if(level == -1 || scale == -1){
+        float batteryLevel = ((float) level / (float) scale) * 100.0f;
+        if (level == -1 || scale == -1) {
             //error tror jeg?
-        }else
-        {
+        } else {
             statusText.append("\n Battery nivå: " + batteryLevel + " %");
         }
 
@@ -525,7 +518,7 @@ public class HomeActivity extends FragmentActivity implements
         updateStartKioskGui();
 
         //TODO: dersom alt er OK her, og vi egentlig skal være i Kiosk, så må vi hoppe til den appen.
-        if(PreferenceUtils.isKioskModeActivated(context)){
+        if (PreferenceUtils.isKioskModeActivated(context)) {
 
             PreferenceUtils.getPrefkioskModeApp(context);
         }
@@ -537,17 +530,17 @@ public class HomeActivity extends FragmentActivity implements
     protected void onResume() {
         //litt feil.
         createAndUpdateStatusList();
-        Log.d(TAG,"onResume() i Home");
-        if(allStatusTrueTest()){
+        Log.d(TAG, "onResume() i Home");
+        if (allStatusTrueTest()) {
             //dette betyr av vi egentlig skal gå til MonumentVandring.
             startPrefKioskModeApp();
         }
 
-        Log.d(TAG,"Forbi startActivity %:%:%:%:%:%:%:%:%");
+        Log.d(TAG, "Forbi startActivity %:%:%:%:%:%:%:%:%");
 
         super.onResume();
         //createAndUpdateStatusList();
-        Log.d(TAG,"onResume()");
+        Log.d(TAG, "onResume()");
 
         hideSystemUiTest();
         setVisible(true);
@@ -555,7 +548,7 @@ public class HomeActivity extends FragmentActivity implements
 
     @Override
     protected void onRestart() {
-        if(allStatusTrueTest()){
+        if (allStatusTrueTest()) {
             //dette betyr av vi egentlig skal gå til MonumentVandring.
             startPrefKioskModeApp();
         }
@@ -566,7 +559,7 @@ public class HomeActivity extends FragmentActivity implements
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
             //TODO: oppdater GUI når noe forandres her.
-            switch (key){
+            switch (key) {
                 case PreferenceUtils.PREF_KIOSK_MODE:
                     updateStartKioskGui();
             }
@@ -577,7 +570,7 @@ public class HomeActivity extends FragmentActivity implements
     protected void onPostResume() {
         //Kan vi kanskje hoppe her ifra istede?
         sharedPreferences.registerOnSharedPreferenceChangeListener(listener);
-        if(allStatusTrueTest()){
+        if (allStatusTrueTest()) {
             //dette betyr av vi egentlig skal gå til MonumentVandring.
             startPrefKioskModeApp();
         }
@@ -597,17 +590,17 @@ public class HomeActivity extends FragmentActivity implements
         try { //unregister reciever dersom den forsatt er registert.
             unregisterReceiver(batteryBroadcastReceiver); //unregisterer recievern, siden vi ikke er interesert i batteri nivået lenger.
             sharedPreferences.unregisterOnSharedPreferenceChangeListener(listener);
-        }catch(IllegalArgumentException e){
-            Log.e(TAG,e.getMessage());
+        } catch (IllegalArgumentException e) {
+            Log.e(TAG, e.getMessage());
         }
         //activityManager.moveTaskToFront(getTaskId(),0);
 
         ComponentName cn = this.getComponentName();
-        Log.d(TAG,cn.toString());
+        Log.d(TAG, cn.toString());
 
         //FIXME 2131:2313.123
         //Husker ikke hva denne var for, muligens Recent button problemer.
-        if(! cn.getClassName().equals(getClass().getName())){
+        if (!cn.getClassName().equals(getClass().getName())) {
             Log.d(TAG, "CN true, er recent button");
             activityManager.moveTaskToFront(getTaskId(), 0);
         }
@@ -616,14 +609,14 @@ public class HomeActivity extends FragmentActivity implements
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d(TAG,"????????????????????Resultcode: "+resultCode);
-        if(resultCode == RESULT_CANCELED){
+        Log.d(TAG, "????????????????????Resultcode: " + resultCode);
+        if (resultCode == RESULT_CANCELED) {
             //VI må starte aktiviteten på nytt?
             //TODO: kan være null
-            if(startPrefKioskModeApp()){
+            if (startPrefKioskModeApp()) {
 
-            }else{
-                Toast.makeText(context,"Kan ikke starte Kiosk mode appen.",Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(context, "Kan ikke starte Kiosk mode appen.", Toast.LENGTH_LONG).show();
             }
             //startActivity(getPackageManager().getLaunchIntentForPackage(PreferenceUtils.getPrefkioskModeApp(context)));
         }
@@ -633,13 +626,13 @@ public class HomeActivity extends FragmentActivity implements
      * Opdater Bruker grense snittet, slik at når vi gjør forandringer, så skal det synes her.
      */
 
-    public void updateStartKioskGui(){
-        if(PreferenceUtils.isKioskModeActivated(this)){
+    public void updateStartKioskGui() {
+        if (PreferenceUtils.isKioskModeActivated(this)) {
             //Må sette knappen til å være Disabled
             startKioskButton.setClickable(false);
             startKioskButton.setAlpha(0.5f); //greyer ut knappen litt.
             startKioskButton.setText("Kiosk mode is On");
-        }else{
+        } else {
             startKioskButton.setClickable(true);
             startKioskButton.setAlpha(1); //greyer ut knappen litt.
             startKioskButton.setText("Start Kiosk Mode");
@@ -649,14 +642,14 @@ public class HomeActivity extends FragmentActivity implements
     public View touchView = null;
     public View navigationTouchView = null;
 
-    public boolean isTouchView(){//denne
+    public boolean isTouchView() {//denne
         WindowManager manager = ((WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE));
 
         return touchView != null;
     }
 
-    public boolean isTouchViewVisible(){
-        if(isTouchView()) {
+    public boolean isTouchViewVisible() {
+        if (isTouchView()) {
             //Dette ser ut til å kjøre før vi faktisk har laget viewet.
             switch (touchView.getVisibility()) {
 
@@ -675,8 +668,8 @@ public class HomeActivity extends FragmentActivity implements
         return false;
     }
 
-    public void startConsumeView(){
-        if(this.findViewById(R.id.view_notification) == null) {//vi legger bare till dersom det er null, som vill si at det ikke eksiterer allerede.
+    public void startConsumeView() {
+        if (this.findViewById(R.id.view_notification) == null) {//vi legger bare till dersom det er null, som vill si at det ikke eksiterer allerede.
 
             WindowManager manager = ((WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE));
             WindowManager.LayoutParams localLayoutParams = new WindowManager.LayoutParams();
@@ -699,9 +692,7 @@ public class HomeActivity extends FragmentActivity implements
             view.setAlpha(0.1f);
             touchView = view; //lagrere Viewet i en variabel;
             manager.addView(touchView, localLayoutParams);
-        }
-        else
-        {
+        } else {
             Log.e(TAG, "Error med å legge til nytt NotifactionView");
         }
 
@@ -733,13 +724,13 @@ public class HomeActivity extends FragmentActivity implements
 
     }
 
-    public void toogleTouchView(){
-            //Sjekker at touchViewet vårt ikke er tomt.
+    public void toogleTouchView() {
+        //Sjekker at touchViewet vårt ikke er tomt.
 
-        if(touchView != null){
-            if(touchView.getVisibility() == View.GONE){
+        if (touchView != null) {
+            if (touchView.getVisibility() == View.GONE) {
                 touchView.setVisibility(View.VISIBLE);
-            }else {
+            } else {
                 touchView.setVisibility(View.GONE);
             }
         }
@@ -747,8 +738,8 @@ public class HomeActivity extends FragmentActivity implements
 
     @Override //Når vi holder inne Power Button, så kjører denne.
     public boolean dispatchKeyEvent(KeyEvent event) {
-        if(event.getKeyCode() == KeyEvent.KEYCODE_POWER){
-            Log.d(TAG,"Key power button pressed");
+        if (event.getKeyCode() == KeyEvent.KEYCODE_POWER) {
+            Log.d(TAG, "Key power button pressed");
             return true;
         }
         return super.dispatchKeyEvent(event);
@@ -764,24 +755,22 @@ public class HomeActivity extends FragmentActivity implements
         super.onAttachedToWindow();
     }
 
-    public void startAccessibilityService(){
-        Log.d(TAG,"startAccessibilityService");
-        Intent accessibilityServiceIntent = new Intent(this,AccessibilityService.class);
-        Log.d(TAG,"starting :"+accessibilityServiceIntent.toString());
+    public void startAccessibilityService() {
+        Log.d(TAG, "startAccessibilityService");
+        Intent accessibilityServiceIntent = new Intent(this, AccessibilityService.class);
+        Log.d(TAG, "starting :" + accessibilityServiceIntent.toString());
         startService(accessibilityServiceIntent);
     }
 
     public void showApps(View v) {
-        if(AppUtils.isAppInstalled(this,APP)){
+        if (AppUtils.isAppInstalled(this, APP)) {
             Toast.makeText(this, "Appen GeofencingAlpga er innstallert", Toast.LENGTH_SHORT).show();
-        }
-        else
-        {
+        } else {
             Toast.makeText(this, "Appen Geofencing er ikke innstallert", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void setKioskMode(boolean activate){
+    private void setKioskMode(boolean activate) {
         UiModeManager uiModeManager = (UiModeManager) this.getSystemService(Context.UI_MODE_SERVICE);
 
         //TODO: sjekk at alt kjører. Viss ikke så må vi be brukeren starte opp noen ting.
@@ -790,14 +779,14 @@ public class HomeActivity extends FragmentActivity implements
     }
 
 
-    public void getScreenDimens(){
+    public void getScreenDimens() {
         Configuration configuration = this.getResources().getConfiguration();
         int screenWidhtdp = configuration.screenWidthDp;
         int screenHeigthdp = configuration.screenHeightDp;
-        Log.d(TAG,"Screen dimes width:"+screenWidhtdp+" dp heigth:"+screenHeigthdp+" dp");
+        Log.d(TAG, "Screen dimes width:" + screenWidhtdp + " dp heigth:" + screenHeigthdp + " dp");
     }
 
-    public void hideSystemUiTest(){
+    public void hideSystemUiTest() {
         //decorView.setSystemUiVisibility(
                 /*View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                 | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
@@ -827,36 +816,34 @@ public class HomeActivity extends FragmentActivity implements
 
     @Override
     public void onBackPressed() {
-        Log.d(TAG,"onBackPressed()");
+        Log.d(TAG, "onBackPressed()");
         //super.onBackPressed(); //Siden vi er Bunnen av aplikasjons stacken, så er det ikke vits i å trykke onBack, den gjør heller ikke noe her ifra.
-        if(allStatusTrueTest()){
+        if (allStatusTrueTest()) {
             //dette betyr av vi egentlig skal gå til MonumentVandring.
             startPrefKioskModeApp();
         }
     }
 
 
-
-
-    public Context getContext(){
-        if(context != null)
+    public Context getContext() {
+        if (context != null)
             return context;
         else
             return this.getApplicationContext();
     }
 
-    public void startMap(View view){
+    public void startMap(View view) {
         Intent intent = new Intent();
         intent.setAction("com.sondreweb.geofencingalpha");
         //context.startActivity(intent);
     }
 
     //TODO: Bruke en App object istedet, litt tryggere på errors.
-    public void StartApp(String packageName){
-        Log.d(TAG,"StartApp: "+ packageName);
+    public void StartApp(String packageName) {
+        Log.d(TAG, "StartApp: " + packageName);
         Intent intent = this.getPackageManager().getLaunchIntentForPackage(packageName);
 
-        if(intent != null ){
+        if (intent != null) {
             startActivity(intent);
         }
     }
@@ -866,8 +853,8 @@ public class HomeActivity extends FragmentActivity implements
     *   Denne skal skru på KioskMode, og så skal vi hoppe til MonumentVandring. Det er forusatt at alt er klart.
     *   Knappen som brukeren har tilgang til.
     * */
-    public void startKioskMode(View view){
-        if( ! kioskModeReady() ){
+    public void startKioskMode(View view) {
+        if (!kioskModeReady()) {
             //Da kan vi ikke starte KioskModen.
             Log.d(TAG, "Kiosk mode not ready");
             return;
@@ -879,9 +866,9 @@ public class HomeActivity extends FragmentActivity implements
 
         //TODO: Hopp til MonumentVandring
 
-        if(startPrefKioskModeApp()){
+        if (startPrefKioskModeApp()) {
 
-        }else{
+        } else {
             setKioskMode(false);
         }
         updateStartKioskGui();
@@ -893,12 +880,12 @@ public class HomeActivity extends FragmentActivity implements
         Touch Event View som blokker quick settings.
         MonumentVandring appen må også være innstalert og satt og korrekt(med monumentene lastet inn).
     * */
-    public boolean kioskModeReady(){//KioskMode er ikke ready
-        if(AppUtils.isAccessibilitySettingsOn(this)){
+    public boolean kioskModeReady() {//KioskMode er ikke ready
+        if (AppUtils.isAccessibilitySettingsOn(this)) {
             return true;
-        }else {
+        } else {
             Intent intent = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
-            startActivityForResult(intent,0);
+            startActivityForResult(intent, 0);
             return false;
         }
     }
@@ -937,16 +924,16 @@ public class HomeActivity extends FragmentActivity implements
 
     /* SET FUNCTIONS*/
 
-    public void lockScreenNow(View view){
-        if(PreferenceUtils.isAppDeviceAdmin(this)) {
+    public void lockScreenNow(View view) {
+        if (PreferenceUtils.isAppDeviceAdmin(this)) {
             DevicePolicyManager devicePolicyManager = (DevicePolicyManager) this.getSystemService(Context.DEVICE_POLICY_SERVICE);
             devicePolicyManager.lockNow();
         }
     }
 
     //Går ikke...
-    public void unlockScreenNow(){
-        if(PreferenceUtils.isAppDeviceAdmin(this)) {
+    public void unlockScreenNow() {
+        if (PreferenceUtils.isAppDeviceAdmin(this)) {
             DevicePolicyManager devicePolicyManager = (DevicePolicyManager) this.getSystemService(Context.DEVICE_POLICY_SERVICE);
         }
     }
@@ -959,13 +946,12 @@ public class HomeActivity extends FragmentActivity implements
     public String id;
 
     //Regn ut batteri nivået i prosent.
-    public static float getLevel(){
-        float batteryLevel = ((float)level / (float)scale) * 100.0f;
-        if(level == -1 || scale == -1){
+    public static float getLevel() {
+        float batteryLevel = ((float) level / (float) scale) * 100.0f;
+        if (level == -1 || scale == -1) {
             //error tror jeg?
             return 0;
-        }else
-        {
+        } else {
             return batteryLevel;
         }
 
@@ -976,14 +962,14 @@ public class HomeActivity extends FragmentActivity implements
      *  IntentFilter(Intent.ACTION_BATTERY_CHANGED)
      */
 
-    public class BatteryBroadcastReceiver extends BroadcastReceiver{
+    public class BatteryBroadcastReceiver extends BroadcastReceiver {
 
         @Override
         public void onReceive(Context context, Intent intent) {
             //denne skal oppdatere variablene våre, når det er nødvendig.
             level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1); //Nåværende battery level. fra 0 til scale.
             scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1); //Maximun battery level
-            Log.d(TAG+"Battery", "level: "+((float)level/(float)scale*100.0f) );
+            Log.d(TAG + "Battery", "level: " + ((float) level / (float) scale * 100.0f));
 
             //Oppdaterer GridView listen.
             createAndUpdateStatusList();
@@ -991,5 +977,25 @@ public class HomeActivity extends FragmentActivity implements
             //TODO: update status listen.
         }
     }
+
+   public void testGeofence(View view){
+       //TODO: lag geofencen våre og be servicens tarte Geofence turen.
+       SQLiteHelper sqLiteHelper = SQLiteHelper.getInstance(this);
+
+       sqLiteHelper.getWritableDatabase();
+
+       /*
+       * Noen LatLng og radiuser som fungere på festningen.
+       * */
+
+
+
+       //sqLiteHelper.addGeofence();
+
+       //sqLiteHelper.addGeofence();
+
+       //Må legge geofence inn i databasen vår.
+   }
+
 }
 

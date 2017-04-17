@@ -8,6 +8,8 @@ import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.util.Log;
 
+import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
+
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -73,8 +75,17 @@ public class AppsLoader extends AsyncTaskLoader<ArrayList<AppModel>> {
             if(packageManager.getLaunchIntentForPackage(packageName) != null){
                     //tester med 3 apper som vi vill kanskje ha.
                 //Log.d(TAG,"PackageName: " +packageName);
+
+                if(packageName.equalsIgnoreCase(PreferenceUtils.getPrefkioskModeApp(context))){
+                    Log.d(TAG,"Legg til app: "+ packageName);
+                    AppModel app = new AppModel(context, apps.get(i));
+                    app.loadLabel(context);
+
+                    items.add(app);
+                }
+
                 if( packageName.equalsIgnoreCase("com.android.settings")
-                        || packageName.equalsIgnoreCase("com.Company.Monumentvandring")
+                        //|| packageName.equalsIgnoreCase("com.Company.Monumentvandring")
                         //|| packageName.equalsIgnoreCase("com.android.chrome")
                         ){
                     Log.d(TAG,"Legg til app: "+ packageName);
@@ -171,10 +182,12 @@ public class AppsLoader extends AsyncTaskLoader<ArrayList<AppModel>> {
         Log.d(TAG,"deliverResult()");
         if(isReset()){
             //An async query kom inn mens loaderen stoppet, vi trenger da ikke resultatet.
-            if(apps !=null){
+            if(apps != null){
                 onReleaseResources(apps);
             }
         }
+
+        //TODO: hva gjor vi dersom det er tomt?
 
         List<AppModel> oldApps = apps;
         innstalledApps = apps;

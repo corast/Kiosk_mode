@@ -20,5 +20,11 @@
     <string name="accessibility_service_description">Lås ned enheten slik at kunn er mulig å bruke satt
         applikasjon på enheten så lenge dette er på.</string>
 
+    <!-- Strings related to Home Screen-->
+
+    <string name="home_app_kiosk_not_found">Application set for Kiosk Mode not installed : </string>
+
     <!--Mer stringer kommer her TODO:lag flere stringer. -->
+
+
 </resources>

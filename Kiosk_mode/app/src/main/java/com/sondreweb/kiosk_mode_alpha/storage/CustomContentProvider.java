@@ -69,7 +69,6 @@ public class CustomContentProvider extends ContentProvider {
     *    ID: if present – must be numeric. The id is used whenever you want to access a single record (e.g. a specific video file).
     * */
 
-
     //Helper constants for use with the UriMatcher.
     private static final int STATISTIKK_ID = 1; //For å lese ut en verdi.
     private static final int STATISTIKK_LIST = 2; //For å inserte en eller flere verdier eller lese ut.
@@ -79,13 +78,10 @@ public class CustomContentProvider extends ContentProvider {
     *   private static final int TABEL_NAME_LIST = 4
     * */
 
-
-
     //content://authority/optionalPath/optionalId
     static final String URL = "content://" + PROVIDER_NAME + "/"+StatisticsTable.TABLE_NAME;
 
     static final Uri CONTENT_URL = Uri.parse(URL); //Hva brukes denne til TODO: finn ut hva CONTENT_URI brukes til
-
 
     private static HashMap<String, String> values; //TODO: Funn ut hva dette faktisk er(hashmap).
     /*
@@ -96,19 +92,6 @@ public class CustomContentProvider extends ContentProvider {
     static final UriMatcher URI_MATCHER;
     static{
         URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
-        /*URI_MATCHER.addURI(
-                PROVIDER_NAME,
-                "statistikk",
-                STATISTIKK_ID
-        );
-
-        URI_MATCHER.addURI(
-                PROVIDER_NAME,
-                "statistikk/#",//# vill si flere
-                STATISTIKK_LIST
-        );
-        */
-
         /*
         URI_MATCHER.addURI(KioskDbContract.AUTHORITY,
                 "statistikk",+
@@ -128,12 +111,25 @@ public class CustomContentProvider extends ContentProvider {
                 KioskDbContract.Statistics.TABLE_NAME+"/#",
                 STATISTIKK_ID
         );
-
     }
 
     private SQLiteHelper sqLiteHelper = null;
     private SQLiteDatabase sqLiteDatabaseWriteable = null;
     private SQLiteDatabase sqLiteDatabaseReadable = null;
+
+    private SQLiteDatabase getWritableDatabase(){
+        if(sqLiteDatabaseWriteable == null){
+            sqLiteDatabaseWriteable = sqLiteHelper.getWritableDatabase();
+        }
+        return sqLiteDatabaseWriteable;
+    }
+
+    private SQLiteDatabase getReadableDatabase(){
+        if(sqLiteDatabaseReadable == null){
+            sqLiteDatabaseReadable = sqLiteHelper.getReadableDatabase();
+        }
+        return sqLiteDatabaseReadable;
+    }
 
     private final ThreadLocal<Boolean> mIsInBatchMode = new ThreadLocal<Boolean>();
 
@@ -145,8 +141,8 @@ public class CustomContentProvider extends ContentProvider {
     public boolean onCreate() {
         //initialisere databasen vår.
         sqLiteHelper = SQLiteHelper.getInstance(getContext()); //lager databasen dersom det ikke er gjordt.
-        sqLiteDatabaseWriteable = sqLiteHelper.getWritableDatabase();
-        sqLiteDatabaseReadable = sqLiteHelper.getReadableDatabase();
+
+        //sqLiteDatabaseReadable = sqLiteHelper.getReadableDatabase();
 
         /*
         *   A content provider is created when its hosting process is created,
@@ -160,7 +156,7 @@ public class CustomContentProvider extends ContentProvider {
     public void onLowMemory() {
         //Når vi har lite med minne, hva gjør vi da?
         /*
-        *   Ved lite minne, må vi be brukeren gå tilbake til Resepsjonen og bytte ut enheten, siden denne må restartet slik at Cashe kan cleares.
+        *   Ved lite minne, må vi be brukeren gå tilbake til Resepsjonen og bytte ut enheten, siden denne må restartet slik at Cashe kan cleares kanskje?
         * */
         super.onLowMemory();
     }
@@ -202,8 +198,6 @@ public class CustomContentProvider extends ContentProvider {
     }
 
 
-
-
     /*  GAMMEL KODE, MEN ER SÅ FIN.
     *     if(URI_MATCHER.match(uri) != STATISTIKK_ID){
             throw new IllegalArgumentException(
@@ -230,7 +224,6 @@ public class CustomContentProvider extends ContentProvider {
         return null;
     * */
 
-
     //Hva gjør denne?
 
     //Sjekker at vi fikk lagt til i databasen riktig, og returnere Uri adressen på denne.
@@ -248,8 +241,8 @@ public class CustomContentProvider extends ContentProvider {
                 "problem while inserting into uri: "+uri);
     }
 
-    /*
-        *   Modifies data
+        /*
+        *   Modifies data, men dett skal vi ikke gjøre med statistikken uansett.
         * */
     @Override
     public int update(@NonNull Uri uri, @Nullable ContentValues values, @Nullable String selection, @Nullable String[] selectionArgs) {
@@ -263,7 +256,7 @@ public class CustomContentProvider extends ContentProvider {
     @Override
     public Cursor query(@NonNull Uri uri, @Nullable String[] projection, @Nullable String selection, @Nullable String[] selectionArgs, @Nullable String sortOrder) {
         Log.d(TAG,"query Uri: "+uri.toString()+" URI_MATCHER int:" +URI_MATCHER.match(uri));
-
+        getReadableDatabase();
         SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
         boolean useAuthorityUri = false;
         switch (URI_MATCHER.match(uri)){
@@ -273,6 +266,8 @@ public class CustomContentProvider extends ContentProvider {
                     sortOrder = Statistics.SORT_ORDER_DEFAULT; //Sorter på visitor_id ASC.
                 }
                 break;
+
+            //DENNE ER IKKE I BRUK. Ikke lagt til som URI engang.
             case STATISTIKK_ID: //Vill si at vi skal lage en cursor hvor vi skal ha tilbake kunn et element.
                 //TODO: Finn ut hvordan vi velger hvilket case som skal gjøres.
                 queryBuilder.setTables(StatisticsTable.TABLE_NAME);
@@ -307,6 +302,8 @@ public class CustomContentProvider extends ContentProvider {
         else {
             cursor.setNotificationUri(getContext().getContentResolver(), uri);
         }
+
+        sqLiteDatabaseReadable.close();
         return cursor;
 
 
@@ -329,7 +326,6 @@ public class CustomContentProvider extends ContentProvider {
             Log.v("cpsample", "query: " + builder.buildQuery(projection, selection, null, null, sortOrder, null));
         }
     }
-
 
     /*
     *   Deletes records
@@ -369,7 +365,6 @@ public class CustomContentProvider extends ContentProvider {
     }
 
 
-
     /*
  *   Adds records
  *   values kan komme inn som et Statistik objekt kanskje?
@@ -377,27 +372,28 @@ public class CustomContentProvider extends ContentProvider {
     @Nullable
     @Override
     public Uri insert(@NonNull Uri uri, @NonNull ContentValues values) {
-        Log.d(TAG,"Prøver å legge til med uri: "+uri.toString());
-        Log.d(TAG,values.toString());
+        getWritableDatabase(); //initialisere databasen som vi kan trenge.
         long id = 0; //Default error verdi.
         switch (URI_MATCHER.match(uri)) {
-            case STATISTIKK_LIST: //Bruker denne for å legge til.
+            case STATISTIKK_LIST: //Bruker denne for å legge til en rad.
                 id = sqLiteDatabaseWriteable.insert(
                         StatisticsTable.TABLE_NAME,
                         null,
                         values);
+                sqLiteDatabaseWriteable.close();
                 return getUriForId(id, uri);
             default:
+                sqLiteDatabaseWriteable.close();
                 throw new IllegalArgumentException("Unknown URI ? " + URI_MATCHER.match(uri));
         }
     }
 
     @Override
     public int bulkInsert(@NonNull Uri uri, @NonNull ContentValues[] valuesList) {
-        SQLiteDatabase db = sqLiteHelper.getWritableDatabase();
+        SQLiteDatabase db = getWritableDatabase();
 
         switch (URI_MATCHER.match(uri)){
-            case STATISTIKK_LIST:
+            case STATISTIKK_LIST: //bruker denne til å legge til flere rader sammtidig.
                 int numberInserted = 0;
                 db.beginTransaction();
                 try {
@@ -420,6 +416,7 @@ public class CustomContentProvider extends ContentProvider {
                 }
                 return numberInserted;
             default:
+                db.close();
                 throw new UnsupportedOperationException("unsupported uri: " + uri);
         }
     }
@@ -445,18 +442,25 @@ public class CustomContentProvider extends ContentProvider {
         Job myJob = dispatcher.newJobBuilder()
                 // the JobService that will be called
                 .setService(CustomJobService.class)
+
                 // uniquely identifies the job
                 .setTag(jobTag)
+
                 // one-off job
                 .setRecurring(false)
-                // don't persist past a device reboot
-                .setLifetime(Lifetime.UNTIL_NEXT_BOOT)
-                // start between 0 and 60 seconds from now
-                .setTrigger(Trigger.executionWindow(0, 60))
+
+                // persist past a device reboot
+                .setLifetime(Lifetime.FOREVER)
+
+                // start between 0 and 120 seconds from now after constraints met.
+                .setTrigger(Trigger.executionWindow(0, 120))
+
                 // overwrite an existing job with the same tag
                 .setReplaceCurrent(true)
+
                 // retry with exponential backoff
                 .setRetryStrategy(RetryStrategy.DEFAULT_EXPONENTIAL)
+
                 // constraints that need to be satisfied for the job to run
                 .setConstraints(
                         // only run on an unmetered network, i vårt tilfelle Ikke mobilnett som koster penger.
@@ -470,5 +474,4 @@ public class CustomContentProvider extends ContentProvider {
         dispatcher.mustSchedule(myJob);
         dispatcher.schedule(myJob);
     }
-
 }

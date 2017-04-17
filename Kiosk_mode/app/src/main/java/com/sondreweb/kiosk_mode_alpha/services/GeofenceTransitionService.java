@@ -4,6 +4,7 @@ package com.sondreweb.kiosk_mode_alpha.services;
  * Created by sondre on 03-Mar-17.
  */
 
+import android.app.AlarmManager;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -18,6 +19,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.PowerManager;
+import android.os.SystemClock;
 import android.os.Vibrator;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -176,7 +178,7 @@ public class GeofenceTransitionService extends Service implements
 
     public GeofenceTransitionService(){} //default constructor
 
-    private ScreenOffReceiver screenOffReceiver;
+    private ServiceBroadcastReceiver serviceBroadcastReceiver;
 
 
     private PowerManager.WakeLock wakeLock;
@@ -205,10 +207,10 @@ public class GeofenceTransitionService extends Service implements
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_SCREEN_OFF);
         filter.addAction(STOP_KIOSK);
-        screenOffReceiver = new ScreenOffReceiver();
+        serviceBroadcastReceiver = new ServiceBroadcastReceiver();
 
         // Registrer Recievereren vi trenger for å fange SCREEN_OFF.
-        registerReceiver(screenOffReceiver, filter);
+        registerReceiver(serviceBroadcastReceiver, filter);
         sContext = getApplicationContext();
     }
 
@@ -247,6 +249,12 @@ public class GeofenceTransitionService extends Service implements
             case RESTART_GEOFENCES:
                 //Dersom enheten er restertet under vandring.
                 //TODO: reRegistrer Geofencene fra , og sørg for at vi forsatt fdatabasenår hentet ut Location en gang i blandt.
+                if(createGoogleApi()){
+                    if(!googleApiClient.isConnected()){
+                        googleApiClient.connect();
+                    }
+                    //TODO gjør det vi må. her.
+                }
                 break;
             case TRIGGERED_GEOFENCE: //betyr at vi er kommet hit pga et eller flere Geofence er triggered.
                 //TODO: gjør oppdatering på geofencene.
@@ -352,8 +360,6 @@ public class GeofenceTransitionService extends Service implements
         //Starter locationUpdates.
         startLocationUpdates(getsContext());
 
-
-
         //Sender dette GeofenceReuestet videre til LocationServices.GeofencingApi.addGeofences.
         addGeofencesToMonitor(geofenceRequest);
 
@@ -369,7 +375,6 @@ public class GeofenceTransitionService extends Service implements
 
     //Må lage listen med Geofence oversikt.
 
-
     private void updateGeofenceStatus(int geofenceTransition,List<Geofence> triggeredeGeofences){
 
         //Lager en itterator for å gå gjennom en liste. Men er dette idet hele tatt nødvendig?
@@ -381,7 +386,7 @@ public class GeofenceTransitionService extends Service implements
             //tar listen med Geofence og sammenligner, når vi finner lik RequestId, så kan vi oppdater statusen.
             while(geofenceStatusListItterator.hasNext()){
                 //lopper gjennom hele listen til vi finner et med samme requestId, for så å oppdatere denne.
-
+                //O(n^2) hastighet på det her, litt tregt , men såpass få Geofence at det skal gå fint.
                 if(geofenceStatusListItterator.next().getGeofence().getRequestId().equalsIgnoreCase(geofence.getRequestId())){
                     //Oppdatere statusen til denne utifra geofenceTransition koden.
                     geofenceStatusListItterator.next().setStatus(geofenceTransition);
@@ -393,9 +398,20 @@ public class GeofenceTransitionService extends Service implements
 
         if( ! checkIfInsideAtleastOneGeofence()){
            //TODO: Si ifra om at brukeren har beveget seg utenfor Geofencet vårt.
+
+            //starte alarm som skal gå av inne 5 minutter og varsle brukeren på å bevege seg innenfor Geofence igjenn.
+            AlarmManager alarmManager = (AlarmManager) getsContext().getSystemService(Context.ALARM_SERVICE);
+            Intent alarmIntent = new Intent(getsContext(),GeofenceTransitionService.class);
+
+            PendingIntent alarmPintent = PendingIntent.getBroadcast(getsContext(),0, alarmIntent,0);
+
+            alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime()+
+                    60*1000, alarmPintent);
+
+        }else{
+
         }
     }
-
 
         //Sjekker listen på om vi er innefor minst ett geofence.
     public boolean checkIfInsideAtleastOneGeofence(){
@@ -409,8 +425,6 @@ public class GeofenceTransitionService extends Service implements
         }
         return false;
     }
-
-
 
 /*
 *   Vi må lage en oversikt over de ulike Geofence og derese IDer, samt oppdatere denne oversikten hver gang et Geofence Event framkommer.
@@ -509,7 +523,6 @@ public class GeofenceTransitionService extends Service implements
         this.createGoogleApi();
         return googleApiClient;
     }
-
 
     /*  ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
     *   GeofenceRequest START
@@ -685,7 +698,7 @@ public class GeofenceTransitionService extends Service implements
 *   Mottar Broadcast om ACTION_SCREEN_OFF.
 *   Vekker enheten derskom dette mottas, slik at skjermen ikke skrus av.
 * */
-    public class ScreenOffReceiver extends BroadcastReceiver {
+    public class ServiceBroadcastReceiver extends BroadcastReceiver {
 
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -818,6 +831,7 @@ public class GeofenceTransitionService extends Service implements
 
     /*
     *   Når Vi connecter til Google API Client.
+    *   Veldig viktig at vi her starter med allt vi må.
     * */
     @Override
     public void onConnected(@Nullable Bundle bundle) {
