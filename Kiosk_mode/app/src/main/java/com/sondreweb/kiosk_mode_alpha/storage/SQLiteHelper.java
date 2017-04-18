@@ -10,6 +10,7 @@ import android.database.sqlite.SQLiteQueryBuilder;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.model.LatLng;
 import com.sondreweb.kiosk_mode_alpha.classes.GeofenceClass;
+import com.sondreweb.kiosk_mode_alpha.classes.GeofenceStatus;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -85,7 +86,9 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
         ArrayList<Geofence> geofenceArrayList = new ArrayList<>();
 
-        String selectQuery = "SELECT * FROM "+GeofenceTable.TABLE_NAME;
+        //Henter alle rader fra databasen for denne tabellen.
+        String selectQuery = "SELECT * FROM "+ GeofenceTable.TABLE_NAME;
+
 
         Cursor cursor = db.rawQuery(selectQuery, null);
 
@@ -107,6 +110,32 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         //TODO Lag en liste med GeofenceStatus objecter utifra dette vi returneren her.
     }
 
+    public List<GeofenceClass> getAllGeofencesClass(){
+
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        ArrayList<GeofenceClass> geofenceArrayList = new ArrayList<>();
+
+        String selectQuery = "SELECT * FROM "+GeofenceTable.TABLE_NAME;
+
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        if(cursor.moveToFirst()){//Flytter oss til først rad dersom den eksisterer
+            do {  //Legger til alle Geofence fra database i Arrayet med korrekte atributter.
+                geofenceArrayList.add( new GeofenceClass(
+                        id_HEAD+cursor.getString(cursor.getColumnIndex(GeofenceTable.COLUMN_GEOFENCE_ID)),
+                        cursor.getDouble(cursor.getColumnIndex(GeofenceTable.COLUMN_LATITUDE)),
+                        cursor.getDouble(cursor.getColumnIndex(GeofenceTable.COLUMN_LONGITUDE)),
+                        cursor.getFloat(cursor.getColumnIndex(GeofenceTable.COLUMN_RADIUS)))
+                );
+            }while (cursor.moveToNext());
+        }
+        cursor.close();
+        db.close();
+        return geofenceArrayList;
+        //TODO Lag en liste med GeofenceStatus objecter utifra dette vi returneren her.
+    }
+
     /*
     *   Metode for å legge til et nytt Geofence til Listen
     * */
@@ -120,9 +149,12 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         values.put(GeofenceTable.COLUMN_LONGITUDE, latLng.longitude);
         values.put(GeofenceTable.COLUMN_RADIUS, radius);
 
+        long id = db.insertOrThrow(GeofenceTable.TABLE_NAME, null, values);
         db.close();
-        return db.insertOrThrow(GeofenceTable.TABLE_NAME, null, values); //vi får en ID tilbake, eller så kaster vi en error.
+        return id;
+        //vi får en ID tilbake, eller så kaster vi en error.
     }
+
 
     /*
     *   Vider utvikling, legge til flere typer Geofence, foreksempel en egen for Vandring.
@@ -133,11 +165,11 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
-
         //TODO: legg til flere geofence samtidig.
-
         return new ArrayList<>();
     }
+
+
 
     //TODO sjekk gamel versjon av databasen, for om den trenger syncing eller ikke.
 
@@ -167,6 +199,22 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     /*
     *   ¤¤¤¤¤¤¤¤¤¤¤¤StatisticsTable Funskjoner¤¤¤¤¤¤¤¤¤¤¤¤
     * */
+
+    public boolean checkDataInStatisticsTable(){
+        SQLiteDatabase db = this.getReadableDatabase();
+        ;
+
+        String selectQuery = "SELECT count(*) FROM "+ StatisticsTable.TABLE_NAME;
+
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        if(cursor.moveToFirst()){
+            if(cursor.getInt(0) == 0){ //Sjekker om antall rader er 0.
+                return true;
+            }
+        }
+        return false;
+    }
 
     public Cursor getStatistics(String id, String[] projection, String selection, String[] selectionArgs, String sortOrder){
         SQLiteQueryBuilder sqLiteQueryBuilder = new SQLiteQueryBuilder();

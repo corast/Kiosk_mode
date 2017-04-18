@@ -138,6 +138,7 @@ public class GeofenceTransitionService extends Service implements
 
     private static final String STOP_KIOSK = "com.sondreweb.STOP_KIOSK";
 
+    private static boolean geofence_running = false;
     GoogleApiClient googleApiClient;
 
     /*¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤Broadcast reviever TAGS¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤*/
@@ -146,11 +147,9 @@ public class GeofenceTransitionService extends Service implements
 
     /*¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤END TAGS¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤*/
 
-
     /*
     *   Når mobilen restartes av en eller ann grunn og viss den forsatt skal være i Kiosk mode, må vi reRegistrere Geofencne våre. Siden de forsvinner fra minne.
     * */
-
     public static final String START_GEOFENCE = "com.geofence.start";
 
     public static final String RESTART_GEOFENCES = "com.geofence.restart";
@@ -158,7 +157,6 @@ public class GeofenceTransitionService extends Service implements
     public static final String START_SERVICE = "com.geofence.service.start";
 
     public static final String TRIGGERED_GEOFENCE = "com.geofence.triggered";
-
 
     private static final String TAG = GeofenceTransitionService.class.getSimpleName();
 
@@ -180,7 +178,6 @@ public class GeofenceTransitionService extends Service implements
 
     private ServiceBroadcastReceiver serviceBroadcastReceiver;
 
-
     private PowerManager.WakeLock wakeLock;
     private boolean isLocationPollingEnabled = true;
     private static Context sContext;
@@ -190,10 +187,12 @@ public class GeofenceTransitionService extends Service implements
     //Holder oversikt over alle statusene på Geofencene. Om vi er innefor ett eller flere geofence sammtidig.
     private List<GeofenceStatus> geofenceStatusList = null;
 
-
-    static{
-       // PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "My Tag");
-    }
+        private String getGeofenceStatus() {
+            if(geofence_running){
+                return getResources().getString(R.string.service_geofence_on);
+            }
+            return getResources().getString(R.string.service_geofence_off);
+        }
 
     @Override
     public void onCreate() {
@@ -202,7 +201,7 @@ public class GeofenceTransitionService extends Service implements
         //locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         notificationMananger = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
         notificationBuilder = new NotificationCompat.Builder(this); //Instansiate the NotificatioBuilder.
-        startInForeground("starting GeofenceService", true); //setter opp notifikasjonen for å kjøre i forgrunn.
+        startInForeground("starting GeofenceService"); //setter opp notifikasjonen for å kjøre i forgrunn.
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_SCREEN_OFF);
@@ -330,7 +329,6 @@ public class GeofenceTransitionService extends Service implements
             }
         }*/
 
-
         /**
          *
          *  StartGeofenceMonitoring:
@@ -377,22 +375,17 @@ public class GeofenceTransitionService extends Service implements
 
     private void updateGeofenceStatus(int geofenceTransition,List<Geofence> triggeredeGeofences){
 
-        //Lager en itterator for å gå gjennom en liste. Men er dette idet hele tatt nødvendig?
-        final ListIterator<GeofenceStatus> geofenceStatusListItterator = geofenceStatusList.listIterator();
-
         //For hvert Geofence som triggere må vi finne tilsvarende GeofenceStatus og oppdatere denne.
         for (Geofence geofence : triggeredeGeofences)
         {
-            //tar listen med Geofence og sammenligner, når vi finner lik RequestId, så kan vi oppdater statusen.
-            while(geofenceStatusListItterator.hasNext()){
-                //lopper gjennom hele listen til vi finner et med samme requestId, for så å oppdatere denne.
-                //O(n^2) hastighet på det her, litt tregt , men såpass få Geofence at det skal gå fint.
-                if(geofenceStatusListItterator.next().getGeofence().getRequestId().equalsIgnoreCase(geofence.getRequestId())){
-                    //Oppdatere statusen til denne utifra geofenceTransition koden.
-                    geofenceStatusListItterator.next().setStatus(geofenceTransition);
+            for(GeofenceStatus geofenceStatus : geofenceStatusList){
+                if(geofence.getRequestId().equalsIgnoreCase(geofenceStatus.getGeofence().getRequestId())){
+                    //siden de er like, så må vi oppdatere denne
+                    geofenceStatus.setStatus(geofenceTransition);
                 }
             }
         }
+
 
         //TODO sjekk om vi er innefor minst ett Geofence.
 
@@ -609,13 +602,12 @@ public class GeofenceTransitionService extends Service implements
         * */
     }
 
-
     /* Notification build up:
     * | Icon | Title
     *         SubText
     * */
 
-    private void startInForeground(String msg, boolean notify){ //vi må kalle denn viss vi skal oppdatere notifikasjonen.
+    private void startInForeground(String msg){ //vi må kalle denn viss vi skal oppdatere notifikasjonen.
         Log.d(TAG,"startInForeground()");
         //TODO: use input to change the notification.
 
@@ -623,9 +615,9 @@ public class GeofenceTransitionService extends Service implements
 
         notificationBuilder
                 .setSmallIcon(getNotificationIcon()) //icon that the user see in status bar.
-                .setContentTitle("Title") // GeofenceClass Service
-                .setContentText(msg) // Text; Location being monitored.
-                .setSubText("SubText") //lan lot centrum geofence
+                .setContentTitle(getResources().getString(R.string.service_title)) // GeofenceClass Service
+                .setContentText(getResources().getString(R.string.service_text)) // Text; Location being monitored.
+                .setSubText(getResources().getString(R.string.service_status_geofence) + " " + getGeofenceStatus()) //lan lot centrum geofence
                 .setTicker("Service starting") //geofence running
                 .setPriority(NotificationCompat.PRIORITY_MAX);//Makes the system prioritize this notification over the others(or the same as other with max
 
@@ -635,13 +627,11 @@ public class GeofenceTransitionService extends Service implements
         loggInIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent pendingInlogging = PendingIntent.getActivity(this,0,loggInIntent,PendingIntent.FLAG_UPDATE_CURRENT);
 
-
         //Intent for å sette KioskMode til OFF/kunn for testing.
         Intent stopKiosk = new Intent(STOP_KIOSK);
         PendingIntent pendingStopKiosk = PendingIntent.getBroadcast(getsContext(),0,stopKiosk,PendingIntent.FLAG_UPDATE_CURRENT);
 
         //TODO: koble opp mot Innlogging, gjøres ved å ta ibruk
-
         //notificationBuilder.setContentIntent(pendingIntent);
         notificationBuilder.addAction(R.drawable.login_48, "Log Inn", pendingInlogging );
         notificationBuilder.addAction(R.drawable.unlock_50, "Stop Kioks Mode",pendingStopKiosk);

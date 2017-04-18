@@ -141,9 +141,6 @@ public class CustomContentProvider extends ContentProvider {
     public boolean onCreate() {
         //initialisere databasen vår.
         sqLiteHelper = SQLiteHelper.getInstance(getContext()); //lager databasen dersom det ikke er gjordt.
-
-        //sqLiteDatabaseReadable = sqLiteHelper.getReadableDatabase();
-
         /*
         *   A content provider is created when its hosting process is created,
         *   and remains around for as long as the process does, so there is no need to close the database --
@@ -474,4 +471,5 @@ public class CustomContentProvider extends ContentProvider {
         dispatcher.mustSchedule(myJob);
         dispatcher.schedule(myJob);
     }
+
 }

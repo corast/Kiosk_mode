@@ -1,9 +1,13 @@
 package com.sondreweb.kiosk_mode_alpha.utils;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+
+import com.sondreweb.kiosk_mode_alpha.services.GeofenceTransitionService;
 
 /**
  * Created by sondre on 24-Feb-17.
@@ -36,7 +40,10 @@ public class PreferenceUtils {
 
     private static final String PREF_KIOSK_APP = "com.android.calculator2"; //Dette er Appen som vi skal starte opp.
 
-    private static final String DEFAULT_APP = "com.android.chrome"; //VI setter Chrome nå i starten for å teste.
+    //kan være hva som helst
+    //TODO: si ifra om at Kiosk Mode app ikke er satt.
+    private static final String DEFAULT_APP = "no.app.found";
+            //"com.android.chrome"; //VI setter Chrome nå i starten for å teste.
 
     //private static final String DEFAULT_APP_TEST = "com.Company.Monumentvandring"; //VI setter Chrome nå i starten for å teste.
 
@@ -55,7 +62,15 @@ public class PreferenceUtils {
     public static void setKioskModeActive( final Context context, boolean active){
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         //Henter Preferansene til systemet.
+
         if(sharedPreferences.edit().putBoolean(PREF_KIOSK_MODE, active).commit()){
+            if(active){
+                //TODO: be servicen starte og hente lokasjon.
+                LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(context);
+                Intent startGeofenceIntent = new Intent(context,GeofenceTransitionService.class);
+                startGeofenceIntent.setAction(GeofenceTransitionService.START_GEOFENCE);
+                //localBroadcastManager.sendBroadcast(startGeofenceIntent);
+            }
             Log.d(TAG, "Successfully set Kiosk mode to: "+active);
         }else
             Log.e(TAG,"Error setting Kiosk mode to: "+active);

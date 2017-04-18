@@ -36,9 +36,6 @@ public class RestartBroadcastReceiver extends WakefulBroadcastReceiver {
                 checkIfServiceRunning(context);
                 sendToast(context);
                 break;
-            case Intent.ACTION_SCREEN_OFF:
-                Log.d(TAG, "ACTION SCREEN OFF");
-                break;
             default:
                 Log.d(TAG,"Action som ble motatt i BroadcastReceiver:"+ action);
         }

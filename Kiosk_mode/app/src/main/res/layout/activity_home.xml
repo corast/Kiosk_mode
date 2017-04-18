@@ -57,20 +57,11 @@
         android:layout_height="40dp"
         android:layout_centerHorizontal="true"
         android:layout_below="@id/button_start_kiosk"
-        android:text="Start MonumentVandring"
+        android:text="Gå til Admin panel"
         android:layout_alignWithParentIfMissing="true"
-        android:onClick="startMap"
-        android:visibility="gone"/>
-<!--
-    <Button
-        android:id="@+id/button_innlogging_admin"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/button_start_map"
-        android:layout_centerHorizontal="true"
-        android:text="Log in Admin"
-        android:onClick="startAdminLogin" />
--->
+        android:onClick="startAdminPanel"
+        android:visibility="visible"/>
+
     <fragment
         android:layout_centerHorizontal="true"
         android:layout_centerInParent="true"
@@ -81,7 +72,6 @@
         android:layout_above="@+id/button_lock_screen"
         android:name="com.sondreweb.kiosk_mode_alpha.AppsFragment" >
     </fragment>
-
 
     <Button
         android:id="@+id/button_lock_screen"

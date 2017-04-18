@@ -50,4 +50,8 @@ public class GeofenceClass {
         return radius;
     }
 
+    @Override
+    public String toString() {
+        return requestId + " cordinates: "+ latitude+", "+longitude+"  rad:"+radius+"m";
+    }
 }

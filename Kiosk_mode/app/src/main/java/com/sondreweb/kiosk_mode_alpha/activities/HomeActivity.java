@@ -11,6 +11,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.PixelFormat;
@@ -34,7 +35,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.Geofence;
+import com.google.android.gms.maps.model.LatLng;
 import com.sondreweb.kiosk_mode_alpha.CustomView;
+import com.sondreweb.kiosk_mode_alpha.classes.GeofenceClass;
 import com.sondreweb.kiosk_mode_alpha.classes.StatusInfo;
 import com.sondreweb.kiosk_mode_alpha.adapters.StatusAdapter;
 import com.sondreweb.kiosk_mode_alpha.deviceAdministator.DeviceAdminKiosk;
@@ -48,6 +52,7 @@ import com.sondreweb.kiosk_mode_alpha.services.AccessibilityService;
 import com.sondreweb.kiosk_mode_alpha.storage.SQLiteHelper;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by sondre on 16-Feb-17.
@@ -153,6 +158,9 @@ public class HomeActivity extends FragmentActivity implements
             Intent AccessibilityServiceIntent = new Intent(context, AccessibilityService.class);
             context.startService(AccessibilityServiceIntent);
         }
+
+
+        AppUtils.askLocationPermission(this);
     }
 
 
@@ -179,6 +187,7 @@ public class HomeActivity extends FragmentActivity implements
             accessibilityServiceStatus = "Accessibility Service",
             accessibilityServiceRunningStatus = "Accessibility Service Running",
             touchViewStatus = "Quick Settings Restriction",
+            locationPermissionEnabledStatus = "Location Permission",
             locationEnabledStatus = "Location",
             batteryStatus = "Battery",
             homeStatus = "Home",
@@ -245,14 +254,22 @@ public class HomeActivity extends FragmentActivity implements
         statusList.add(status);
 
 
-        //Må sjekke at Location er enabled
-        status = new StatusInfo(locationEnabledStatus);
+        //Må sjekke at Location Permission er enabled
+        status = new StatusInfo(locationPermissionEnabledStatus);
         if (AppUtils.checkLocationPermission(this)) {
             status.setStatus(true);
         } else {
             status.setStatus(false);
         }
+        statusList.add(status);
 
+        //Må sjekke at Location er enabled
+        status = new StatusInfo(locationEnabledStatus);
+        if (AppUtils.isProvidersAvailable(this)) {
+            status.setStatus(true);
+        } else {
+            status.setStatus(false);
+        }
         statusList.add(status);
 
 
@@ -334,6 +351,13 @@ public class HomeActivity extends FragmentActivity implements
             } catch (ClassCastException e) {
                 Log.e(TAG, e.getLocalizedMessage());
             }
+
+
+            //Dersom statusen er OK, så trenger vi ikke flytte brukeren til der de skal være.
+            if(statusInfo.getStatus()){
+
+                return;
+            }
             //TODO gå til de ulike klassene.
             switch (statusInfo.getName()) {
                 case googlePlayServiceStatus:
@@ -343,13 +367,16 @@ public class HomeActivity extends FragmentActivity implements
                     break;
                 case accessibilityServiceStatus:
                     startActivity(new Intent(AccessibilitySettings));
-
+                    Toast.makeText(context,getResources().getString(R.string.home_enable)+": "+getResources().getString(R.string.accessibility_label),Toast.LENGTH_SHORT).show();
                     break;
                 case touchViewStatus:
                     toogleTouchView();
                     break;
                 case locationEnabledStatus:
-
+                    startActivity(new Intent(LocationSettings));
+                    break;
+                case locationPermissionEnabledStatus:
+                    startActivity(new Intent(LocationSettings));
                     break;
                 case batteryStatus:
 
@@ -461,25 +488,11 @@ public class HomeActivity extends FragmentActivity implements
 
         createAndUpdateStatusList(); //oppdaterer listen.
 
-        if (AppUtils.isServiceRunning(GeofenceTransitionService.class, this)) {
-            statusText.setText("GeofenceTransitionService kjører");
-        } else {
-            statusText.setText("GeofenceTransitionService er IKKE startet");
-        }
-
         if (AppUtils.isGooglePlayServicesAvailable(this)) {
             statusText.append(" | Google Play Servicen er oppdatert og tilgjengelig");
         } else {
             statusText.append(" | Google Play Services er IKKE tilgjengelig med gammel utgave");
         }
-
-        if (AppUtils.checkLocationPermission(this)) {
-            statusText.append("\nVi har rettigheter til Lokasjon tilgjengelig");
-        } else {
-            AppUtils.askLocationPermission(this);
-            statusText.append("\nVi har IKKE rettigheter til Lokasjon tilgjengelig");
-        }
-
 
         if (AppUtils.isGpsProviderAvailable(this)) {
             statusText.append("\nLocation GPS provider er enabled");
@@ -495,6 +508,7 @@ public class HomeActivity extends FragmentActivity implements
         } else {
             statusText.append("\nLocation Network provider er disabled");
         }
+
 
         Intent batteryIntent = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         int level = batteryIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1); //Nåværende battery level. fra 0 til scale.
@@ -627,6 +641,7 @@ public class HomeActivity extends FragmentActivity implements
      */
 
     public void updateStartKioskGui() {
+        //TODO: sett slik av vi går igjennom listen.
         if (PreferenceUtils.isKioskModeActivated(this)) {
             //Må sette knappen til å være Disabled
             startKioskButton.setClickable(false);
@@ -884,6 +899,7 @@ public class HomeActivity extends FragmentActivity implements
         if (AppUtils.isAccessibilitySettingsOn(this)) {
             return true;
         } else {
+
             Intent intent = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
             startActivityForResult(intent, 0);
             return false;
@@ -988,14 +1004,31 @@ public class HomeActivity extends FragmentActivity implements
        * Noen LatLng og radiuser som fungere på festningen.
        * */
 
+        try {
+            final long id = sqLiteHelper.addGeofence(new LatLng(59.120162127, 11.4032587908), 228);
+            final long id2 = sqLiteHelper.addGeofence(new LatLng(59.1191655086, 11.3983820317), 219);
+            final long id3 = sqLiteHelper.addGeofence(new LatLng(59.1164847077, 11.3958256159), 170);
+            final long id4 = sqLiteHelper.addGeofence(new LatLng(59.1159299692, 11.4000095433), 185);
+        }catch (SQLiteConstraintException e){
+            Toast.makeText(context,"Du har allered lagt til noen av disse geofencene før",Toast.LENGTH_SHORT).show();
+        }
 
 
-       //sqLiteHelper.addGeofence();
+       List<GeofenceClass> list = sqLiteHelper.getAllGeofencesClass();
+
+       for (GeofenceClass geofence: list
+            ) {
+        Log.d(TAG,geofence.toString());
+       }
 
        //sqLiteHelper.addGeofence();
 
        //Må legge geofence inn i databasen vår.
    }
 
+
+   public void startAdminPanel(View view){
+       startActivity(new Intent(context,AdminPanelActivity.class));
+   }
 }
 

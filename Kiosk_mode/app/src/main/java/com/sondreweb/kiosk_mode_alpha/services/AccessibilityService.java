@@ -144,13 +144,14 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
                     Log.d(TAG,"Global_action_back <<<<<<<<<<<<<<<<<<<<");
                     this.performGlobalAction(GLOBAL_ACTION_BACK);
                 }
+                Toast.makeText(this.getApplicationContext(), "Venligst ikke bytt Applikasjon", Toast.LENGTH_SHORT).show();
             }
-            Toast.makeText(this.getApplicationContext(), "Venligst ikke bytt Applikasjon", Toast.LENGTH_SHORT).show();
+
             Log.d(TAG,"denne Appen er Ikke grei");
         }
         Log.d(TAG,"---------------------------------------------");
-
     }
+
 
     public void checkIfOkState(AccessibilityEvent event){
         if(event.getPackageName().equals(PreferenceUtils.getPrefkioskModeApp(getApplicationContext()))){ //sjekker at vi er innefor Packages som er godkjent, som er MonumentVandring elns.
@@ -230,10 +231,6 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
             }
         }
     }
-
-
-
-
 
     public void checkIfOkayWindowStateTest(AccessibilityEvent event){
         if(event.getPackageName().equals(PreferenceUtils.getPrefkioskModeApp(getApplicationContext()))){

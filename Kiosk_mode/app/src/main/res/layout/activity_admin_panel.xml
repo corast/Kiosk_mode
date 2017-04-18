@@ -1,44 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Insert into Content provider"
-        android:onClick="insertDataTest"/>
 
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Insert mye data inn"
-        android:onClick="bulkInsertDataTest"/>
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Les all data fra Content Provider test"
-        android:onClick="lesDataTest"/>
+    <View
+        android:id="@+id/top_view"
+        android:layout_width="match_parent"
+        android:layout_height="20dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:visibility="invisible"/>
 
+    <LinearLayout
+        android:id="@+id/content_view"
+        android:orientation="horizontal"
+        android:layout_below="@id/top_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:layout_centerHorizontal="true"
+        >
+
+        <EditText
+            android:id="@+id/edit_text_pref_kiosk_mode"
+            android:hint="Application used in Kiosk mode."
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAlignment="center"/>
+
+        <Button
+            android:id="@+id/button_change_pref_app"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="change Kiosk Mode Applikation"
+            android:onClick="changeKioskApplication"/>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/button_schedule_sync"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Schedule synchronize"
+        android:layout_below="@id/content_view"
+        android:onClick="scheduleSync"
+        android:layout_centerHorizontal="true"/>
 
     <TextView
         android:id="@+id/text_view_content_provider_test"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="bla bla masse tekst...."/>
+        android:text="bla bla masse tekst...."
+        android:visibility="gone"/>
+
 
     <Button
         android:id="@+id/button_admin_panel_kiosk_mode"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Turn off Kioks mode"
-        android:onClick="turnOffKioskMode"/>
+        android:onClick="turnOffKioskMode"
+        android:layout_centerInParent="true"/>
 
-    <EditText
-        android:id="@+id/edit_text_pref_kiosk_mode"
-        android:hint="Locked App"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-
-</LinearLayout>
+</RelativeLayout>

@@ -12,4 +12,6 @@
     <!-- Dimentions for viewStub-->
     <dimen name="app_size_width">48dp</dimen>
     <dimen name="app_size_heigtt">48dp</dimen>
+
+
 </resources>

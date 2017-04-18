@@ -27,7 +27,7 @@ public class GeofenceTable{
                     COLUMN_LATITUDE + " real not null, " +
                     COLUMN_LONGITUDE + " real not null, " +
                     COLUMN_RADIUS + " real not null," +
-                    " UNIQUE(" + COLUMN_LATITUDE + ", " + COLUMN_LONGITUDE+")"+
+                    " UNIQUE(" + COLUMN_LATITUDE + ", " + COLUMN_LONGITUDE + ","+ COLUMN_RADIUS + ")"+
                     ");";
 
     /*
@@ -35,8 +35,12 @@ public class GeofenceTable{
     *           latitude real not null,
     *           longitude real not null,
     *           radius real not null,
-    *           UNIQUE(latitude, longitude)
+    *           UNIQUE(latitude, longitude, radius)
     *           );
+    *
+    *           Grunne til at latitude, longitude og radius må være en uniq kombinasjon er siden det skal være mulig å plassere
+    *           Geofence som ligger på samme sentrum, men med forskjellig radius.
+    *           Vi ønsker heller ikke at vi har geofence med samme radius, longitude og latitude flere ganger.
     * */
 
     public static void onCreate(SQLiteDatabase database){

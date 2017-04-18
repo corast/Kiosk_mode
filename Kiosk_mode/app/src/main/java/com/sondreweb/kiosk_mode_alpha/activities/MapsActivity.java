@@ -28,6 +28,8 @@ import com.sondreweb.kiosk_mode_alpha.R;
  * Created by sondre on 03-Mar-17.
  *
  * Denne har bare ansvar for å vise et kart og vår lokasjon på kartet kontinuelig/Denne må da altså ha tak i Location.
+ *
+ * IKKE I BRUK.
  */
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback{

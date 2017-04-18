@@ -84,6 +84,7 @@ public class AppsLoader extends AsyncTaskLoader<ArrayList<AppModel>> {
                     items.add(app);
                 }
 
+                /*
                 if( packageName.equalsIgnoreCase("com.android.settings")
                         //|| packageName.equalsIgnoreCase("com.Company.Monumentvandring")
                         //|| packageName.equalsIgnoreCase("com.android.chrome")
@@ -93,7 +94,7 @@ public class AppsLoader extends AsyncTaskLoader<ArrayList<AppModel>> {
                     app.loadLabel(context);
 
                     items.add(app);
-                }
+                } */
             }
         }
 

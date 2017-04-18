@@ -16,14 +16,31 @@
     </string>
 
 
-    <!-- Accessibility service Strings -->
+    <!-- AccessibilityService Strings -->
     <string name="accessibility_service_description">Lås ned enheten slik at kunn er mulig å bruke satt
         applikasjon på enheten så lenge dette er på.</string>
+    <string name="accessibility_label">Kiosk Service</string>
 
     <!-- Strings related to Home Screen-->
 
     <string name="home_app_kiosk_not_found">Application set for Kiosk Mode not installed : </string>
 
+    <string name="home_enable">Please Enable</string>
+
+    <string name="home_enable_location_mode">High accuracy</string>
+
+    <!-- GeofenceTransitionService Strings -->
+    <string name="service_title">Kiosk service</string>
+    <string name="service_text">Service running in the background</string>
+    <string name="service_status_geofence">Geofence status: </string>
+    <string name="service_geofence_on">On</string>
+    <string name="service_geofence_off">Off</string>
+
+    <!-- Strings relate to AdminPanel -->
+    <string name="admin_panel_kiosk_button_off">Turn Kiosk Mode Off</string>
+    <string name="admin_panel_kiosk_button_on">Kiosk Mode is off</string>
+    <string name="admin_panel_synchronize_empty_database">Nothing to synchronze, database is empty</string>
+    <string name="admin_panel_synchronize">Synchronize scheduled when WIFI is next available.</string>
     <!--Mer stringer kommer her TODO:lag flere stringer. -->
 
 

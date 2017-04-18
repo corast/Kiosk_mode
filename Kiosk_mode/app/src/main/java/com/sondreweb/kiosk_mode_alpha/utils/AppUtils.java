@@ -238,6 +238,7 @@ public class AppUtils{
  /*
  * returns true, then the location returned by getLastLocation(GoogleApiClient) will be reasonably up to date within the hints specified by the active LocationRequests.
  *  If the client isn't connected to Google Play services and the request times out, null is returned.
+ *
  * */
     //sjekker GoogleApiClienteten om den faktisk klarere p hente Location.
     public static boolean checkLocationAvailabillity(Context context,GoogleApiClient googleApiClient) { //Denne returnere true dersom vi har Location enabled og faktisk driver å henter location fra google clientent.
@@ -256,7 +257,7 @@ public class AppUtils{
         //sjekker om GPS og Nettverk er påskrudd i enheten. WIfi kan være avskrudd, men ikke mobilnett.
         if( ! manager.isProviderEnabled(LocationManager.GPS_PROVIDER) && ! manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)){ //verken GPS eller WIFI er enabled.
             //dersom GPS provicer og Network provider er enabled(ikke avskrudd)
-            Toast.makeText(context, "Verken GPS eller WIFI er på.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "Neither GPS or WIFI is enabled.", Toast.LENGTH_SHORT).show();
             return false;
         }else if( ! manager.isProviderEnabled(LocationManager.GPS_PROVIDER)){ //At kunn GPS er enabled, bør være greit i første omgang.
             Toast.makeText(context, "Enable location services(GPS) for accurate data", Toast.LENGTH_SHORT).show();
