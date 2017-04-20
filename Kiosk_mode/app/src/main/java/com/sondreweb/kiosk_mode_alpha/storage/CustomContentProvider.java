@@ -425,8 +425,7 @@ public class CustomContentProvider extends ContentProvider {
 
     public final static String syncKey = "com.firebase.sync.key";
     private final static String syncValue = "com.firebase.sync.value";
-    public final static String jobTag = "SYNC_WITH_DATABASE";
-
+    public final static String synchJob = "SYNC_WITH_DATABASE";
 
     private void scheduleSyncJob(){
         // Create a new dispatcher using the Google Play driver.
@@ -441,7 +440,7 @@ public class CustomContentProvider extends ContentProvider {
                 .setService(CustomJobService.class)
 
                 // uniquely identifies the job
-                .setTag(jobTag)
+                .setTag(synchJob)
 
                 // one-off job
                 .setRecurring(false)

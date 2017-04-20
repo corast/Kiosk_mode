@@ -1,17 +1,21 @@
 <resources>
+
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
+    <dimen name="text_large">22sp</dimen>
+    <dimen name="text_medium">18sp</dimen>
+    <dimen name="text_small">14sp</dimen>
+
+
     <dimen name="screen_width_landscape">960dp</dimen>
     <dimen name="screen_width_half">10dp</dimen>
     <dimen name="screen_heigth_landscape">527dp</dimen>
     <dimen name="text_sign_in">24sp</dimen>
     <dimen name="text_field">24sp</dimen>
 
-
-    <!-- Dimentions for viewStub-->
-    <dimen name="app_size_width">48dp</dimen>
-    <dimen name="app_size_heigtt">48dp</dimen>
-
+    <!-- Dimensjoner for Admin panelet-->
+    <dimen name="kiosk_off_heigth">72dp</dimen>
+    <dimen name="kiosk_button_text_size">22sp</dimen>
 
 </resources>

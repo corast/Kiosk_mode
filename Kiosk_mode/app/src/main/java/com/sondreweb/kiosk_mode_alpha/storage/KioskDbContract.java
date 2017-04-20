@@ -11,7 +11,6 @@ public final class KioskDbContract {
 
     //TODO: lag ferdig denne til Martin sin app.
 
-
     /*
     *   Authority.
     * */

@@ -2,8 +2,8 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
-    android:layout_width="130dp"
-    android:layout_height="130dp"
+    android:layout_width="142dp"
+    android:layout_height="142dp"
     android:paddingLeft="5dp"
     android:paddingRight="5dp"
     android:paddingTop="5dp"
@@ -12,14 +12,13 @@
     android:focusableInTouchMode="false"
     android:focusable="false">
 
-
     <TextView
         android:id="@+id/grid_status_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"
         android:layout_marginRight="0dp"
-        android:maxWidth="120dp"
+        android:maxWidth="136dp"
         android:paddingRight="0dp"
         android:text="Navnet på statusen"
         android:textAlignment="center"

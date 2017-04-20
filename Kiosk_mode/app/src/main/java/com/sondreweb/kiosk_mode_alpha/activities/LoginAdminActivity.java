@@ -3,6 +3,7 @@ package com.sondreweb.kiosk_mode_alpha.activities;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
@@ -27,6 +28,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
@@ -60,6 +62,18 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
     private static final String[] DUMMY_CREDENTIALS = new String[]{
             "foo@example.com:hello", "bar@example.com:world"
     };
+
+    @Override
+    protected void onPause() {
+        //Henter tastaturet dersom det er i fokus.
+        //henter input metoder på dette, siden det et tastatur så kan vi gjemme det fra vinduet.
+        View view = this.getCurrentFocus();
+        if(view != null){
+            InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+        super.onPause();
+    }
 
     private static final String[] DYMMY_CREDENTUALS_PASSWORDS = new String[]{
       "passord123","FORGOTPASSWORD","password","12345"
@@ -162,6 +176,11 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
         return false;
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+    }
+
     /**
      * Callback received when a permissions request has been completed.
      */
@@ -179,7 +198,7 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
     @Override
     protected void onResume() {
         super.onResume();
-        hideSystemUiTest();
+        //hideSystemUiTest();
     }
 
     /**

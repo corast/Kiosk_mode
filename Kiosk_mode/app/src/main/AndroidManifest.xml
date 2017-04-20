@@ -64,6 +64,7 @@
     <!-- Allows using PowerManager WakeLocks to keep processor from sleeping or screen from dimming. -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
+
     <!-- For å lage et view som "spiser" alle inputene på notifikasjons baren -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
@@ -96,15 +97,15 @@
             android:name=".activities.HomeActivity"
             android:clearTaskOnLaunch="true"
             android:excludeFromRecents="true"
-            android:label="Simple Launcher Activity"
+            android:label="@string/home_label"
             android:launchMode="singleInstance"
             android:screenOrientation="userLandscape"
             android:stateNotNeeded="true"
-            android:theme="@style/Theme.AppCompat.NoActionBar">
+            android:theme="@style/Theme.AppCompat">
 
             <!-- singleInstace: slik at vi ikke kan kjøre flere instanser. -->
             <!-- TODO: Fiks orientasjon, slik at vi faktisk bare viser en orientasjon slik som resten av tangoen gjør. -->
-            <intent-filter>
+            <intent-filter android:label="@string/app_name">
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.HOME" />
@@ -209,6 +210,10 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <!-- for å mota implisit intents fra systemet -->
                 <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="com.monumentvandring.launcher.outside.geofence"/>
             </intent-filter>
         </receiver>
 

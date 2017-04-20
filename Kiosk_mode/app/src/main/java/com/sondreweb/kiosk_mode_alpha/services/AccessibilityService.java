@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.IntDef;
 import android.util.Log;
+import android.view.View;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.Toast;
@@ -33,11 +34,17 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
     protected final String LogInnAdmin = "class com.sondreweb.kiosk_mode_alpha.activities.LoginAdminActivity";
 
     //BLACKLISTED PACKAGENAMES:
+    /* Settings packagen, selvforklarende */
     protected final String Settings = "com.android.settings";
+    /*
+    * Dette er packagen som har med hvordan vi velger å starte en prosess som systemet ikke har en valg måte å håndtere,
+    * som åpning av en fil hvor vi velger hvilken applikasjon som skal gåndtere dette
+    * */
     protected final String ResolverActivity = "com.android.internal.app.ResolverActivity";
+    /* Launcheren fra Systemet, som følger med.*/
     protected final String DefaultLauncher = "com.android.launcher";
 
-    //WHITELIST LIST
+    //WHITELISTED PACKAGENAMES LIST:
     ArrayList<String> WhiteListPackages = new ArrayList<String>(
             Arrays.asList(
                     GeofencingApp,
@@ -45,6 +52,7 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
                     LauncherApp
             )); //populate med appene vi tillater i kiosk mode.
 
+    //WHITELISTED PACKAGENAMES LIST:
     ArrayList<String> WhiteListedClasses = new ArrayList<>(
            Arrays.asList(
                    LogInnAdmin
@@ -75,7 +83,7 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
         info.flags = AccessibilityServiceInfo.DEFAULT;
             //The timeout after the most recent event of a given type before an AccessibilityService is notified.
             //Delay før vi får inn Eventet som har skjedd.
-        info.notificationTimeout = 200; //0.1 sekunder er nok for bruken til å se hva som har skjedd, men ikke nok tid til å faktisk gjøre noe.
+        info.notificationTimeout = 10; //0.1 sekunder er nok for bruken til å se hva som har skjedd, men ikke nok tid til å faktisk gjøre noe.
 
         setServiceInfo(info);
 
@@ -84,12 +92,11 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
         WhiteListPackages.add(PreferenceUtils.getPrefkioskModeApp(getApplicationContext()));
     }
 
-
+        //TODO: fiks google søk
 
     //TODO: Fiks på Whitelisten, og kanskje noe blacklisting, slik at vi er sikker på at alt uønsket ikke kan framkomme underveis, samtidig så er Packagename litt universel for flere Classnames.
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
-        Log.d(TAG,"Accesibitlity event: "+event.getEventType());
 
             //Enkel sjekk på at det er WindowStateChange event og at event faktisk ikke er null, kanskje litt overflødig med å sjekke alt dette.
         if( event != null && event.getPackageName()!= null && event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ){
@@ -142,7 +149,7 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
                     this.performGlobalAction(GLOBAL_ACTION_HOME);
                 }else{
                     Log.d(TAG,"Global_action_back <<<<<<<<<<<<<<<<<<<<");
-                    this.performGlobalAction(GLOBAL_ACTION_BACK);
+                    this.performGlobalAction(GLOBAL_ACTION_HOME);
                 }
                 Toast.makeText(this.getApplicationContext(), "Venligst ikke bytt Applikasjon", Toast.LENGTH_SHORT).show();
             }

@@ -7,6 +7,9 @@ import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import java.util.Calendar;
+import java.util.TimeZone;
+
 import com.sondreweb.kiosk_mode_alpha.services.GeofenceTransitionService;
 
 /**
@@ -28,17 +31,18 @@ public class PreferenceUtils {
     private static final String PREF_GEOFENCE_UPDATE_INTERVAL = "pref_kiosk_geofence_update_interval";
     private static final String PREF_GEOFENCE_FASTEST_UPDATE_INTERVAL = "pref_kiosk_geofence_fastest_update_interval";
 
+    public static final int ONE_MINUTE_IN_MILLIS = 1000*60;
+    public static final int ONE_SECOND_IN_MILLIS = 1000;
+    public static final int THIRTY_SECONDS_IN_MILLIS = ONE_SECOND_IN_MILLIS *30;
 
-    public static final int ONE_MINUTE_IN_MILIS = 1000*60;
-
-    private static final int DEFAULT_PREF_GEOFENCE_UPDATE_INTERVAL = 5*ONE_MINUTE_IN_MILIS; //5 minutter
-    private static final int DEFAULT_GEOFENCE_FASTEST_UPDATE_INTERVAL = ONE_MINUTE_IN_MILIS; //1 minutt
+    private static final int DEFAULT_PREF_GEOFENCE_UPDATE_INTERVAL = ONE_SECOND_IN_MILLIS; //2 minutter
+    private static final int DEFAULT_GEOFENCE_FASTEST_UPDATE_INTERVAL = ONE_SECOND_IN_MILLIS; //10 sekunder
 
     /*
     *   Her bør MonumentVandring Appen stå.
     * */
 
-    private static final String PREF_KIOSK_APP = "com.android.calculator2"; //Dette er Appen som vi skal starte opp.
+    private static final String PREF_KIOSK_APP_KEY = "pref_kiosk_app"; //Dette er Appen som vi skal starte opp.
 
     //kan være hva som helst
     //TODO: si ifra om at Kiosk Mode app ikke er satt.
@@ -49,6 +53,10 @@ public class PreferenceUtils {
 
 
     //private static final String DEFAULT_APP = "com.Company.Monumentvandring"; //VI setter MonumentVandring nå i starten for å teste.
+    //private static com.android.calculator2
+
+    private static final String SYNCHRONIZATION_TIME = "last_synchronize";
+    private static final String SYNCHRONIZATION_TIME_DEFAULT = "Never";
 
     public static boolean isKioskModeActivated(final Context context){
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
@@ -76,6 +84,8 @@ public class PreferenceUtils {
             Log.e(TAG,"Error setting Kiosk mode to: "+active);
     }
 
+
+
     //For å sjekke om vi har DeviceAdmin rettigheter eller ikke.
     public static boolean isAppDeviceAdmin(final Context context){
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
@@ -96,21 +106,46 @@ public class PreferenceUtils {
 
     public static void setPrefkioskModeApp(final String appPackage,final Context context){
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        sharedPreferences.edit().putString(PREF_KIOSK_APP, appPackage).apply();
+        sharedPreferences.edit().putString(PREF_KIOSK_APP_KEY, appPackage).apply();
     }
 
     public static String getPrefkioskModeApp(final Context context){
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         //TODO: check if package is installed
-        String kiosk_app = sharedPreferences.getString(PREF_KIOSK_APP, DEFAULT_APP);
+        String kiosk_app = sharedPreferences.getString(PREF_KIOSK_APP_KEY, DEFAULT_APP);
         /*
         *   En kjapp test på om Packagen som vi faktisk har er installert på enheten.
         * */
-        Log.d(TAG,"isPacketInnstalled : "+kiosk_app +" -> "+ AppUtils.isPacketInstalled(kiosk_app,context));
+        //Log.d(TAG,"isPacketInnstalled : "+kiosk_app +" -> "+ AppUtils.isPacketInstalled(kiosk_app,context));
         if(AppUtils.isPacketInstalled(kiosk_app,context)){//True dersom den eksitere
             return kiosk_app;
         }
         return DEFAULT_APP; //Da bare returnere vi Default app stringen, siden den vet vi eksiterer.
+    }
+
+    /*
+    *   Må brukes når vi synchroniserer dataen vår.
+    * */
+    public static void setSynchronizationTime(final Context context, String time){
+        //henter datoen nå og lagrer denne unna.
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        if(time == null){
+            TimeZone tzNorway = TimeZone.getTimeZone("GMT+2");
+            Calendar c = Calendar.getInstance(tzNorway);
+            //Gir oss tid på formatet dag/månde/år time:minutt:sekund
+            String Time = c.get(Calendar.DAY_OF_MONTH) + "/" + c.get(Calendar.MONTH) +
+                    "/" + c.get(Calendar.YEAR) + " " + c.get(Calendar.HOUR_OF_DAY) +
+                    ":" + c.get(Calendar.MINUTE) + ":" + c.get(Calendar.SECOND);
+            sharedPreferences.edit().putString(SYNCHRONIZATION_TIME,Time).apply();
+        }else
+        {
+            sharedPreferences.edit().putString(SYNCHRONIZATION_TIME,time).apply();
+        }
+    }
+
+    public static String getTimeSinceLastSynchronization(final Context context){
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        return sharedPreferences.getString(SYNCHRONIZATION_TIME,SYNCHRONIZATION_TIME_DEFAULT);
     }
 
 /*

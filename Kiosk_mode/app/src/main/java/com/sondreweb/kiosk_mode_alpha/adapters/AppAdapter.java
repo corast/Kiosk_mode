@@ -29,8 +29,8 @@ public class AppAdapter extends ArrayAdapter<AppModel> {
 
     public AppAdapter(Context context)
     {
+        //super(context, R.layout.support_simple_spinner_dropdown_item);
         super(context, R.layout.horizontal_layout);
-
         inflater = LayoutInflater.from(context);
 
     }
@@ -38,6 +38,8 @@ public class AppAdapter extends ArrayAdapter<AppModel> {
     public static class ViewHolder{
         ImageView icon;
         TextView label;
+        TextView package_name;
+
     }
 
 
@@ -72,6 +74,7 @@ public class AppAdapter extends ArrayAdapter<AppModel> {
 
             viewHolder.icon = (ImageView) convertView.findViewById(R.id.icon);
             viewHolder.label = (TextView) convertView.findViewById(R.id.label);
+            viewHolder.package_name = (TextView) convertView.findViewById(R.id.package_name);
 
             convertView.setTag(viewHolder);
         }
@@ -84,6 +87,7 @@ public class AppAdapter extends ArrayAdapter<AppModel> {
 
         viewHolder.icon.setImageDrawable(item.getIcon());
         viewHolder.label.setText(item.getAppName());
+        viewHolder.package_name.setText(item.getApplicationPackageName());
 
         //return super.getView(position, convertView, parent);
         return convertView;

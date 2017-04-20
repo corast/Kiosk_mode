@@ -161,6 +161,10 @@ public class HomeActivity extends FragmentActivity implements
 
 
         AppUtils.askLocationPermission(this);
+
+        if(PreferenceUtils.isKioskModeActivated(context)){
+            startPrefKioskModeApp();
+        }
     }
 
 
@@ -203,11 +207,15 @@ public class HomeActivity extends FragmentActivity implements
 
         StatusInfo status; //status objekt som vi bare kan bruke, mulig dette er litt dårlig, siden vi får samme objekt med ulike parametere.
 
+        /*  Status for googlePlayServices.
+        * */
         status = new StatusInfo(googlePlayServiceStatus);
         if (AppUtils.isGooglePlayServicesAvailable(this)) {
             status.setStatus(true);
+            status.setInfo(getResources().getString(R.string.home_status_info_googleplay_service_true));
         } else {
             status.setStatus(false);
+            status.setInfo(getResources().getString(R.string.home_status_info_googleplay_service_false));
         }
         statusList.add(status);
 
@@ -222,34 +230,41 @@ public class HomeActivity extends FragmentActivity implements
         status = new StatusInfo(accessibilityServiceStatus);
         if (AppUtils.isAccessibilitySettingsOn(this)) {
             status.setStatus(true);
+            status.setInfo(getResources().getString(R.string.home_status_info_accessibility_service_true));
         } else {
             status.setStatus(false);
+            status.setInfo(getResources().getString(R.string.home_status_info_accessibility_service_false));
         }
         statusList.add(status);
 
         status = new StatusInfo(accessibilityServiceRunningStatus);
         if (AppUtils.isServiceRunning(AccessibilityService.class, context)) {
             status.setStatus(true);
+            status.setInfo(getResources().getString(R.string.home_status_info_accessibility_service_running_true));
         } else {
             status.setStatus(false);
+            status.setInfo(getResources().getString(R.string.home_status_info_accessibility_service_running_false));
         }
         statusList.add(status);
 
         status = new StatusInfo(BackgroundServiceStatus);
         if (AppUtils.isServiceRunning(GeofenceTransitionService.class, context)) {
             status.setStatus(true);
+            status.setInfo(getResources().getString(R.string.home_status_info_background_service_true));
         } else {
             status.setStatus(false);
+            status.setInfo(getResources().getString(R.string.home_status_info_background_service_false));
         }
         statusList.add(status);
-
 
         //sjekker touchVievet
         status = new StatusInfo(touchViewStatus);
         if (isTouchViewVisible()) {
             status.setStatus(true);
+            status.setInfo(getResources().getString(R.string.home_status_info_touch_view_true));
         } else {
             status.setStatus(false);
+            status.setInfo(getResources().getString(R.string.home_status_info_touch_view_false));
         }
         statusList.add(status);
 
@@ -258,8 +273,10 @@ public class HomeActivity extends FragmentActivity implements
         status = new StatusInfo(locationPermissionEnabledStatus);
         if (AppUtils.checkLocationPermission(this)) {
             status.setStatus(true);
+            status.setInfo(getResources().getString(R.string.home_status_info_location_permission_true));
         } else {
             status.setStatus(false);
+            status.setInfo(getResources().getString(R.string.home_status_info_location_permission_false));
         }
         statusList.add(status);
 
@@ -267,8 +284,10 @@ public class HomeActivity extends FragmentActivity implements
         status = new StatusInfo(locationEnabledStatus);
         if (AppUtils.isProvidersAvailable(this)) {
             status.setStatus(true);
+            status.setInfo(getResources().getString(R.string.home_status_info_location_enabled_true));
         } else {
             status.setStatus(false);
+            status.setInfo(getResources().getString(R.string.home_status_info_location_enabled_false));
         }
         statusList.add(status);
 
@@ -280,20 +299,27 @@ public class HomeActivity extends FragmentActivity implements
         status = new StatusInfo(batteryStatus);
         if (HomeActivity.getLevel() >= BATTERY_LIMIT) {
             status.setStatus(true);
+            status.setInfo(getResources().getString(R.string.home_status_info_battery)+
+                    getLevel()+ "% "+
+                    getResources().getString(R.string.home_status_info_battery_true));
         } else {
             status.setStatus(false);
+            status.setInfo(getResources().getString(R.string.home_status_info_battery)+
+                            getLevel()+"% "+
+                    getResources().getString(R.string.home_status_info_battery_false));
         }
         statusList.add(status);
 
         /*
         *   Status på om vi er HOME launcher.
         * */
-
         status = new StatusInfo(homeStatus);
         if (AppUtils.isDefault(this, this.getComponentName())) {
             status.setStatus(true);
+            status.setInfo(getResources().getString(R.string.home_status_info_home_true));
         } else {
             status.setStatus(false);
+            status.setInfo(getResources().getString(R.string.home_status_info_home_false));
         }
         statusList.add(status);
 
@@ -301,17 +327,8 @@ public class HomeActivity extends FragmentActivity implements
         *   Bare masse testinger.
         * */
 
-        status = new StatusInfo("Status 1");
-        status.setStatus(true);
-        statusList.add(status);
 
-        status = new StatusInfo("Status 2");
-        status.setStatus(true);
-        statusList.add(status);
-
-        status = new StatusInfo("Status 3");
-        status.setStatus(true);
-        statusList.add(status);
+        //TODO: lage en status for å holde skjermen våken eller ikke.
 
 
         Log.d(TAG, statusList.toString());
@@ -324,7 +341,6 @@ public class HomeActivity extends FragmentActivity implements
         statusAdapter.setData(statusList);
         gridView.setAdapter(statusAdapter);
     }
-
 
     private final String AccessibilitySettings = Settings.ACTION_ACCESSIBILITY_SETTINGS;
     private final String DeviceAdminSettings = Settings.ACTION_SECURITY_SETTINGS;
@@ -340,34 +356,42 @@ public class HomeActivity extends FragmentActivity implements
 
         StatusInfo statusInfo = null;
 
-
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             //TODO: gjør de ulike tingene.
-            Log.d(TAG, parent.getItemAtPosition(position).getClass().toString());
             try {
                 statusInfo = (StatusInfo) parent.getItemAtPosition(position);
                 //Tilfelle det er feil klasse, men dette skal strengt tatt aldri skje, siden adaptere kunn legger ut StatusInfo objecter.
             } catch (ClassCastException e) {
                 Log.e(TAG, e.getLocalizedMessage());
             }
+            if(AppUtils.DEBUG){
+                Log.d(TAG,statusInfo.toString());
+            }
 
-
+            //TODO: Finn ut om dette er ønskelig?
             //Dersom statusen er OK, så trenger vi ikke flytte brukeren til der de skal være.
             if(statusInfo.getStatus()){
-
                 return;
             }
+
             //TODO gå til de ulike klassene.
             switch (statusInfo.getName()) {
                 case googlePlayServiceStatus:
+                    //Poll brukeren.
+                    AppUtils.isGooglePlayServicesAvailableAndPoll(context,HomeActivity.this);
                     break;
                 case deviceAdminStatus:
 
                     break;
                 case accessibilityServiceStatus:
+                    //flytter brukeren til AccessibilitySettings
                     startActivity(new Intent(AccessibilitySettings));
-                    Toast.makeText(context,getResources().getString(R.string.home_enable)+": "+getResources().getString(R.string.accessibility_label),Toast.LENGTH_SHORT).show();
+                    //Ber brukeren skru på riktig accessibilityservice som toast.
+                    Toast.makeText(context,getResources().getString(R.string.home_enable)+": "+getResources().getString(R.string.accessibility_label),Toast.LENGTH_LONG).show();
+                    break;
+                case accessibilityServiceRunningStatus:
+                    startAccessibilityService();
                     break;
                 case touchViewStatus:
                     toogleTouchView();
@@ -382,12 +406,16 @@ public class HomeActivity extends FragmentActivity implements
 
                     break;
                 case homeStatus:
+                    Toast.makeText(context,getResources().getString(R.string.home_enable)+": "+getResources().getString(R.string.home_label)+" "+
+                            getResources().getString(R.string.home_enable_settings)+" "+getResources().getString(R.string.home_enable_settings_default),Toast.LENGTH_LONG).show();
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        Toast.makeText(context,getResources().getString(R.string.home_enable)+": "+getResources().getString(R.string.home_label),Toast.LENGTH_LONG).show();
                         startActivity(new Intent(HomeSettings));
                     } else {
                         startActivity(new Intent(Settings.ACTION_SETTINGS));
+                        Toast.makeText(context,getResources().getString(R.string.home_enable)+": "+getResources().getString(R.string.home_label)+" "+
+                                getResources().getString(R.string.home_enable_settings)+" "+getResources().getString(R.string.home_enable_settings_default),Toast.LENGTH_LONG).show();
                     }
-
                     break;
             }
             //Intent intent = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
@@ -406,9 +434,7 @@ public class HomeActivity extends FragmentActivity implements
             createAndUpdateStatusList();
 
         }
-
     }
-
 
     //TODO: logikk på om vi er klare til å starte.
     //Noen ting kan vi faktisk bare sette på selv, som TouchViewet ivertfall.
@@ -452,6 +478,7 @@ public class HomeActivity extends FragmentActivity implements
                 //TODO: gjør noe når packagenen ikke er installert.
                 Log.d(TAG, "Intent er null");
                 //Log.e(TAG, e.getMessage());
+
                 Toast.makeText(context, "Packagen " + prefApp + " er ikke installert", Toast.LENGTH_SHORT).show();
                 return false;
             }
@@ -465,9 +492,9 @@ public class HomeActivity extends FragmentActivity implements
 
     static final int PICK_CONTANCT_RQEUST = 1;
 
-
     @Override
     protected void onStart() {//Ved onstart burde vi sjekke ulike ting.
+        statusText.setText("");
         Log.d(TAG, "onStart()");
         if (allStatusTrueTest()) {
             //dette betyr av vi egentlig skal gå til MonumentVandring.
@@ -624,6 +651,8 @@ public class HomeActivity extends FragmentActivity implements
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.d(TAG, "????????????????????Resultcode: " + resultCode);
+
+        //TODO: martin må sende tilbake resultatet på sin app.
         if (resultCode == RESULT_CANCELED) {
             //VI må starte aktiviteten på nytt?
             //TODO: kan være null
@@ -1010,7 +1039,7 @@ public class HomeActivity extends FragmentActivity implements
             final long id3 = sqLiteHelper.addGeofence(new LatLng(59.1164847077, 11.3958256159), 170);
             final long id4 = sqLiteHelper.addGeofence(new LatLng(59.1159299692, 11.4000095433), 185);
         }catch (SQLiteConstraintException e){
-            Toast.makeText(context,"Du har allered lagt til noen av disse geofencene før",Toast.LENGTH_SHORT).show();
+            //Toast.makeText(context,"Du har allered lagt til noen av disse geofencene før",Toast.LENGTH_SHORT).show();
         }
 
 
@@ -1024,6 +1053,12 @@ public class HomeActivity extends FragmentActivity implements
        //sqLiteHelper.addGeofence();
 
        //Må legge geofence inn i databasen vår.
+
+       Intent geofence_intent = new Intent(context,GeofenceTransitionService.class);
+       geofence_intent.setAction(GeofenceTransitionService.START_GEOFENCE);
+       startService(geofence_intent);
+       PreferenceUtils.setKioskModeActive(context, true);
+       Toast.makeText(context,"Starter Geofence monitorering testing",Toast.LENGTH_SHORT).show();
    }
 
 

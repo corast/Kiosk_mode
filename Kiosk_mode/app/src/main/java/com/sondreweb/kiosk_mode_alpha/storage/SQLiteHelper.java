@@ -79,8 +79,6 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     *   Metode for hente ut alle Geofence og sende de tilbake som en Liste.
     * */
 
-
-
     public List<Geofence> getAllGeofences(){
         SQLiteDatabase db = this.getReadableDatabase();
 
@@ -92,7 +90,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
         Cursor cursor = db.rawQuery(selectQuery, null);
 
-        if(cursor.moveToFirst() && cursor.getCount() <= 1){//Flytter oss til først rad dersom den eksisterer
+        if(cursor.moveToFirst() && cursor.getCount() >= 1){//Flytter oss til først rad dersom den eksisterer
             do {  //Legger til alle Geofence fra database i Arrayet med korrekte atributter.
                 geofenceArrayList.add( new Geofence.Builder()
                         .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
@@ -100,6 +98,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
                                 cursor.getDouble(cursor.getColumnIndex(GeofenceTable.COLUMN_LONGITUDE)),
                                 cursor.getFloat(cursor.getColumnIndex(GeofenceTable.COLUMN_RADIUS)))
                         .setRequestId(id_HEAD+cursor.getString(cursor.getColumnIndex(GeofenceTable.COLUMN_GEOFENCE_ID)))
+                        .setExpirationDuration(Geofence.NEVER_EXPIRE)
                         .build());
 
             }while (cursor.moveToNext());

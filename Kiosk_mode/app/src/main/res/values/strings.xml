@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Kiosk_mode_alpha</string>
     <string name="title_activity_login_admin">Sign in</string>
+    <string name="home_label">Kiosk Mode Launcher</string>
 
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
@@ -22,12 +23,46 @@
     <string name="accessibility_label">Kiosk Service</string>
 
     <!-- Strings related to Home Screen-->
-
     <string name="home_app_kiosk_not_found">Application set for Kiosk Mode not installed : </string>
 
     <string name="home_enable">Please Enable</string>
-
+    <string name="home_enable_settings"> in Home settings</string>
+    <string name="home_enable_settings_default">as default launcher</string>
     <string name="home_enable_location_mode">High accuracy</string>
+
+    <!-- Strings relatert til Statuser -->
+    <string name="home_status_info_googleplay_service_true">Google Play Service innstalled</string>
+    <string name="home_status_info_googleplay_service_false">Google Play Services not installed or not up to date</string>
+
+    <string name="home_status_info_deviceadmin_true"></string>
+    <string name="home_status_info_deviceadmin_false"></string>
+
+    <string name="home_status_info_accessibility_service_true">Permission granted</string>
+    <string name="home_status_info_accessibility_service_false">Not turned on. Enable in settings</string>
+
+    <string name="home_status_info_accessibility_service_running_true">Accessiblity service running</string>
+    <string name="home_status_info_accessibility_service_running_false">Accessiblity service not running</string>
+
+    <string name="home_status_info_touch_view_true">Quick Settings blocked</string>
+    <string name="home_status_info_touch_view_false">Quick Settings reachable, tap here to turn on</string>
+
+    <string name="home_status_info_location_permission_true">Permission granted</string>
+    <string name="home_status_info_location_permission_false">No permission to get Location</string>
+
+    <string name="home_status_info_location_enabled_true">Enabled</string>
+    <string name="home_status_info_location_enabled_false">Not enabled, turn on in Settings</string>
+
+
+    <string name="home_status_info_battery">Battery level:</string>
+    <string name="home_status_info_battery_true">Good</string>
+    <string name="home_status_info_battery_false">Too low. Charge more</string>
+
+    <string name="home_status_info_home_true">Home is okay</string>
+    <string name="home_status_info_home_false">Home not this launcher</string>
+
+    <string name="home_status_info_background_service_true">background service running</string>
+    <string name="home_status_info_background_service_false">background service not running, touch to start</string>
+
 
     <!-- GeofenceTransitionService Strings -->
     <string name="service_title">Kiosk service</string>
@@ -35,6 +70,8 @@
     <string name="service_status_geofence">Geofence status: </string>
     <string name="service_geofence_on">On</string>
     <string name="service_geofence_off">Off</string>
+
+    <string name="service_geofence_outside_view_text">Venligst returner tilbake til området for å forsette</string>
 
     <!-- Strings relate to AdminPanel -->
     <string name="admin_panel_kiosk_button_off">Turn Kiosk Mode Off</string>

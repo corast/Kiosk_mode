@@ -3,8 +3,6 @@
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-
-
     <View
         android:id="@+id/top_view"
         android:layout_width="match_parent"
@@ -28,7 +26,7 @@
             android:hint="Application used in Kiosk mode."
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAlignment="center"/>
+            android:textAlignment="center" />
 
         <Button
             android:id="@+id/button_change_pref_app"
@@ -57,10 +55,13 @@
 
     <Button
         android:id="@+id/button_admin_panel_kiosk_mode"
+        android:layout_margin="10dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Turn off Kioks mode"
+        android:layout_height="@dimen/kiosk_off_heigth"
+        android:text="@string/admin_panel_kiosk_button_off"
+        android:textSize="@dimen/text_large"
         android:onClick="turnOffKioskMode"
-        android:layout_centerInParent="true"/>
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"/>
 
 </RelativeLayout>

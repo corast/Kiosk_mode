@@ -42,6 +42,7 @@ public class StatusAdapter extends ArrayAdapter<StatusInfo>{
 
         ImageView icon;
         TextView label;
+        TextView info;
         RelativeLayout rLayout;
     }
 
@@ -78,6 +79,7 @@ public class StatusAdapter extends ArrayAdapter<StatusInfo>{
 
             viewHolder.icon = (ImageView) convertView.findViewById(R.id.grid_status_image);
             viewHolder.label = (TextView) convertView.findViewById(R.id.grid_status_name);
+            viewHolder.info = (TextView) convertView.findViewById(R.id.grid_status_info);
 
             viewHolder.rLayout = (RelativeLayout) convertView.findViewById(R.id.relative_layout_grid_status);
 
@@ -101,6 +103,7 @@ public class StatusAdapter extends ArrayAdapter<StatusInfo>{
 
             viewHolder.icon.setImageResource(status.getImageDrawable());
             viewHolder.label.setText(status.getName());
+            viewHolder.info.setText(status.getInfo());
         }
         return convertView;
 

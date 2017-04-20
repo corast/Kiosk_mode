@@ -1,14 +1,17 @@
 package com.sondreweb.kiosk_mode_alpha.activities;
 
 import android.content.ContentValues;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.text.InputType;
 import android.util.Log;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -21,10 +24,9 @@ import com.firebase.jobdispatcher.Job;
 import com.firebase.jobdispatcher.Lifetime;
 import com.firebase.jobdispatcher.RetryStrategy;
 import com.firebase.jobdispatcher.Trigger;
-import com.google.android.gms.location.Geofence;
 import com.sondreweb.kiosk_mode_alpha.R;
 import com.sondreweb.kiosk_mode_alpha.jobscheduler.CustomJobService;
-import com.sondreweb.kiosk_mode_alpha.settings.AdminPanel;
+import com.sondreweb.kiosk_mode_alpha.services.GeofenceTransitionService;
 import com.sondreweb.kiosk_mode_alpha.storage.KioskDbContract;
 import com.sondreweb.kiosk_mode_alpha.storage.SQLiteHelper;
 import com.sondreweb.kiosk_mode_alpha.storage.StatisticsTable;
@@ -33,9 +35,6 @@ import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
 
 import java.util.ArrayList;
 import java.util.Random;
-
-import static com.sondreweb.kiosk_mode_alpha.storage.CustomContentProvider.jobTag;
-import static com.sondreweb.kiosk_mode_alpha.storage.CustomContentProvider.syncKey;
 
 /**
  * Created by sondre on 14-Apr-17.
@@ -51,8 +50,12 @@ public class AdminPanelActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+
         if(getResources().getConfiguration().orientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE){
+            Log.d(TAG, "orientation == landscape");
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        }else{
+            Log.d(TAG, "orientation != landscape");
         }
 
         super.onCreate(savedInstanceState);
@@ -66,20 +69,31 @@ public class AdminPanelActivity extends AppCompatActivity {
 
         //TODO: lage en edit text.
         edit_text_pref_kiosk = (EditText) findViewById(R.id.edit_text_pref_kiosk_mode);
-
+        edit_text_pref_kiosk.setInputType(InputType.TYPE_TEXT_VARIATION_URI);
         updateGui();
     }
 
     @Override
     protected void onStart() {
+        /*
+        View view = this.getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager)getSystemService(getApplicationContext().INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), InputMethodManager.HIDE_IMPLICIT_ONLY);
+        } */
         super.onStart();
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        finish(); //Ber systemet fjerne denne activiteten fra stacken osv.
+    }
 
     @Override
     protected void onStop() {
+
         super.onStop();
-        finish();
     }
 
     public void updateGui(){
@@ -89,18 +103,21 @@ public class AdminPanelActivity extends AppCompatActivity {
             //True vill si at vi gjøre slik at knappen ikke er trykkbar.
             kiosk_button.setText(getResources().getString(R.string.admin_panel_kiosk_button_off));
             kiosk_button.setClickable(true);
+            kiosk_button.setAlpha(1f);
         }else{
             kiosk_button.setText(getResources().getString(R.string.admin_panel_kiosk_button_on));
             kiosk_button.setClickable(false);
+            kiosk_button.setAlpha(0.4f);
         }
 
         //Dersom ingen til å synchronisere.
         if(SQLiteHelper.getInstance(getApplicationContext()).checkDataInStatisticsTable()){
-            kiosk_button.setText(getResources().getString(R.string.admin_panel_synchronize));
-            kiosk_button.setClickable(true);
+            button_schedule_sync.setText(getResources().getString(R.string.admin_panel_synchronize));
+            button_schedule_sync.setClickable(true);
+
         }else{
-            kiosk_button.setText(getResources().getString(R.string.admin_panel_synchronize_empty_database));
-            kiosk_button.setClickable(false);
+            button_schedule_sync.setText(getResources().getString(R.string.admin_panel_synchronize_empty_database));
+            button_schedule_sync.setClickable(false);
         }
 
     }
@@ -108,10 +125,11 @@ public class AdminPanelActivity extends AppCompatActivity {
     public void turnOffKioskMode(View view){
         //Setter dette til false.
         PreferenceUtils.setKioskModeActive(getApplicationContext(),false);
+        Intent geofence_intent = new Intent(getApplicationContext(),GeofenceTransitionService.class);
+        geofence_intent.setAction(GeofenceTransitionService.STOP_GEOFENCE_MONITORING);
+        startService(geofence_intent);
         updateGui();
     }
-
-
 
     public void changeKioskApplication(View view){
         String app = null;
@@ -123,8 +141,9 @@ public class AdminPanelActivity extends AppCompatActivity {
 
         if(app != null){
             if(AppUtils.isAppInstalled(getApplicationContext(),app)){
-                Toast.makeText(getApplicationContext(),app, Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(),app + "Settes nå som kiosk mode appliasjon", Toast.LENGTH_SHORT).show();
                 PreferenceUtils.setPrefkioskModeApp(app,getApplicationContext());
+
             }else{
                 Toast.makeText(getApplicationContext(),app + " er ikke innstallert", Toast.LENGTH_SHORT).show();
             }
@@ -150,10 +169,8 @@ public class AdminPanelActivity extends AppCompatActivity {
             //scheduleJobNow();
             //TODO: forandre på teksten på knappen?
             Toast.makeText(getApplicationContext(), getResources().getString(R.string.admin_panel_synchronize), Toast.LENGTH_SHORT).show();
-
         }else{
             Toast.makeText(getApplicationContext(), getResources().getString(R.string.admin_panel_synchronize_empty_database), Toast.LENGTH_SHORT).show();
-
         }
     }
 

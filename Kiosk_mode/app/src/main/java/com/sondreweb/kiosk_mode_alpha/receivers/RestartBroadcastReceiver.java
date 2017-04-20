@@ -36,6 +36,10 @@ public class RestartBroadcastReceiver extends WakefulBroadcastReceiver {
                 checkIfServiceRunning(context);
                 sendToast(context);
                 break;
+            case GeofenceTransitionService.OUTSIDE_GEOFENCE_TRIGGERED:
+                Log.d(TAG," ALARM !");
+                Log.d(TAG,"  RING!");
+                Log.d(TAG," ALARM !");
             default:
                 Log.d(TAG,"Action som ble motatt i BroadcastReceiver:"+ action);
         }

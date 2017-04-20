@@ -176,8 +176,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-
-
     private void cameraUpdate(){
         if(locationMarker != null) {
             cameraUpdate = CameraUpdateFactory.newLatLngZoom(locationMarker.getPosition(), zoom);

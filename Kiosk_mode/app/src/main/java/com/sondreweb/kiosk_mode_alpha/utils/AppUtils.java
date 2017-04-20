@@ -72,27 +72,35 @@ public class AppUtils{
             //gir brukeren beskjed om hvorfor det ikke gikk
             //ConnectionResult.RESOLUTION_REQUIRED vill si at vi kan be brukeren intallerer hva det som mangler.
             try {
-                if (googleApiAvailbility.isUserResolvableError(resultCode)) {
+                //TODO: Først må vi sjekke at filen er tilstede, dersom den er det så kan vi innstalere denne.
+                if(resultCode != ConnectionResult.SUCCESS) {
+                    googleApiAvailbility.getErrorDialog(activity, resultCode, 2404).show();
 
+                }
+                /* Kode for å innstalere fra fil, men problemet er at filen må være tilstede og den må være krevd versjon av
+                *  Google play Services, noe som er helt umulig å godkjenne her.
+                * */
+
+                /*if (googleApiAvailbility.isUserResolvableError(resultCode)) {
                     if(apkFileExists(context,"/download/com.google.android.gms.apk")){
 
                     }
-
                     if(installFromApk(context, "/download/com.google.android.gms.apk")){
                         //installFromApk(context,"/download/com.google.android.gms.apk");
                     }
-
-                    if(isPacketInstalled("com.google.android.gms.apk",context)){
+                    if(isPacketInstalled("com..googleandroid.gms.apk",context)){
                         Log.d(TAG, "Package is not installed.");
                     }
 
-
                     resultCode = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context); //oppdaterer.
                     if( resultCode != ConnectionResult.SUCCESS){
-                       // googleApiAvailbility.getErrorDialog(activity, resultCode, 2404).show();
+                        //ber brukeren installere Google Play Services fra Play Store.
+                        googleApiAvailbility.getErrorDialog(activity, resultCode, 2404).show();
                     }
-                    //googleApiAvailbility.getErrorDialog(activity, resultCode, 2404).show(); //ber brukeren installere Google Play Services fra Play Store.
-                }
+
+                    //googleApiAvailbility.getErrorDialog(activity, resultCode, 2404).show();
+                } */
+
             }catch (Exception e) {
                 Log.e("Error"+TAG," "+e);
             }

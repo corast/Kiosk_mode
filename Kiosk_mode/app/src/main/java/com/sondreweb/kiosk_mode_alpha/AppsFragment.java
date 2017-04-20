@@ -73,8 +73,8 @@ public class AppsFragment extends ListFragment implements LoaderManager.LoaderCa
         Log.d(TAG,"onListItemClick"+ app.getApplicationPackageName());
         if( app != null ){
             //lager et intent tilsvarende Appen vi trykket på.
-
-           final Intent intent = getActivity().getPackageManager().getLaunchIntentForPackage(app.getApplicationPackageName());
+            final Intent intent = getActivity().getPackageManager().getLaunchIntentForPackage(app.getApplicationPackageName());
+            if(! PreferenceUtils.isKioskModeActivated(getContext())) {
                 new AlertDialog.Builder(getContext())
                         .setTitle("Start Application")
                         .setMessage("Are you sure you want to start this application without activating kiosk mode?")
@@ -92,14 +92,12 @@ public class AppsFragment extends ListFragment implements LoaderManager.LoaderCa
                                 dialog.cancel();
                             }
                         })
-                        .setNeutralButton("Maby?", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-
-                            }
-                        })
                         .show();
                 //AlertDialog.BUTTON_NEGATIVE
+            }else{
+                //Siden Kioskmode er aktivert, kan vi bare starte monumentVandringen.
+                startActivity(intent);
+            }
         }
     }
 
