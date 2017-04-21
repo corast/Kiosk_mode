@@ -62,7 +62,6 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         //Må lage alle Tabellen dersom det ikke er gjordt.
         GeofenceTable.onCreate(db);
-
         StatisticsTable.onCreate(db);
     }
 

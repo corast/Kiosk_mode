@@ -7,13 +7,22 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutCompat;
 import android.text.InputType;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewStub;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,6 +34,8 @@ import com.firebase.jobdispatcher.Lifetime;
 import com.firebase.jobdispatcher.RetryStrategy;
 import com.firebase.jobdispatcher.Trigger;
 import com.sondreweb.kiosk_mode_alpha.R;
+import com.sondreweb.kiosk_mode_alpha.adapters.GeofenceAdapter;
+import com.sondreweb.kiosk_mode_alpha.classes.GeofenceClass;
 import com.sondreweb.kiosk_mode_alpha.jobscheduler.CustomJobService;
 import com.sondreweb.kiosk_mode_alpha.services.GeofenceTransitionService;
 import com.sondreweb.kiosk_mode_alpha.storage.KioskDbContract;
@@ -34,7 +45,10 @@ import com.sondreweb.kiosk_mode_alpha.utils.AppUtils;
 import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
+
+import static java.security.AccessController.getContext;
 
 /**
  * Created by sondre on 14-Apr-17.
@@ -47,6 +61,9 @@ public class AdminPanelActivity extends AppCompatActivity {
     Button kiosk_button,button_schedule_sync;
     TextView statistics_text;
     EditText edit_text_pref_kiosk;
+    TableLayout tableLayout;
+    ListView geofenceListView;
+    GeofenceAdapter geofenceAdapter;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -64,12 +81,36 @@ public class AdminPanelActivity extends AppCompatActivity {
         kiosk_button = (Button) findViewById(R.id.button_admin_panel_kiosk_mode);
         button_schedule_sync = (Button) findViewById(R.id.button_schedule_sync);
 
-
         statistics_text = (TextView) findViewById(R.id.text_view_content_provider_test);
 
         //TODO: lage en edit text.
         edit_text_pref_kiosk = (EditText) findViewById(R.id.edit_text_pref_kiosk_mode);
         edit_text_pref_kiosk.setInputType(InputType.TYPE_TEXT_VARIATION_URI);
+
+        //tableLayout = (TableLayout) findViewById(R.id.table_layout_geofences);
+        geofenceListView = (ListView) findViewById(R.id.list_view_geofences);
+
+        /*
+        TextView emptyView = new TextView(getApplicationContext());
+        emptyView.setGravity(LinearLayout.HORIZONTAL);
+        emptyView.setLayoutParams(
+                new WindowManager.LayoutParams(
+                        WindowManager.LayoutParams.MATCH_PARENT,
+                        WindowManager.LayoutParams.MATCH_PARENT
+                ));
+        emptyView.setTextColor(ContextCompat.getColor(getApplicationContext(),R.color.black));
+        emptyView.setText(R.string.admin_panel_list_geofence_emtpy);
+        emptyView.setTextSize(20);
+        emptyView.setVisibility(View.GONE);
+        emptyView.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
+
+        ((ViewGroup) geofenceListView.getParent()).addView(emptyView);
+        geofenceListView.setEmptyView(emptyView);
+        */
+        ViewStub stub = (ViewStub) findViewById(R.id.vs_continue_empty);
+        geofenceListView.setEmptyView(stub);
+        geofenceAdapter = new GeofenceAdapter(getApplicationContext());
+        geofenceListView.setAdapter(geofenceAdapter);
         updateGui();
     }
 
@@ -81,6 +122,10 @@ public class AdminPanelActivity extends AppCompatActivity {
             InputMethodManager imm = (InputMethodManager)getSystemService(getApplicationContext().INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(view.getWindowToken(), InputMethodManager.HIDE_IMPLICIT_ONLY);
         } */
+
+        //tableLayout.addView();
+
+        updateGeofenceTable();
         super.onStart();
     }
 
@@ -92,7 +137,6 @@ public class AdminPanelActivity extends AppCompatActivity {
 
     @Override
     protected void onStop() {
-
         super.onStop();
     }
 
@@ -119,7 +163,6 @@ public class AdminPanelActivity extends AppCompatActivity {
             button_schedule_sync.setText(getResources().getString(R.string.admin_panel_synchronize_empty_database));
             button_schedule_sync.setClickable(false);
         }
-
     }
 
     public void turnOffKioskMode(View view){
@@ -150,6 +193,21 @@ public class AdminPanelActivity extends AppCompatActivity {
         }
     }
 
+    public void updateGeofenceTable(){
+
+        if(!geofenceAdapter.isEmpty()){
+            geofenceAdapter.clear();
+        }
+
+        List list = SQLiteHelper.getInstance(getApplicationContext()).getAllGeofencesClass();
+        if(AppUtils.DEBUG){
+            Log.d(TAG, list.toString());
+        }
+        //TODO gå gjennom hele listen og skriv ut til tabell.
+        geofenceAdapter.addAll(list);
+
+    }
+
 
     public void checkIfDataInStatisticsTable(View view){
        if(SQLiteHelper.getInstance(getApplicationContext()).checkDataInStatisticsTable()){
@@ -159,6 +217,7 @@ public class AdminPanelActivity extends AppCompatActivity {
            Toast.makeText(getApplicationContext(), "Det er Ikke Statistikk tilgjengelig", Toast.LENGTH_SHORT).show();
        }
     }
+
 
     public final static String syncKey = "com.firebase.sync.key";
     private final static String syncValue = "com.firebase.sync.value";
@@ -217,7 +276,7 @@ public class AdminPanelActivity extends AppCompatActivity {
     }
 
     /*
-    *   Test metoder.
+    *   Test metoder til ContentProviceren, hvordan vi bruker denne.
     * */
     public void insertDataTest(View view){
         //TODO contentResolver til å inserte en rad.
@@ -234,10 +293,12 @@ public class AdminPanelActivity extends AppCompatActivity {
         int time = rn.nextInt(10000)+1; //Fra 1 ms til 10000
         int visitor_id = rn.nextInt(10000)+1; //Fra 1 ms til 10000
 
+        String dateS = Integer.toString(date);
+
         ContentValues contentValue = new ContentValues();
 
         contentValue.put(StatisticsTable.COLUMN_MONUMENT, monumentId);
-        contentValue.put(StatisticsTable.COLUMN_DATE, date);
+        contentValue.put(StatisticsTable.COLUMN_DATE, dateS);
         contentValue.put(StatisticsTable.COLUMN_TIME, time);
         contentValue.put(StatisticsTable.COLUMN_VISITOR_ID,visitor_id);
 
@@ -265,8 +326,10 @@ public class AdminPanelActivity extends AppCompatActivity {
             int date = rn.nextInt(200)+1; //fra 1-200
             int time = rn.nextInt(10000)+1; //Fra 1 ms til 10000
             int visitor_id = rn.nextInt(10000)+1; //Fra 1 ms til 10000
+            String dateS = "20/30/2017 20:30";
+
             values.put(StatisticsTable.COLUMN_MONUMENT, monumentId);
-            values.put(StatisticsTable.COLUMN_DATE, date);
+            values.put(StatisticsTable.COLUMN_DATE, dateS);
             values.put(StatisticsTable.COLUMN_TIME, time);
             values.put(StatisticsTable.COLUMN_VISITOR_ID,visitor_id);
             contentValuesList[i] = values;

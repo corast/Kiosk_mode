@@ -106,7 +106,6 @@ public class StatusAdapter extends ArrayAdapter<StatusInfo>{
             viewHolder.info.setText(status.getInfo());
         }
         return convertView;
-
     }
 
     //TODO: fiks slik at vi kan trykke på de ulike statusene.

@@ -26,7 +26,7 @@ public class StatisticsTable {
             "create table "+ TABLE_NAME + "(" +
                     COLUMN_MONUMENT +" integer not null, " +
                     COLUMN_VISITOR_ID +" integer not null, " +
-                    COLUMN_DATE + " integer not null, " +
+                    COLUMN_DATE + " text not null, " +
                     COLUMN_TIME + " integer not null, " +
                     " PRIMARY KEY("+ COLUMN_MONUMENT+", "+COLUMN_VISITOR_ID+", "+COLUMN_DATE+")"+
                     ");";
@@ -46,7 +46,7 @@ public class StatisticsTable {
     }
 
     public static void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion){
-        Log.v(TAG, "Removes all data from table:"+ TABLE_NAME +" Upgrade table from version:"+oldVersion+" To: "+newVersion);
+        Log.v(TAG, "Removes all data from table:"+ TABLE_NAME +" Upgrade table from version: "+oldVersion+" To: "+newVersion);
         database.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME +";"); //drop table og bytter ut med no annet, viss vi forandrer versjonen
     }
 }

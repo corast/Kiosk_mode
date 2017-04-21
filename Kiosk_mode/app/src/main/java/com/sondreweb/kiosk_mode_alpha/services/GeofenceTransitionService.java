@@ -28,6 +28,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.util.TypedValue;
+
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -57,6 +58,7 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
+
 import com.sondreweb.kiosk_mode_alpha.HudView;
 import com.sondreweb.kiosk_mode_alpha.R;
 import com.sondreweb.kiosk_mode_alpha.activities.LoginAdminActivity;
@@ -497,7 +499,8 @@ public class GeofenceTransitionService extends Service implements
 
         linearLayout.addView(textView);
         WindowManager windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
-        windowManager.addView(linearLayout);
+        //windowManager.addView(linearLayout);
+
 
     }
 

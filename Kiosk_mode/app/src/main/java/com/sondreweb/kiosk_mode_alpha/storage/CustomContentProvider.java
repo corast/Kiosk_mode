@@ -140,11 +140,16 @@ public class CustomContentProvider extends ContentProvider {
     @Override
     public boolean onCreate() {
         //initialisere databasen vår.
+
         sqLiteHelper = SQLiteHelper.getInstance(getContext()); //lager databasen dersom det ikke er gjordt.
+        /*sqLiteHelper.getWritableDatabase();
+        sqLiteHelper.onUpgrade(sqLiteHelper.getWritableDatabase(),1,1);//Upgrade database.
+        */
         /*
         *   A content provider is created when its hosting process is created,
         *   and remains around for as long as the process does, so there is no need to close the database --
         *   it will get closed as part of the kernel cleaning up the process's resources when the process is killed.
+        *    -En eller annen Engineer fra Google.
         * */
         return true;
     }
