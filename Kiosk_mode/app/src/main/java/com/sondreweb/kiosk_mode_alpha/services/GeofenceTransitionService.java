@@ -263,7 +263,6 @@ public class GeofenceTransitionService extends Service implements
                     } else { //Dersom man allerede er connectet så må man sjekke om vi må refreshe GeofenceListen vår.
                         //TODO: hent alle geofence vi har nå og hent en ny list fra database, dersom de er like så er det ikke noe å gjøre annet å sjekke at vi forsatt monitorere de.
                     }
-
                 }
                 break;
             case RESTART_GEOFENCES:

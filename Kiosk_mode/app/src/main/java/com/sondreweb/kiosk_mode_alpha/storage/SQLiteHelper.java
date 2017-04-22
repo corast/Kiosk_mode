@@ -198,9 +198,11 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     *   ¤¤¤¤¤¤¤¤¤¤¤¤StatisticsTable Funskjoner¤¤¤¤¤¤¤¤¤¤¤¤
     * */
 
+    /*
+    *   Sjekker om det er noe data i Statistics Tabellen.
+    *  */
     public boolean checkDataInStatisticsTable(){
         SQLiteDatabase db = this.getReadableDatabase();
-        ;
 
         String selectQuery = "SELECT count(*) FROM "+ StatisticsTable.TABLE_NAME;
 
@@ -244,6 +246,9 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     *       values);
     * */
 
+    /*
+    *   Legg til en statistikk rad.
+    * */
     public long addNewStastistic(ContentValues value){
         long id = getWritableDatabase().insert(
                 StatisticsTable.TABLE_NAME,
@@ -253,6 +258,9 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         return id;
     }
 
+    /*
+    *   Legg til en mengde med statistikk med en gang, mest effektivt.
+    * */
     public ArrayList<Long> addAllNewStatics(ContentValues[] values){
         SQLiteDatabase db = this.getWritableDatabase();
         ArrayList<Long> idList = new ArrayList<>();
@@ -272,6 +280,45 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         return idList; //Dersom listen inneholde noen som er mindre enn 0, så er det error.
     }
 
+    /*
+    *   Returnere en liste med all statistikk som ligger i datasen nå.
+    * */
+    public ArrayList<ContentValues> getAllStatistics(){
+        ArrayList<ContentValues> statisticsList = new ArrayList<>();
 
+        SQLiteDatabase dbReadable = this.getReadableDatabase();
+        SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
+        queryBuilder.setTables(KioskDbContract.Statistics.TABLE_NAME);
+
+        Cursor cursor = queryBuilder.query(dbReadable, null, null, null,
+                null, null, null);
+
+        ContentValues contentValues = new ContentValues();
+
+        if(cursor.moveToFirst()){//Flytter oss til først rad dersom den eksisterer
+            do {  //Legger til alle Geofence fra database i Arrayet med korrekte atributter.
+                contentValues = new ContentValues(); //Lager en ny ContentValue å lagre verdiene våre inn i middeltidlig.
+                //Legger inn alle verdiene fra raden vi står på nå.
+                contentValues.put(StatisticsTable.COLUMN_MONUMENT,cursor.getInt(cursor.getColumnIndex(StatisticsTable.COLUMN_MONUMENT)));
+                contentValues.put(StatisticsTable.COLUMN_VISITOR_ID,cursor.getInt(cursor.getColumnIndex(StatisticsTable.COLUMN_VISITOR_ID)));
+                contentValues.put(StatisticsTable.COLUMN_DATE,cursor.getString(cursor.getColumnIndex(StatisticsTable.COLUMN_DATE)));
+                contentValues.put(StatisticsTable.COLUMN_TIME,cursor.getInt(cursor.getColumnIndex(StatisticsTable.COLUMN_TIME)));
+                //Setter dette objektet med verdiene inn i en ArrayList.
+                statisticsList.add(contentValues);
+            }while (cursor.moveToNext()); //beveger oss til neste rad.
+        }
+            //Returnere ArrayListen med verdiene fra alle radene.
+        return statisticsList;
+    }
+
+    /*
+    *   Funksjon for å tømme Statistics tabellen, for bruk etter vi har sent successfully til databasen.
+    *   Men burde ikke kjøre for ofte, ettersom det kan være greit å holde på duplikater og så sile de ut fra databasen.
+    * */
+    public int emptyStatisticsTable(){
+        SQLiteDatabase dbWritable = this.getWritableDatabase();
+        //Returnere antall rader som var påvirket av delete setningen.
+        return dbWritable.delete(StatisticsTable.TABLE_NAME,null,null);
+    }
 
 }

@@ -79,9 +79,6 @@ public class CustomContentProvider extends ContentProvider {
     * */
 
     //content://authority/optionalPath/optionalId
-    static final String URL = "content://" + PROVIDER_NAME + "/"+StatisticsTable.TABLE_NAME;
-
-    static final Uri CONTENT_URL = Uri.parse(URL); //Hva brukes denne til TODO: finn ut hva CONTENT_URI brukes til
 
     private static HashMap<String, String> values; //TODO: Funn ut hva dette faktisk er(hashmap).
     /*
@@ -165,6 +162,7 @@ public class CustomContentProvider extends ContentProvider {
 
     /*
     *   Returns the MIME type for this URI
+    *   Brukes når man URI_MATCHER.match(uri).
     * */
     @Nullable
     @Override
@@ -257,7 +255,9 @@ public class CustomContentProvider extends ContentProvider {
     @Nullable
     @Override
     public Cursor query(@NonNull Uri uri, @Nullable String[] projection, @Nullable String selection, @Nullable String[] selectionArgs, @Nullable String sortOrder) {
-        Log.d(TAG,"query Uri: "+uri.toString()+" URI_MATCHER int:" +URI_MATCHER.match(uri));
+        if(AppUtils.DEBUG) {
+            Log.d(TAG, "query Uri: " + uri.toString() + " URI_MATCHER int:" + URI_MATCHER.match(uri));
+        }
         getReadableDatabase();
         SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
         boolean useAuthorityUri = false;
@@ -271,9 +271,10 @@ public class CustomContentProvider extends ContentProvider {
 
             //DENNE ER IKKE I BRUK. Ikke lagt til som URI engang.
             case STATISTIKK_ID: //Vill si at vi skal lage en cursor hvor vi skal ha tilbake kunn et element.
+                //Denne er ikke teste ut, så fungere mest sannsynlig ikke som forventet.
                 //TODO: Finn ut hvordan vi velger hvilket case som skal gjøres.
                 queryBuilder.setTables(StatisticsTable.TABLE_NAME);
-                //TODO: Finn ut hvordan vi best kan finne bare en data, siden dette ikk er unikt.
+                //TODO: Finn ut hvordan vi best kan finne bare en data, siden dette ikke er unikt.
                 //uri.getLastPathSegment() er det som kommer etter /# så altså hva som står i #, et tall for primary key eller string. Tror jeg ivetfall.
                 //queryBuilder.appendWhere(StatisticsTable.COLUMN_VISITOR_ID + " = " + uri.getLastPathSegment());
                 //Vi må da sende inn de tre verdiene vi trenger å sjekke imot for å finne den uniqe raden.
@@ -288,26 +289,28 @@ public class CustomContentProvider extends ContentProvider {
                 break;
             default: //Støtter kunn å hente ut hele tabellen enn så lenge.
                 throw new IllegalArgumentException("Unsupporter Uri" + uri);
-
         }
 
         // logQuere for debugging.
         logQuery(queryBuilder,  projection, selection, sortOrder);
 
-
         Cursor cursor = queryBuilder.query(sqLiteDatabaseReadable, projection, selection, selectionArgs,
                 null, null, sortOrder);
+        try {
+            cursor.setNotificationUri(getContext().getContentResolver(), uri);
+        }catch (NullPointerException e){
+            Log.e(TAG,e.getLocalizedMessage());
+        }
+        /*
         // if we want to be notified of any changes to database:
         if (useAuthorityUri) {
             cursor.setNotificationUri(getContext().getContentResolver(), KioskDbContract.CONTENT_URI);
         }
         else {
             cursor.setNotificationUri(getContext().getContentResolver(), uri);
-        }
-
+        } */
         sqLiteDatabaseReadable.close();
         return cursor;
-
 
     /*
         String id = null;
@@ -337,7 +340,6 @@ public class CustomContentProvider extends ContentProvider {
         return 0;
     }
 
-
     /*
     *   For å legge til flere enn en value/rad. Men aner ikke hvordan operations fungerer.
     * */
@@ -365,7 +367,6 @@ public class CustomContentProvider extends ContentProvider {
     private boolean isInBatchMode() {
         return mIsInBatchMode.get() != null && mIsInBatchMode.get();
     }
-
 
     /*
  *   Adds records
@@ -400,7 +401,7 @@ public class CustomContentProvider extends ContentProvider {
                 db.beginTransaction();
                 try {
                     //Inserter en value for hver av de.
-                    for (ContentValues value : valuesList ) {
+                    for ( ContentValues value : valuesList ) {
                         if(db.insert(StatisticsTable.TABLE_NAME,
                                 null,
                                 value) == 0){
@@ -408,7 +409,7 @@ public class CustomContentProvider extends ContentProvider {
                                 //så var det en vellykket insert settning.
                             throw new SQLException("Failed to insert "+ value.toString() + " into uri:" + uri);
                         }
-                        //else så er det bare å forsette å inserte.
+                        //ellers så er det bare å forsette å inserte.
                     }
                     db.setTransactionSuccessful();
                     numberInserted = valuesList.length;

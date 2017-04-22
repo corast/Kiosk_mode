@@ -7,20 +7,15 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutCompat;
+import android.support.v7.widget.Toolbar;
 import android.text.InputType;
 import android.util.Log;
-import android.view.Gravity;
+import android.view.Menu;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.ViewStub;
-import android.view.WindowManager;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TableLayout;
 import android.widget.TextView;
@@ -35,7 +30,6 @@ import com.firebase.jobdispatcher.RetryStrategy;
 import com.firebase.jobdispatcher.Trigger;
 import com.sondreweb.kiosk_mode_alpha.R;
 import com.sondreweb.kiosk_mode_alpha.adapters.GeofenceAdapter;
-import com.sondreweb.kiosk_mode_alpha.classes.GeofenceClass;
 import com.sondreweb.kiosk_mode_alpha.jobscheduler.CustomJobService;
 import com.sondreweb.kiosk_mode_alpha.services.GeofenceTransitionService;
 import com.sondreweb.kiosk_mode_alpha.storage.KioskDbContract;
@@ -48,8 +42,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import static java.security.AccessController.getContext;
-
 /**
  * Created by sondre on 14-Apr-17.
  */
@@ -57,10 +49,21 @@ import static java.security.AccessController.getContext;
 public class AdminPanelActivity extends AppCompatActivity {
 
     private static final String TAG = AdminPanelActivity.class.getSimpleName();
+    Toolbar toolbar;
 
-    Button kiosk_button,button_schedule_sync;
-    TextView statistics_text;
     EditText edit_text_pref_kiosk;
+    Button kiosk_button;
+
+    Button button_schedule_sync;
+    Button button_schedule_geofence;
+
+    TextView statistics_text;
+    TextView textView_schedule_geofence;
+    TextView textView_schedule_sync;
+
+
+
+
     TableLayout tableLayout;
     ListView geofenceListView;
     GeofenceAdapter geofenceAdapter;
@@ -83,9 +86,16 @@ public class AdminPanelActivity extends AppCompatActivity {
 
         statistics_text = (TextView) findViewById(R.id.text_view_content_provider_test);
 
+        textView_schedule_geofence = (TextView) findViewById(R.id.text_schedule_geofence);
+
+
         //TODO: lage en edit text.
         edit_text_pref_kiosk = (EditText) findViewById(R.id.edit_text_pref_kiosk_mode);
         edit_text_pref_kiosk.setInputType(InputType.TYPE_TEXT_VARIATION_URI);
+
+        button_schedule_geofence = (Button) findViewById(R.id.button_schedule_sync_geofence) ;
+
+        textView_schedule_sync = (TextView) findViewById(R.id.text_schedule_statistics);
 
         //tableLayout = (TableLayout) findViewById(R.id.table_layout_geofences);
         geofenceListView = (ListView) findViewById(R.id.list_view_geofences);
@@ -107,15 +117,32 @@ public class AdminPanelActivity extends AppCompatActivity {
         ((ViewGroup) geofenceListView.getParent()).addView(emptyView);
         geofenceListView.setEmptyView(emptyView);
         */
+
+
+        toolbar = (Toolbar) findViewById(R.id.toolbar_main);
+        setSupportActionBar(toolbar);
+        if(toolbar != null) {
+            getSupportActionBar().setTitle("Admin panel");
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+            getSupportActionBar().setDisplayShowHomeEnabled(false);
+        }
+
+
         ViewStub stub = (ViewStub) findViewById(R.id.vs_continue_empty);
         geofenceListView.setEmptyView(stub);
         geofenceAdapter = new GeofenceAdapter(getApplicationContext());
         geofenceListView.setAdapter(geofenceAdapter);
+
         updateGui();
+
+
     }
 
     @Override
     protected void onStart() {
+
+
+
         /*
         View view = this.getCurrentFocus();
         if (view != null) {
@@ -124,9 +151,23 @@ public class AdminPanelActivity extends AppCompatActivity {
         } */
 
         //tableLayout.addView();
-
+        String textLastStatSync = getResources().getString(R.string.admin_panel_synchronize_text)
+                .concat(": ")
+                .concat(PreferenceUtils.getTimeSinceLastSynchronization(getApplicationContext()));
+        textView_schedule_sync.setText(textLastStatSync);
+        String textLastGeoSync = getResources().getString(R.string.admin_panel_synchronize_text)
+                .concat(": ")
+                .concat(PreferenceUtils.getPrefLastSynchroizeGeofence(getApplicationContext()));
+        textView_schedule_geofence.setText(textLastGeoSync);
         updateGeofenceTable();
         super.onStart();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.admin_panel_toolbar,menu);
+
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
@@ -156,7 +197,7 @@ public class AdminPanelActivity extends AppCompatActivity {
 
         //Dersom ingen til å synchronisere.
         if(SQLiteHelper.getInstance(getApplicationContext()).checkDataInStatisticsTable()){
-            button_schedule_sync.setText(getResources().getString(R.string.admin_panel_synchronize));
+            button_schedule_sync.setText(getResources().getString(R.string.admin_panel_synchronize_scheduled));
             button_schedule_sync.setClickable(true);
 
         }else{
@@ -205,7 +246,6 @@ public class AdminPanelActivity extends AppCompatActivity {
         }
         //TODO gå gjennom hele listen og skriv ut til tabell.
         geofenceAdapter.addAll(list);
-
     }
 
 
@@ -219,15 +259,13 @@ public class AdminPanelActivity extends AppCompatActivity {
     }
 
 
-    public final static String syncKey = "com.firebase.sync.key";
-    private final static String syncValue = "com.firebase.sync.value";
     public final static String jobTag = "SYNC_WITH_DATABASE";
 
     public void scheduleSync(View view){
         if(SQLiteHelper.getInstance(getApplicationContext()).checkDataInStatisticsTable()){
             //scheduleJobNow();
             //TODO: forandre på teksten på knappen?
-            Toast.makeText(getApplicationContext(), getResources().getString(R.string.admin_panel_synchronize), Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), getResources().getString(R.string.admin_panel_synchronize_scheduled), Toast.LENGTH_SHORT).show();
         }else{
             Toast.makeText(getApplicationContext(), getResources().getString(R.string.admin_panel_synchronize_empty_database), Toast.LENGTH_SHORT).show();
         }
@@ -236,10 +274,6 @@ public class AdminPanelActivity extends AppCompatActivity {
     private void scheduleJobNow(){
         //TODO: schedule synchronize. Krever forsatt wifi, men trenger ikke å være ladd.
         FirebaseJobDispatcher dispatcher = new FirebaseJobDispatcher(new GooglePlayDriver(getApplicationContext()));
-
-        Bundle myExtrasBundle = new Bundle();
-
-        myExtrasBundle.putString(syncKey,syncValue);
 
         Job myJob = dispatcher.newJobBuilder()
                 // the JobService that will be called
@@ -268,7 +302,6 @@ public class AdminPanelActivity extends AppCompatActivity {
                         // only run on an unmetered network, i vårt tilfelle Ikke mobilnett som koster penger.
                         Constraint.ON_UNMETERED_NETWORK
                 )
-                .setExtras(myExtrasBundle)
                 .build();
 
         dispatcher.mustSchedule(myJob);
@@ -307,7 +340,6 @@ public class AdminPanelActivity extends AppCompatActivity {
         //Uri yri = getContentResolver().bulkInsert()
         Toast.makeText(this, "New Statistics added", Toast.LENGTH_SHORT).show();
     }
-
 
     public void bulkInsertDataTest(View view){
 
@@ -366,5 +398,4 @@ public class AdminPanelActivity extends AppCompatActivity {
         }
         cursor.close(); //Lukker cursoren etter bruk.
     }
-
 }

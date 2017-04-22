@@ -55,8 +55,7 @@ public class PreferenceUtils {
     //private static final String DEFAULT_APP = "com.Company.Monumentvandring"; //VI setter MonumentVandring nå i starten for å teste.
     //private static com.android.calculator2
 
-    private static final String SYNCHRONIZATION_TIME = "last_synchronize";
-    private static final String SYNCHRONIZATION_TIME_DEFAULT = "Never";
+
 
     public static boolean isKioskModeActivated(final Context context){
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
@@ -124,8 +123,10 @@ public class PreferenceUtils {
     }
 
     /*
-    *   Må brukes når vi synchroniserer dataen vår.
+    *   lagrer unna når vi synchroniserer data.
     * */
+    private static final String SYNCHRONIZATION_TIME = "last_synchronize";
+    private static final String SYNCHRONIZATION_TIME_DEFAULT = "Never";
     public static void setSynchronizationTime(final Context context, String time){
         //henter datoen nå og lagrer denne unna.
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
@@ -133,10 +134,10 @@ public class PreferenceUtils {
             TimeZone tzNorway = TimeZone.getTimeZone("GMT+2");
             Calendar c = Calendar.getInstance(tzNorway);
             //Gir oss tid på formatet dag/månde/år time:minutt:sekund
-            String Time = c.get(Calendar.DAY_OF_MONTH) + "/" + c.get(Calendar.MONTH) +
+            String timeC = c.get(Calendar.DAY_OF_MONTH) + "/" + c.get(Calendar.MONTH) +
                     "/" + c.get(Calendar.YEAR) + " " + c.get(Calendar.HOUR_OF_DAY) +
                     ":" + c.get(Calendar.MINUTE) + ":" + c.get(Calendar.SECOND);
-            sharedPreferences.edit().putString(SYNCHRONIZATION_TIME,Time).apply();
+            sharedPreferences.edit().putString(SYNCHRONIZATION_TIME,timeC).apply();
         }else
         {
             sharedPreferences.edit().putString(SYNCHRONIZATION_TIME,time).apply();
@@ -148,8 +149,28 @@ public class PreferenceUtils {
         return sharedPreferences.getString(SYNCHRONIZATION_TIME,SYNCHRONIZATION_TIME_DEFAULT);
     }
 
+    private static final String SYNCHRONIZE_GEOFENCE_KEY = "pref_synchronize_geofence";
+    private static final String SYNCHRONIZE_GEOFENCE_DEFAULT = "Never";
+
+    public static String getPrefLastSynchroizeGeofence(final Context context) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        return sharedPreferences.getString(SYNCHRONIZE_GEOFENCE_KEY, SYNCHRONIZE_GEOFENCE_DEFAULT);
+    }
+
+    public static void updatePrefLastSynchronizeGeofence(final Context context){
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        //Get time now.
+        TimeZone tzNorway = TimeZone.getTimeZone("GMT+2");
+        Calendar c = Calendar.getInstance(tzNorway);
+        //Gir oss tid på formatet dag/månde/år time:minutt:sekund
+        String time = c.get(Calendar.DAY_OF_MONTH) + "/" + c.get(Calendar.MONTH) +
+                "/" + c.get(Calendar.YEAR) + " " + c.get(Calendar.HOUR_OF_DAY) +
+                ":" + c.get(Calendar.MINUTE) + ":" + c.get(Calendar.SECOND);
+        sharedPreferences.edit().putString(SYNCHRONIZE_GEOFENCE_KEY,time).apply();
+    }
+
 /*
-*   Metoder for å hente ut og sette oppdatersings tid på LocationRequests.
+*   Metoder for å hente ut og sette oppdatersings tid på LocationServices.FusedLocationApi LocationRequests.
 * */
 
     public static void setPrefGeofenceUpdateInterval(int UPDATE_INTERVAL, final Context context){

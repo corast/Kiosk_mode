@@ -130,7 +130,9 @@
         <activity android:name=".activities.AdminPanelActivity"
             android:noHistory="true"
             android:label="AdminPanel"
-            android:excludeFromRecents="true" />
+            android:excludeFromRecents="true"
+            android:theme="@style/AppThemeKiosk"
+            />
 
         <!--
         EXPORTED: Whether or not components of other applications can invoke the service or interact with it —

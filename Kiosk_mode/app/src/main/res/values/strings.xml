@@ -77,9 +77,12 @@
     <string name="admin_panel_kiosk_button_off">Turn Kiosk Mode Off</string>
     <string name="admin_panel_kiosk_button_on">Kiosk Mode is off</string>
     <string name="admin_panel_synchronize_empty_database">Nothing to synchronze, database is empty</string>
-    <string name="admin_panel_synchronize">Synchronize scheduled when WIFI is next available.</string>
+    <string name="admin_panel_synchronize_scheduled">Synchronize scheduled when WIFI is next available.</string>
 
     <string name="admin_panel_list_geofence_emtpy">No Geofences in storage</string>
+
+    <string name="admin_panel_synchronize_text">Last synchronized</string>
+    <string name="admin_panel_settings">Settings</string>
     <!--Mer stringer kommer her TODO:lag flere stringer. -->
 
 

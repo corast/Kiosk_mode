@@ -9,7 +9,6 @@ import android.net.Uri;
 
 public final class KioskDbContract {
 
-    //TODO: lag ferdig denne til Martin sin app.
 
     /*
     *   Authority.
@@ -18,7 +17,6 @@ public final class KioskDbContract {
 
     public static final Uri CONTENT_URI = Uri.parse("content://"+AUTHORITY);
 
-    //TODO: lage denne slik at det er enkelt for Martin å bruke ContentProvideren.
 
     public static final class Statistics {
         public static final String TABLE_NAME ="Statistics";
@@ -26,7 +24,6 @@ public final class KioskDbContract {
         //brukes for å velge denne tabellen.
         public static final Uri CONTENT_URI = Uri.withAppendedPath(KioskDbContract.CONTENT_URI,TABLE_NAME);
 
-        //TODO: fiks disse 15.april
         /*
         * The mime type of a directory of items.
         * */
@@ -51,7 +48,4 @@ public final class KioskDbContract {
         public static final String SORT_ORDER_DEFAULT =
                 Statistics.COLUMN_VISITOR_ID + " ASC";
     }
-
-
-    //Constant for the statistics Table of
 }
