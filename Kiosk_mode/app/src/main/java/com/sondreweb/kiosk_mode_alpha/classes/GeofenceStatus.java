@@ -10,7 +10,9 @@ import com.google.android.gms.location.Geofence;
 //Holder på et Geofence og en status. Som bare er Int verdien.
 public class GeofenceStatus {
     Geofence geofence;
-    boolean insideStatus = false; //Default status. Når de ikke er lagd er vi alltid utenfor.
+    boolean insideStatus = true; //Default status. Vi setter default true, pga første gang, kan det hende at vi triggere på exit trigger.
+        //Og pga det så kan det hende at det slås alarm på at vi er utenfor alle geofenfence.
+    //TODO: test ut dette og det gamle som var false.
 
     public GeofenceStatus(Geofence geofence){
         this.geofence = geofence;
