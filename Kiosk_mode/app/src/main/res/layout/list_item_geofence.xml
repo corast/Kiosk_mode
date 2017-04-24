@@ -8,22 +8,25 @@
         android:id="@+id/text_geofence_latitude"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="89.44121411241"
+        android:text="89.4412141"
         android:textSize="@dimen/text_medium"
-        android:layout_weight="1"/>
+        android:layout_weight="1"
+        android:textAlignment="center"/>
 
     <TextView
         android:id="@+id/text_geofence_longitude"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="@dimen/text_medium"
-        android:text="13.515151512512"
-        android:layout_weight="1"/>
+        android:text="13.5151515"
+        android:layout_weight="1"
+        android:textAlignment="center"/>
     <TextView
         android:id="@+id/text_geofence_radius"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="@dimen/text_medium"
-        android:text="200 m"
-        android:layout_weight="1"/>
+        android:text="200"
+        android:layout_weight="1"
+        android:textAlignment="center"/>
 </LinearLayout>

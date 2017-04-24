@@ -86,9 +86,9 @@ public class GeofenceAdapter extends ArrayAdapter<GeofenceClass> {
 
         //TODO: forandre på iconene basert på hva vi trykker på.
         if (geofence != null) {
-            viewHolder.latitude.setText(String.format("%.6f",geofence.getLatLng().longitude));
-            viewHolder.longitude.setText(String.format("%.6f",geofence.getLatLng().longitude));
-            viewHolder.radius.setText(String.format("%0f",geofence.getRadius()));
+            viewHolder.latitude.setText(String.format("%.7f",geofence.getLatLng().longitude));
+            viewHolder.longitude.setText(String.format("%.7f",geofence.getLatLng().longitude));
+            viewHolder.radius.setText(String.format("%.0f",geofence.getRadius()));
         }
         return convertView;
     }

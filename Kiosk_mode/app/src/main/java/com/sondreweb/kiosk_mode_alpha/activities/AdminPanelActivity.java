@@ -12,6 +12,7 @@ import android.support.v7.widget.Toolbar;
 import android.text.InputType;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewStub;
 import android.widget.Button;
@@ -32,6 +33,7 @@ import com.sondreweb.kiosk_mode_alpha.R;
 import com.sondreweb.kiosk_mode_alpha.adapters.GeofenceAdapter;
 import com.sondreweb.kiosk_mode_alpha.jobscheduler.CustomJobService;
 import com.sondreweb.kiosk_mode_alpha.services.GeofenceTransitionService;
+import com.sondreweb.kiosk_mode_alpha.settings.AdminSettingsActivity;
 import com.sondreweb.kiosk_mode_alpha.storage.KioskDbContract;
 import com.sondreweb.kiosk_mode_alpha.storage.SQLiteHelper;
 import com.sondreweb.kiosk_mode_alpha.storage.StatisticsTable;
@@ -171,13 +173,28 @@ public class AdminPanelActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int mId = item.getItemId();
+        switch (mId){
+            case R.id.action_settings:
+                Intent intent = new Intent(this, AdminSettingsActivity.class);
+                startActivity(intent);
+                break;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     protected void onPause() {
+        Log.d(TAG,"onPause()");
         super.onPause();
-        finish(); //Ber systemet fjerne denne activiteten fra stacken osv.
+        //finish(); //Ber systemet fjerne denne activiteten fra stacken osv.
     }
 
     @Override
     protected void onStop() {
+        Log.d(TAG,"onStop()");
         super.onStop();
     }
 
