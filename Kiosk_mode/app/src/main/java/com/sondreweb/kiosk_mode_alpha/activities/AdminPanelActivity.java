@@ -2,10 +2,12 @@ package com.sondreweb.kiosk_mode_alpha.activities;
 
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -46,6 +48,13 @@ import java.util.Random;
 
 /**
  * Created by sondre on 14-Apr-17.
+ * Activitete som vi logger inn til, som gir oss tilgang settings osv.
+ *   Ansvar:
+ *          vise Geofencene som er i bruk.
+ *          Starte synchronisering med databasen for Geofence og å sende over statistikken,
+ *              med enklere betingelser som kunn er WIFI. slik at vi kan sende med en gang WIFI er tilgjengelig.
+ *          Skru av Kiosk mode på enheten, slik at vi kan bruke den til alminelig bruk igjen.
+ *          Velge hvilken applikasjon som vi skal låse enheten til.
  */
 
 public class AdminPanelActivity extends AppCompatActivity {
@@ -62,9 +71,6 @@ public class AdminPanelActivity extends AppCompatActivity {
     TextView statistics_text;
     TextView textView_schedule_geofence;
     TextView textView_schedule_sync;
-
-
-
 
     TableLayout tableLayout;
     ListView geofenceListView;
@@ -143,7 +149,12 @@ public class AdminPanelActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
 
-
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        boolean overlay = sharedPreferences.getBoolean(getResources().getString(R.string.KEY_SECURITY_GEOFENCE_OVERLAY),false);
+        Toast.makeText(getApplicationContext(),
+                "overlay: "+ overlay,
+                Toast.LENGTH_SHORT)
+                .show();
 
         /*
         View view = this.getCurrentFocus();
@@ -168,6 +179,7 @@ public class AdminPanelActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.admin_panel_toolbar,menu);
+
 
         return super.onCreateOptionsMenu(menu);
     }

@@ -67,7 +67,6 @@ public class HomeActivity extends FragmentActivity implements
     public final static String TAG = HomeActivity.class.getSimpleName();
     private final static String APP = "com.sondreweb.geofencingalpha";
 
-
     final float BATTERY_LIMIT = 80f; //hvor mange proset batteriet må minst være på.
     private TextView statusText, googleClientText;
 
@@ -139,7 +138,6 @@ public class HomeActivity extends FragmentActivity implements
         //lager statusAdapteret vi trenger til senere.
         statusAdapter = new StatusAdapter(HomeActivity.this);
 
-
         gridView.setOnItemClickListener(new OnStatusItemClickListener());
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
@@ -159,14 +157,12 @@ public class HomeActivity extends FragmentActivity implements
             context.startService(AccessibilityServiceIntent);
         }
 
-
         AppUtils.askLocationPermission(this);
 
         if(PreferenceUtils.isKioskModeActivated(context)){
             startPrefKioskModeApp();
         }
     }
-
 
     public static GoogleApiClient createGoogleApiClient() {
         if (googleApiClient != null) {

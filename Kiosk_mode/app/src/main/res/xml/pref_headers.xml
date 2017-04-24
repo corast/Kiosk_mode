@@ -17,4 +17,13 @@
         android:icon="@drawable/ic_sync_black_24dp"
         android:title="@string/pref_header_data_sync" />
 
+    <header
+        android:fragment="com.sondreweb.kiosk_mode_alpha.settings.AdminSettingsActivity$SecurityPreferenceFragment"
+        android:icon="@drawable/visible_50"
+        android:title="Security"
+        />
+    <header
+        android:fragment="com.sondreweb.kiosk_mode_alpha.settings.AdminSettingsActivity$GeofencePreferenceFragment"
+        />
+
 </preference-headers>

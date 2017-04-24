@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources >
+    <!-- VIKTIG: Nye strenger bør ha translatable="false" for å ikke gi problemer ved ulike språk.-->
+
+    <!-- Settings keys -->
+    <string translatable="false" name="KEY_SECURITY_GEOFENCE_OVERLAY">security_enable_geofence_overlay</string>
+
+    <string translatable="false" name="KEY_SECURITY_ACCESSIBILITY">security_enable_acccesibility</string>
+
+    <string translatable="false" name="KEY_SECURITY_WINDOW_DELAY">security_window_delay</string>
+
+
+
+    <!-- PreferenceUtil keys -->
+    <string translatable="false" name="PREF_KIOSK_MODE_ENABLED">pref_kiosk_mode</string>
+        <!-- Location Update intervall -->
+    <string translatable="false" name="PREF_GEOFENCE_UPDATE_INTERVAL">pref_kiosk_geofence_update_interval</string>
+    <string translatable="false" name="PREF_GEOFENCE_FASTEST_UPDATE_INTERVAL">pref_kiosk_geofence_fastest_update_interval</string>
+        <!-- Kiosk applikasjon -->
+    <string translatable="false" name="PREF_KIOSK_APP_KEY">pref_kiosk_app</string>
+    <string translatable="false" name="PREF_DEFAULT_APP">no.app.found</string>
+        <!-- Synch statistics -->
+    <string translatable="false" name="PREF_SYNCHRONIZATION_TIME">last_synchronize</string>
+    <string translatable="false" name="PREF_SYNCHRONIZATION_TIME_DEFAULT">Never</string>
+        <!-- Synch Geofence-->
+    <string translatable="false" name="PREF_SYNCHRONIZE_GEOFENCE_KEY">pref_synchronize_geofence</string>
+    <string translatable="false" name="PREF_SYNCHRONIZE_GEOFENCE_DEFAULT">Never</string>
+
+</resources>
