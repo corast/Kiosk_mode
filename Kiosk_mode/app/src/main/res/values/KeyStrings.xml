@@ -9,6 +9,18 @@
 
     <string translatable="false" name="KEY_SECURITY_WINDOW_DELAY">security_window_delay</string>
 
+    <string translatable="false" name="KEY_DATA_SYNCH_AUTOMATIC">automatic_synching_to_server</string>
+
+    <string translatable="false" name="KEY_URL_SERVER_STATISTICS">automatic_synching_to_server</string>
+    <string translatable="false" name="KEY_URL_SERVER_GEOFENCE">automatic_synching_to_server</string>
+
+    <string translatable="false" name="DEFAULT_URL_SERVER_STATISTICS">54.69.169.144/statistikk.php</string>
+    <string translatable="false" name="DEFAULT_URL_SERVER_GEOFENCE">54.69.169.144/geofence.php</string>
+
+        <!-- 1000 ms , 1 sekund. -->
+    <string translatable="false" name="DEFAULT_GEOFENCE_UPDATEINTERVAL">1000</string>
+    <string translatable="false" name="KEY_GEOFENCE_UPDATEINTERVAL">50</string>
+
 
 
     <!-- PreferenceUtil keys -->

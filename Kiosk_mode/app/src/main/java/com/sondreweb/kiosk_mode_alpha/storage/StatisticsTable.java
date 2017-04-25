@@ -24,12 +24,13 @@ public class StatisticsTable {
 
     public static final String DATABASE_CREATE_STATISTICS =
             "create table "+ TABLE_NAME + "(" +
-                    COLUMN_MONUMENT +" integer not null, " +
+                    COLUMN_MONUMENT +" text not null, " +
                     COLUMN_VISITOR_ID +" integer not null, " +
                     COLUMN_DATE + " text not null, " +
                     COLUMN_TIME + " integer not null, " +
                     " PRIMARY KEY("+ COLUMN_MONUMENT+", "+COLUMN_VISITOR_ID+", "+COLUMN_DATE+")"+
                     ");";
+
     /*
     *   create table Statistics(
     *       monument integer not null,

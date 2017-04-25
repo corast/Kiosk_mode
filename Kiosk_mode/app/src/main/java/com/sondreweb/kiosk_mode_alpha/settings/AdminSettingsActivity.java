@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
+import android.preference.SwitchPreference;
 import android.support.annotation.Nullable;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v7.app.ActionBar;
@@ -97,7 +98,10 @@ public class AdminSettingsActivity extends AppCompatPreferenceActivity {
                     }
                 }
 
-            } else {
+            }else if(preference instanceof SwitchPreference){
+                //trenger ikke gjøre noe da
+            }
+            else {
                 // For all other preferences, set the summary to the value's
                 // simple string representation.
                 preference.setSummary(stringValue);
@@ -166,13 +170,15 @@ public class AdminSettingsActivity extends AppCompatPreferenceActivity {
         Log.d(TAG,"onMenuItemSelected "+ id +" home: "+(id == android.R.id.home));
         if (id == android.R.id.home) {
 
-            if (!super.onMenuItemSelected(featureId, item)) {
+            /*if (!super.onMenuItemSelected(featureId, item)) {
                 Log.d(TAG,"onMenuItemSelected(featureId,item");
                 NavUtils.navigateUpFromSameTask(this);
-            }
+            } */
 
             Intent upIntent = NavUtils.getParentActivityIntent(this);
+
             if (NavUtils.shouldUpRecreateTask(this, upIntent)) {
+                Log.d(TAG,"shouldUpRecreateTast");
                 // This activity is NOT part of this app's task, so create a new task
                 // when navigating up, with a synthesized back stack
                 TaskStackBuilder.create(this)
@@ -181,10 +187,10 @@ public class AdminSettingsActivity extends AppCompatPreferenceActivity {
                         // Navigate up to the closest parent
                         .startActivities();
             } else {
+                Log.d(TAG,"should not");
+                //NavUtils.navigateUpFromSameTask(this);
                 NavUtils.navigateUpTo(this, upIntent);
             }
-
-
 
             return true;
         }
@@ -218,7 +224,8 @@ public class AdminSettingsActivity extends AppCompatPreferenceActivity {
                 || GeneralPreferenceFragment.class.getName().equals(fragmentName)
                 || DataSyncPreferenceFragment.class.getName().equals(fragmentName)
                 || NotificationPreferenceFragment.class.getName().equals(fragmentName)
-                || SecurityPreferenceFragment.class.getName().equals(fragmentName);
+                || SecurityPreferenceFragment.class.getName().equals(fragmentName)
+                || GeofencePreferenceFragment.class.getName().equals(fragmentName);
     }
 
     /**
@@ -331,7 +338,7 @@ public class AdminSettingsActivity extends AppCompatPreferenceActivity {
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
             // guidelines.
-            bindPreferenceSummaryToValue(findPreference(getResources().getString(R.string.KEY_SECURITY_GEOFENCE_OVERLAY)));
+            //bindPreferenceSummaryToValue(findPreference(getResources().getString(R.string.KEY_SECURITY_GEOFENCE_OVERLAY)));
         }
 
         /*
@@ -355,6 +362,18 @@ public class AdminSettingsActivity extends AppCompatPreferenceActivity {
             super.onCreate(savedInstanceState);
 
             addPreferencesFromResource(R.xml.pref_geofence);
+            setHasOptionsMenu(true);
+
+            bindPreferenceSummaryToValue(findPreference(getResources().getString(R.string.KEY_GEOFENCE_UPDATEINTERVAL)));
+        }
+
+        @Override
+        public boolean onOptionsItemSelected(MenuItem item) {
+            if(item.getItemId() == android.R.id.home){
+                startActivity(new Intent(getActivity(), AdminSettingsActivity.class));
+                return true;
+            }
+            return super.onOptionsItemSelected(item);
         }
     }
 }

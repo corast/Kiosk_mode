@@ -52,6 +52,8 @@
 
    </application>
     -->
+
+    <uses-permission android:name="android.permission.INTERNET"/>
     <!-- For å kunne disable Recent apps button. -->
     <uses-permission android:name="android.permission.REORDER_TASKS" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -136,6 +138,15 @@
                 android:value="com.sondreweb.kiosk_mode_alpha.activities.AdminPanelActivity" />
         </activity>
 
+        <activity android:name=".activities.StatisticsActivity"
+            android:noHistory="true"
+            android:excludeFromRecents="true"
+            >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.sondreweb.kiosk_mode_alpha.activities.AdminPanelActivity"/>
+        </activity>
+
         <!--
         EXPORTED: Whether or not components of other applications can invoke the service or interact with it —
         "true" if they can, and "false" if not. When the value is "false", only components of
@@ -162,7 +173,7 @@
             android:enabled="true" />
         <!-- exportet = false siden vi kunn tillater Denne Appen å bruke jobScheduleren. -->
         <service
-            android:name=".jobscheduler.CustomJobService"
+            android:name=".jobscheduler.SynchJobService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.firebase.jobdispatcher.ACTION_EXECUTE" />
@@ -239,10 +250,10 @@
         -->
 
         <provider
-            android:name=".storage.CustomContentProvider"
-            android:authorities="com.sondreweb.kiosk_mode_alpha.storage.CustomContentProvider"
-            android:enabled="true"
-            android:exported="true" />
+        android:name=".storage.CustomContentProvider"
+        android:authorities="com.sondreweb.kiosk_mode_alpha.storage.CustomContentProvider"
+        android:enabled="true"
+        android:exported="true" />
 
     </application>
 

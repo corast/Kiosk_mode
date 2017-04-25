@@ -33,7 +33,7 @@ import com.firebase.jobdispatcher.RetryStrategy;
 import com.firebase.jobdispatcher.Trigger;
 import com.sondreweb.kiosk_mode_alpha.R;
 import com.sondreweb.kiosk_mode_alpha.adapters.GeofenceAdapter;
-import com.sondreweb.kiosk_mode_alpha.jobscheduler.CustomJobService;
+import com.sondreweb.kiosk_mode_alpha.jobscheduler.SynchJobService;
 import com.sondreweb.kiosk_mode_alpha.services.GeofenceTransitionService;
 import com.sondreweb.kiosk_mode_alpha.settings.AdminSettingsActivity;
 import com.sondreweb.kiosk_mode_alpha.storage.KioskDbContract;
@@ -60,6 +60,8 @@ import java.util.Random;
 public class AdminPanelActivity extends AppCompatActivity {
 
     private static final String TAG = AdminPanelActivity.class.getSimpleName();
+    public static final String synchJob = "SYNC_WITH_DATABASE_MANUAL";
+
     Toolbar toolbar;
 
     EditText edit_text_pref_kiosk;
@@ -189,9 +191,12 @@ public class AdminPanelActivity extends AppCompatActivity {
         int mId = item.getItemId();
         switch (mId){
             case R.id.action_settings:
-                Intent intent = new Intent(this, AdminSettingsActivity.class);
-                startActivity(intent);
+                Intent settingsIntent = new Intent(this, AdminSettingsActivity.class);
+                startActivity(settingsIntent);
                 break;
+            case R.id.action_statistics:
+                Intent statisticsIntent = new Intent(this, StatisticsActivity.class);
+                startActivity(statisticsIntent);
         }
 
         return super.onOptionsItemSelected(item);
@@ -254,7 +259,7 @@ public class AdminPanelActivity extends AppCompatActivity {
 
         if(app != null){
             if(AppUtils.isAppInstalled(getApplicationContext(),app)){
-                Toast.makeText(getApplicationContext(),app + "Settes nå som kiosk mode appliasjon", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(),app + " Settes nå som kiosk mode appliasjon", Toast.LENGTH_SHORT).show();
                 PreferenceUtils.setPrefkioskModeApp(app,getApplicationContext());
 
             }else{
@@ -306,7 +311,7 @@ public class AdminPanelActivity extends AppCompatActivity {
 
         Job myJob = dispatcher.newJobBuilder()
                 // the JobService that will be called
-                .setService(CustomJobService.class)
+                .setService(SynchJobService.class)
 
                 // uniquely identifies the job
                 .setTag(jobTag)
@@ -350,17 +355,16 @@ public class AdminPanelActivity extends AppCompatActivity {
         //int monumentId = 2;
         Random rn = new Random();
 
-        int monumentId = rn.nextInt(6); //fra 0-4  (min-max)+1 -> [min, max]
-        int date = rn.nextInt(200)+1; //fra 1-200
+        String monumentId = Integer.toString(rn.nextInt(6)); //fra 0-4  (min-max)+1 -> [min, max]
+        String date = Integer.toString(rn.nextInt(200)+1); //fra 1-200
         int time = rn.nextInt(10000)+1; //Fra 1 ms til 10000
         int visitor_id = rn.nextInt(10000)+1; //Fra 1 ms til 10000
 
-        String dateS = Integer.toString(date);
 
         ContentValues contentValue = new ContentValues();
 
         contentValue.put(StatisticsTable.COLUMN_MONUMENT, monumentId);
-        contentValue.put(StatisticsTable.COLUMN_DATE, dateS);
+        contentValue.put(StatisticsTable.COLUMN_DATE, date);
         contentValue.put(StatisticsTable.COLUMN_TIME, time);
         contentValue.put(StatisticsTable.COLUMN_VISITOR_ID,visitor_id);
 

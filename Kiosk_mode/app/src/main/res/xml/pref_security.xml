@@ -11,10 +11,4 @@
         android:key="@string/KEY_SECURITY_GEOFENCE_OVERLAY"
         android:title="Enable Overlay for when user exits a geofence" />
 
-    <ListPreference
-        android:title="Delay window change from Accessibility service"
-        android:key="@string/KEY_SECURITY_WINDOW_DELAY">
-
-    </ListPreference>
-
 </PreferenceScreen>

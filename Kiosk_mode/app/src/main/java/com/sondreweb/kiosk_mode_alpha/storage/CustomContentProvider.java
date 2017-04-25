@@ -27,7 +27,7 @@ import com.firebase.jobdispatcher.Job;
 import com.firebase.jobdispatcher.Lifetime;
 import com.firebase.jobdispatcher.RetryStrategy;
 import com.firebase.jobdispatcher.Trigger;
-import com.sondreweb.kiosk_mode_alpha.jobscheduler.CustomJobService;
+import com.sondreweb.kiosk_mode_alpha.jobscheduler.SynchJobService;
 import com.sondreweb.kiosk_mode_alpha.utils.AppUtils;
 import com.sondreweb.kiosk_mode_alpha.storage.KioskDbContract.Statistics;
 
@@ -47,7 +47,6 @@ public class CustomContentProvider extends ContentProvider {
     //Navn på provideren vår.
     static final String PROVIDER_NAME =
             "com.sondreweb.kiosk_mode_alpha.storage.CustomContentProvider";
-
 
     /*
     *   Assigned to a content provider so any application can access it
@@ -234,6 +233,7 @@ public class CustomContentProvider extends ContentProvider {
                 getContext()
                         .getContentResolver().notifyChange(itemUri, null);
             }
+
             return itemUri;
         }
 
@@ -379,11 +379,14 @@ public class CustomContentProvider extends ContentProvider {
         long id = 0; //Default error verdi.
         switch (URI_MATCHER.match(uri)) {
             case STATISTIKK_LIST: //Bruker denne for å legge til en rad.
+
                 id = sqLiteDatabaseWriteable.insert(
                         StatisticsTable.TABLE_NAME,
                         null,
                         values);
                 sqLiteDatabaseWriteable.close();
+
+                scheduleSyncJob();
                 return getUriForId(id, uri);
             default:
                 sqLiteDatabaseWriteable.close();
@@ -429,21 +432,15 @@ public class CustomContentProvider extends ContentProvider {
     *   JobScheduling av Syncing.
     * */
 
-    public final static String syncKey = "com.firebase.sync.key";
-    private final static String syncValue = "com.firebase.sync.value";
-    public final static String synchJob = "SYNC_WITH_DATABASE";
+    public final static String synchJob = "SYNC_WITH_DATABASE_AUTOMATIC";
 
     private void scheduleSyncJob(){
         // Create a new dispatcher using the Google Play driver.
         FirebaseJobDispatcher dispatcher = new FirebaseJobDispatcher(new GooglePlayDriver(getContext()));
 
-        Bundle myExtrasBundle = new Bundle();
-
-        myExtrasBundle.putString(syncKey,syncValue);
-
         Job myJob = dispatcher.newJobBuilder()
                 // the JobService that will be called
-                .setService(CustomJobService.class)
+                .setService(SynchJobService.class)
 
                 // uniquely identifies the job
                 .setTag(synchJob)
@@ -466,15 +463,13 @@ public class CustomContentProvider extends ContentProvider {
                 // constraints that need to be satisfied for the job to run
                 .setConstraints(
                         // only run on an unmetered network, i vårt tilfelle Ikke mobilnett som koster penger.
-                        Constraint.ON_UNMETERED_NETWORK,
+                        Constraint.ON_UNMETERED_NETWORK
                         // only run when the device is charging
-                        Constraint.DEVICE_CHARGING
+                        //Constraint.DEVICE_CHARGING
                 )
-                .setExtras(myExtrasBundle)
                 .build();
 
         dispatcher.mustSchedule(myJob);
-        dispatcher.schedule(myJob);
     }
 
 }

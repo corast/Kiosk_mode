@@ -18,4 +18,26 @@
         <intent android:action="android.settings.SYNC_SETTINGS" />
     </Preference>
 
+    <!-- Settings som vi kanksje bare fjerner. -->
+    <Preference android:title="Geofence Update Automaticly">
+        <intent android:action="android.settings.SYNC_GEOFENCE_SETTINGS"/>
+    </Preference>
+
+    <EditTextPreference
+        android:defaultValue="@string/DEFAULT_URL_SERVER_STATISTICS"
+        android:inputType="textUri"
+        android:key="@string/KEY_URL_SERVER_STATISTICS"
+        android:selectAllOnFocus="false"
+        android:title="@string/settings_data_sync_url_statistics_title"
+        />
+
+    <EditTextPreference
+        android:defaultValue="@string/DEFAULT_URL_SERVER_GEOFENCE"
+        android:inputType="textUri"
+        android:key="@string/KEY_URL_SERVER_STATISTICS"
+        android:selectAllOnFocus="false"
+        android:title="@string/settings_data_sync_url_geofence_title"
+        />
+
+
 </PreferenceScreen>

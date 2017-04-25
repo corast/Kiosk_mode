@@ -8,4 +8,10 @@
         android:title="@string/admin_panel_settings"
         app:showAsAction="always"/>
 
+    <item
+        android:id="@+id/action_statistics"
+        android:icon="@android:drawable/arrow_down_float"
+        android:title="Statistics"
+        app:showAsAction="always"/>
+
 </menu>
