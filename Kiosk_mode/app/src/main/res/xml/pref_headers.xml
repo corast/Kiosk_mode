@@ -2,10 +2,6 @@
 
     <!-- These settings headers are only used on tablets. -->
 
-    <header
-        android:fragment="com.sondreweb.kiosk_mode_alpha.settings.AdminSettingsActivity$GeneralPreferenceFragment"
-        android:icon="@drawable/ic_info_black_24dp"
-        android:title="@string/pref_header_general" />
 
     <header
         android:fragment="com.sondreweb.kiosk_mode_alpha.settings.AdminSettingsActivity$NotificationPreferenceFragment"
@@ -18,12 +14,9 @@
         android:title="@string/pref_header_data_sync" />
 
     <header
-        android:fragment="com.sondreweb.kiosk_mode_alpha.settings.AdminSettingsActivity$SecurityPreferenceFragment"
-        android:icon="@drawable/visible_50"
-        android:title="Security"
-        />
-    <header
         android:fragment="com.sondreweb.kiosk_mode_alpha.settings.AdminSettingsActivity$GeofencePreferenceFragment"
+        android:title="Geofence"
+        android:icon="@drawable/ic_geofence_black_24dp"
         />
 
 </preference-headers>

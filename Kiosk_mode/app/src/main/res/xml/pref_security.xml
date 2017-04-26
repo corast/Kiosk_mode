@@ -3,11 +3,6 @@
 
     <SwitchPreference
         android:defaultValue="true"
-        android:key="@string/KEY_SECURITY_ACCESSIBILITY"
-        android:title="Enable AccessibilityService" />
-
-    <SwitchPreference
-        android:defaultValue="true"
         android:key="@string/KEY_SECURITY_GEOFENCE_OVERLAY"
         android:title="Enable Overlay for when user exits a geofence" />
 

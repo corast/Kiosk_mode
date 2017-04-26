@@ -73,6 +73,8 @@
     <uses-permission android:name="android.permission.PREVENT_POWER_KEY" />
     <!-- G -->
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+    <!-- Gir oss tillatelse til å oppdatere Synch settings. -->
+    <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
 
     <!-- Gir oss tillatelse til å lese av Intentene som har med når mobilen er ferdig påskrudd(boot completed) -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETE" />
@@ -112,13 +114,18 @@
                 -->
             </intent-filter>
         </activity>
-        <activity android:name=".activities.MapsActivity" />
+
+
+        <!--
+            noHistory=true, siden vi ikke ønsker at vi navigere tilbake hit ved klikk av back.
+        -->
         <activity
             android:name=".activities.LoginAdminActivity"
             android:excludeFromRecents="true"
             android:label="@string/title_activity_login_admin"
             android:noHistory="true"
             android:parentActivityName=".activities.HomeActivity" />
+
         <activity
             android:name=".activities.AdminPanelActivity"
             android:excludeFromRecents="true"
@@ -130,8 +137,8 @@
             android:name=".settings.AdminSettingsActivity"
             android:label="@string/title_activity_admin_settings"
             android:parentActivityName=".activities.AdminPanelActivity"
-            android:noHistory="true"
             android:excludeFromRecents="true"
+            android:noHistory="true"
             >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

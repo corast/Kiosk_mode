@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.InputType;
@@ -132,11 +133,12 @@ public class AdminPanelActivity extends AppCompatActivity {
         toolbar = (Toolbar) findViewById(R.id.toolbar_main);
         setSupportActionBar(toolbar);
         if(toolbar != null) {
-            getSupportActionBar().setTitle("Admin panel");
+            getSupportActionBar().setTitle(R.string.admin_panel_toolbar_title);
             getSupportActionBar().setDisplayHomeAsUpEnabled(false);
             getSupportActionBar().setDisplayShowHomeEnabled(false);
-        }
+            //toolbar.setTitleTextColor(ContextCompat.getColor(getApplicationContext(),R.color.redWard));
 
+        }
 
         ViewStub stub = (ViewStub) findViewById(R.id.vs_continue_empty);
         geofenceListView.setEmptyView(stub);
@@ -145,7 +147,6 @@ public class AdminPanelActivity extends AppCompatActivity {
 
         updateGui();
 
-
     }
 
     @Override
@@ -153,11 +154,11 @@ public class AdminPanelActivity extends AppCompatActivity {
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         boolean overlay = sharedPreferences.getBoolean(getResources().getString(R.string.KEY_SECURITY_GEOFENCE_OVERLAY),false);
+        boolean test = sharedPreferences.getBoolean("android.settings.SYNC_SETTINGS",false);
         Toast.makeText(getApplicationContext(),
-                "overlay: "+ overlay,
+                "overlay: "+ overlay + ", sync_settings: "+test,
                 Toast.LENGTH_SHORT)
                 .show();
-
         /*
         View view = this.getCurrentFocus();
         if (view != null) {
@@ -174,6 +175,7 @@ public class AdminPanelActivity extends AppCompatActivity {
                 .concat(": ")
                 .concat(PreferenceUtils.getPrefLastSynchroizeGeofence(getApplicationContext()));
         textView_schedule_geofence.setText(textLastGeoSync);
+
         updateGeofenceTable();
         super.onStart();
     }

@@ -10,10 +10,22 @@
         android:key="@string/KEY_GEOFENCE_UPDATEINTERVAL"
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
-        android:title="@string/pref_title_location_update_interval"
+        android:title="@string/settings_title_location_update_interval"
         />
 
 
+
+
 <!-- Utenfor Geofence oppdateringstid -->
+
+    <ListPreference
+        android:defaultValue="180000"
+        android:entries="@array/list_preference_update_interval_titles"
+        android:entryValues="@array/list_preference_update_interval"
+        android:key="@string/KEY_OUTSIDE_GEOFENCE_UPDATE_INTERVAL"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null"
+        android:title="@string/settings_title_location_update_interval_outside_geofence"
+        />
 
 </PreferenceScreen>

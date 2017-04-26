@@ -3,25 +3,29 @@
     <!-- NOTE: Hide buttons to simplify the UI. Users can touch outside the dialog to
          dismiss it. -->
     <!-- NOTE: ListPreference's summary should be set to its value by the activity code. -->
-    <ListPreference
-        android:defaultValue="180"
-        android:entries="@array/pref_sync_frequency_titles"
-        android:entryValues="@array/pref_sync_frequency_values"
-        android:key="sync_frequency"
-        android:negativeButtonText="@null"
-        android:positiveButtonText="@null"
-        android:title="@string/pref_title_sync_frequency" />
 
-    <!-- This preference simply launches an intent when selected. Use this UI sparingly, per
-         design guidelines. -->
-    <Preference android:title="@string/pref_title_system_sync_settings">
-        <intent android:action="android.settings.SYNC_SETTINGS" />
-    </Preference>
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:title="@string/settings_data_sync_automatic_title"
+        android:key="@string/KEY_DATA_SYNCHRONIZE_AUTOMATIC"
+        android:summaryOn="@string/settings_data_sync_automatic_summary_on"
+        android:summaryOff="@string/settings_data_sync_automatic_summary_off"
+        />
 
-    <!-- Settings som vi kanksje bare fjerner. -->
+
+    <!--
+    <SwitchPreference
+        android:defaultValue="true"
+        android:key="@string/KEY_DATA_SYNCH_AUTOMATIC"
+        android:title="@string/settings_data_sync_automatic_title"
+        android:summary="@string/settings_data_sync_automatic_summary">
+    </SwitchPreference>
+    -->
+
+    <!-- Settings som vi kanksje bare fjerner.
     <Preference android:title="Geofence Update Automaticly">
         <intent android:action="android.settings.SYNC_GEOFENCE_SETTINGS"/>
-    </Preference>
+    </Preference> -->
 
     <EditTextPreference
         android:defaultValue="@string/DEFAULT_URL_SERVER_STATISTICS"
@@ -38,6 +42,5 @@
         android:selectAllOnFocus="false"
         android:title="@string/settings_data_sync_url_geofence_title"
         />
-
 
 </PreferenceScreen>

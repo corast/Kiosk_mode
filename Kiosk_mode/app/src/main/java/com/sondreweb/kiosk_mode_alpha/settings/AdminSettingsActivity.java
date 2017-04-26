@@ -16,11 +16,14 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.SwitchPreference;
 import android.support.annotation.Nullable;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v7.app.ActionBar;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
+import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
@@ -49,8 +52,10 @@ public class AdminSettingsActivity extends AppCompatPreferenceActivity {
 
     @Override
     public void onBackPressed() {
-        NavUtils.navigateUpFromSameTask(this);
-       // super.onBackPressed();
+        Log.d(TAG,"Going back");
+        //Går tilbake til Activiteten som startet den opp.
+        startActivity(new Intent(getApplicationContext(), AdminPanelActivity.class));
+        //super.onBackPressed();
     }
 
     private static final String TAG = AdminSettingsActivity.class.getSimpleName();
@@ -154,7 +159,7 @@ public class AdminSettingsActivity extends AppCompatPreferenceActivity {
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             // Show the Up button in the action bar.
-            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setDisplayHomeAsUpEnabled(false);
         }
     }
 
@@ -170,12 +175,15 @@ public class AdminSettingsActivity extends AppCompatPreferenceActivity {
         Log.d(TAG,"onMenuItemSelected "+ id +" home: "+(id == android.R.id.home));
         if (id == android.R.id.home) {
 
-            /*if (!super.onMenuItemSelected(featureId, item)) {
+            if (!super.onMenuItemSelected(featureId, item)) {
                 Log.d(TAG,"onMenuItemSelected(featureId,item");
                 NavUtils.navigateUpFromSameTask(this);
-            } */
+            }
 
             Intent upIntent = NavUtils.getParentActivityIntent(this);
+            Log.d(TAG,"upInten :"+upIntent);
+            Intent testInten = new Intent(getApplicationContext(),AdminPanelActivity.class);
+            Log.d(TAG,"testIntent :"+testInten);
 
             if (NavUtils.shouldUpRecreateTask(this, upIntent)) {
                 Log.d(TAG,"shouldUpRecreateTast");
@@ -190,8 +198,8 @@ public class AdminSettingsActivity extends AppCompatPreferenceActivity {
                 Log.d(TAG,"should not");
                 //NavUtils.navigateUpFromSameTask(this);
                 NavUtils.navigateUpTo(this, upIntent);
-            }
 
+            }
             return true;
         }
         return super.onMenuItemSelected(featureId, item);
@@ -224,7 +232,6 @@ public class AdminSettingsActivity extends AppCompatPreferenceActivity {
                 || GeneralPreferenceFragment.class.getName().equals(fragmentName)
                 || DataSyncPreferenceFragment.class.getName().equals(fragmentName)
                 || NotificationPreferenceFragment.class.getName().equals(fragmentName)
-                || SecurityPreferenceFragment.class.getName().equals(fragmentName)
                 || GeofencePreferenceFragment.class.getName().equals(fragmentName);
     }
 
@@ -239,6 +246,8 @@ public class AdminSettingsActivity extends AppCompatPreferenceActivity {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
+
+            ((AdminSettingsActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
             // Bind the summaries of EditText/List/Dialog/Ringtone preferences
             // to their values. When their values change, their summaries are
@@ -278,11 +287,13 @@ public class AdminSettingsActivity extends AppCompatPreferenceActivity {
             addPreferencesFromResource(R.xml.pref_notification);
             setHasOptionsMenu(true);
 
+            ((AdminSettingsActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
             // Bind the summaries of EditText/List/Dialog/Ringtone preferences
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
             // guidelines.
-            bindPreferenceSummaryToValue(findPreference("notifications_new_message_ringtone"));
+
         }
 
         @Override
@@ -308,11 +319,12 @@ public class AdminSettingsActivity extends AppCompatPreferenceActivity {
             addPreferencesFromResource(R.xml.pref_data_sync);
             setHasOptionsMenu(true);
 
+            ((AdminSettingsActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
             // Bind the summaries of EditText/List/Dialog/Ringtone preferences
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
             // guidelines.
-            bindPreferenceSummaryToValue(findPreference("sync_frequency"));
         }
 
         @Override
@@ -320,36 +332,6 @@ public class AdminSettingsActivity extends AppCompatPreferenceActivity {
             int id = item.getItemId();
             if (id == android.R.id.home) {
                 startActivity(new Intent(getActivity(), AdminSettingsActivity.class));
-                return true;
-            }
-            return super.onOptionsItemSelected(item);
-        }
-    }
-
-    public static class SecurityPreferenceFragment extends PreferenceFragment {
-        @Override
-        public void onCreate(@Nullable Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-
-            addPreferencesFromResource(R.xml.pref_security);
-            setHasOptionsMenu(true);
-
-            // Bind the summaries of EditText/List/Dialog/Ringtone preferences
-            // to their values. When their values change, their summaries are
-            // updated to reflect the new value, per the Android Design
-            // guidelines.
-            //bindPreferenceSummaryToValue(findPreference(getResources().getString(R.string.KEY_SECURITY_GEOFENCE_OVERLAY)));
-        }
-
-        /*
-         *
-         * */
-
-        @Override
-        public boolean onOptionsItemSelected(MenuItem item) {
-            int id = item.getItemId();
-            if(id == android.R.id.home){
-                startActivity(new Intent(getActivity(),AdminSettingsActivity.class));
                 return true;
             }
             return super.onOptionsItemSelected(item);
@@ -364,12 +346,17 @@ public class AdminSettingsActivity extends AppCompatPreferenceActivity {
             addPreferencesFromResource(R.xml.pref_geofence);
             setHasOptionsMenu(true);
 
+            ((AdminSettingsActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            ((AdminSettingsActivity) getActivity()).getSupportActionBar().setTitle("Geofence");
             bindPreferenceSummaryToValue(findPreference(getResources().getString(R.string.KEY_GEOFENCE_UPDATEINTERVAL)));
+            bindPreferenceSummaryToValue(findPreference(getResources().getString(R.string.KEY_OUTSIDE_GEOFENCE_UPDATE_INTERVAL)));
         }
 
         @Override
         public boolean onOptionsItemSelected(MenuItem item) {
             if(item.getItemId() == android.R.id.home){
+                Log.d(TAG, "Going home");
+                NavUtils.navigateUpFromSameTask(this.getActivity());
                 startActivity(new Intent(getActivity(), AdminSettingsActivity.class));
                 return true;
             }

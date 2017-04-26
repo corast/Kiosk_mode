@@ -2,9 +2,48 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <TextView
+<!--TODO: fiksme -->
+    <TableLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:weightSum="3">
+
+        <TableRow android:layout_width="match_parent"
+            android:background="@color/blue_100"
+            android:paddingBottom="4dp">
+            <TextView
+                android:layout_weight="1"
+                android:text="Monument"
+                android:textAlignment="center"
+                android:padding="4dp"
+                android:textSize="@dimen/text_medium"
+                android:textColor="@color/black"/>
+
+            <TextView
+                android:layout_weight="1"
+                android:text="Date"
+                android:textAlignment="center"
+                android:padding="4dp"
+
+                android:textSize="@dimen/text_medium"
+                android:textColor="@color/black"/>
+
+            <TextView
+                android:layout_weight="1"
+                android:text="Time(sec)"
+                android:textAlignment="center"
+                android:padding="4dp"
+                android:textSize="@dimen/text_medium"
+                android:textColor="@color/black"/>
+        </TableRow>
+    </TableLayout>
+
+    <ScrollView
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Statistics kommer.."/>
+        android:layout_height="wrap_content">
+
+
+    </ScrollView>
 
 </LinearLayout>

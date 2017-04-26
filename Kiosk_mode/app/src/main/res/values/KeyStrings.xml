@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources >
+    <!-- Strenger som bruke for nøkler for SharedPreferences, slik at vi enkel kan holde oversikt over alle og
+                bruke de fra hvor som helst rundt om i applikasjonen  -->
     <!-- VIKTIG: Nye strenger bør ha translatable="false" for å ikke gi problemer ved ulike språk.-->
 
     <!-- Settings keys -->
@@ -9,19 +11,20 @@
 
     <string translatable="false" name="KEY_SECURITY_WINDOW_DELAY">security_window_delay</string>
 
-    <string translatable="false" name="KEY_DATA_SYNCH_AUTOMATIC">automatic_synching_to_server</string>
+    <string translatable="false" name="KEY_DATA_SYNCHRONIZE_AUTOMATIC">data_automatic_synching_to_server</string>
 
-    <string translatable="false" name="KEY_URL_SERVER_STATISTICS">automatic_synching_to_server</string>
-    <string translatable="false" name="KEY_URL_SERVER_GEOFENCE">automatic_synching_to_server</string>
+    <string translatable="false" name="KEY_URL_SERVER_STATISTICS">data_url_synching_to_server_statistics</string>
+    <string translatable="false" name="KEY_URL_SERVER_GEOFENCE">data_url_synching_to_server_geofence</string>
 
     <string translatable="false" name="DEFAULT_URL_SERVER_STATISTICS">54.69.169.144/statistikk.php</string>
     <string translatable="false" name="DEFAULT_URL_SERVER_GEOFENCE">54.69.169.144/geofence.php</string>
 
         <!-- 1000 ms , 1 sekund. -->
     <string translatable="false" name="DEFAULT_GEOFENCE_UPDATEINTERVAL">1000</string>
-    <string translatable="false" name="KEY_GEOFENCE_UPDATEINTERVAL">50</string>
 
+    <string translatable="false" name="KEY_GEOFENCE_UPDATEINTERVAL">geofence_update_interval</string>
 
+    <string translatable="false" name="KEY_OUTSIDE_GEOFENCE_UPDATE_INTERVAL">outside_geofence_update_interval</string>
 
     <!-- PreferenceUtil keys -->
     <string translatable="false" name="PREF_KIOSK_MODE_ENABLED">pref_kiosk_mode</string>

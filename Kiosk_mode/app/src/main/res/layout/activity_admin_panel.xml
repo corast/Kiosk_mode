@@ -10,7 +10,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/toolbar_main"
-        android:background="@color/colorPrimaryDark"
+        android:background="@color/colorPrimaryLight"
+        app:titleTextColor="@color/white"
         android:layout_alignParentTop="true" />
 
     <View

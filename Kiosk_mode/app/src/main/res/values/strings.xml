@@ -74,6 +74,8 @@
     <string name="service_geofence_outside_view_text">Venligst returner tilbake til området for å forsette</string>
 
     <!-- Strings relate to AdminPanel -->
+    <string name="admin_panel_toolbar_title">Admin panel</string>
+
     <string name="admin_panel_kiosk_button_off">Turn Kiosk Mode Off</string>
     <string name="admin_panel_kiosk_button_on">Kiosk Mode is off</string>
     <string name="admin_panel_synchronize_empty_database">Nothing to synchronze, database is empty</string>
@@ -89,11 +91,25 @@
     <string name="settings_data_sync_url_statistics_title">URL to synch statistics</string>
     <string name="settings_data_sync_url_geofence_title">URL to synch geofences</string>
 
-    <string name="pref_title_location_update_interval">Location update interval</string>
+    <string name="settings_title_location_update_interval">Location update interval</string>
+    <string name="settings_title_location_update_interval_outside_geofence">Location update interval outside geofences</string>
+
+    <string name="settings_data_sync_automatic_summary">Synchronize automatically with external server when available</string>
+    <string name="settings_data_sync_automatic_title">Synchronize automatically</string>
+
+    <string name="settings_data_sync_automatic_summary_on">Synchronize automatically when WIFI available</string>
+    <string name="settings_data_sync_automatic_summary_off">Synchronization needs to happen manually</string>
+
+    <string name="settings_notifications_vibrate">Vibrate when user leaves Geofences</string>
+    <string name="settings_notifications_vibrate_off">Turn on to vibrate when user leaves Geofences</string>
+
+    <string name="settings_notifications_geofence_overlay_on">Show overlay when user leaves Geofences</string>
+    <string name="settings_notifications_geofence_overlay_title">Overlay text on screen</string>
 
     <!-- Values related to UpdateIntervall in miliseconds -->
     <!-- 1000 ms -> 1 second, 60000 -> 60 seconds -->
     <string-array name="list_preference_update_interval">
+        <item>30000</item>
         <item>60000</item>
         <item>120000</item>
         <item>180000</item>
@@ -108,7 +124,8 @@
     </string-array>
     <!-- Titles related to UpdateIntervall -->
     <string-array name="list_preference_update_interval_titles">
-        <item>1 minute</item>
+        <item>30 seconds</item>
+        <item>1 minutes</item>
         <item>2 minutes</item>
         <item>3 minutes</item>
         <item>4 minutes</item>
@@ -150,24 +167,6 @@
     <!-- Example settings for Data & Sync -->
     <string name="pref_header_data_sync">Data &amp; sync</string>
 
-    <string name="pref_title_sync_frequency">Sync frequency</string>
-    <string-array name="pref_sync_frequency_titles">
-        <item>15 minutes</item>
-        <item>30 minutes</item>
-        <item>1 hour</item>
-        <item>3 hours</item>
-        <item>6 hours</item>
-        <item>Never</item>
-    </string-array>
-    <string-array name="pref_sync_frequency_values">
-        <item>15</item>
-        <item>30</item>
-        <item>60</item>
-        <item>180</item>
-        <item>360</item>
-        <item>-1</item>
-    </string-array>
-
     <string-array name="list_preference_entries">
         <item>Entry 1</item>
         <item>Entry 2</item>
@@ -181,8 +180,6 @@
     </string-array>
 
     <string-array name="multi_select_list_preference_default_value" />
-
-    <string name="pref_title_system_sync_settings">System sync settings</string>
 
     <!-- Example settings for Notifications -->
     <string name="pref_header_notifications">Notifications</string>
