@@ -1,7 +1,6 @@
 package com.sondreweb.kiosk_mode_alpha.jobscheduler;
 
 import android.content.ContentValues;
-import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -11,13 +10,11 @@ import com.sondreweb.kiosk_mode_alpha.activities.AdminPanelActivity;
 import com.sondreweb.kiosk_mode_alpha.storage.CustomContentProvider;
 import com.sondreweb.kiosk_mode_alpha.storage.SQLiteHelper;
 import com.sondreweb.kiosk_mode_alpha.storage.StatisticsTable;
+import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
@@ -37,8 +34,9 @@ public class SynchJobService extends JobService{
 
     private static final String ip = "54.69.169.144";
 
-
     private final static String TAG = SynchJobService.class.getSimpleName();
+
+    //er 4 jobber vi kan gjøre, 1 Synch automatisk fra CustomContentProvider, 2 Synch manuelt Statistikken opp, 3 Synch manuelt geofencene.
 
     //Return verdien er på om resten av arbeiet skal foregå på en anne trår eller ikke
     @Override
@@ -50,15 +48,13 @@ public class SynchJobService extends JobService{
             return false;
         }
         switch (job.getTag()){
-            case CustomContentProvider.synchJob:
+            case CustomContentProvider.synchJob: //Automatisk synching av statistikk.
                 Log.d(TAG,"Schedulerer starter job: "+job.toString());
                 //TODO: Gjør synchronisering med serveren på en tråd, eller på main siden vi står i ladning og har wifi.
                 //TODO: Sjekk at automatisk synching er satt.
                 if(SQLiteHelper.getInstance(getApplicationContext()).checkDataInStatisticsTable()){
-
-
+                    postStatisticsAsThread();
                 }
-                postStatisticsAsThread();
 
                 SQLiteHelper sqLiteHelper = SQLiteHelper.getInstance(getApplicationContext());
                 ArrayList<ContentValues> list = sqLiteHelper.getAllStatistics();
@@ -67,7 +63,15 @@ public class SynchJobService extends JobService{
                 }
                break;
 
-            case AdminPanelActivity.synchJob:
+                //SYNCHJOB fra admin panelet.
+            case AdminPanelActivity.synchStatisticsJob:
+                //TODO: sync statistikken nå. Egentlig samme job som automatiske versjonen.
+                if(SQLiteHelper.getInstance(getApplicationContext()).checkDataInStatisticsTable()) {
+                    //Gjør jobben...
+                }
+                break;
+            case AdminPanelActivity.synchGeofenceJob:
+                //TODO: synch geofencene ned fra databasen
 
                 break;
         }
@@ -93,7 +97,6 @@ public class SynchJobService extends JobService{
 
                 }
 
-
                 for (ContentValues contentValue : list) {
                     PostStatistics(contentValue);
                 }
@@ -102,10 +105,7 @@ public class SynchJobService extends JobService{
 
     }
 
-
     public void PostStatistics(ContentValues contentValues){
-
-
         String monument = contentValues.getAsString(StatisticsTable.COLUMN_MONUMENT);
         String visitor = contentValues.getAsString(StatisticsTable.COLUMN_VISITOR_ID);
         String date = contentValues.getAsString(StatisticsTable.COLUMN_DATE);
@@ -117,8 +117,8 @@ public class SynchJobService extends JobService{
             String data = URLEncoder.encode("navn", "UTF-8")
                     + "=" + URLEncoder.encode(monument, "UTF-8");
 
-            data += "&" + URLEncoder.encode("besoksId", "UTF-8") + "="
-                    + URLEncoder.encode(visitor, "UTF-8");
+            data += "&" + URLEncoder.encode("besoksId", "UTF-8")
+                    + "=" + URLEncoder.encode(visitor, "UTF-8");
 
             data += "&" + URLEncoder.encode("dato", "UTF-8")
                     + "=" + URLEncoder.encode(date, "UTF-8");
@@ -127,16 +127,24 @@ public class SynchJobService extends JobService{
                     + "=" + URLEncoder.encode(time, "UTF-8");
 
             //send data
-            URL url = new URL(ip+"/statistikk.php");
+            //URL url = new URL(ip+"/statistikk.php");
+            URL url = new URL(PreferenceUtils.getSynchStatisticsUrl(getApplicationContext()));
+
             //send post
             URLConnection conn = url.openConnection();
+            //Sets the value of the doOutput field for this URLConnection to the specified value.
             conn.setDoOutput(true);
+            //endoder dataene med en Outputstream til connectionen.
+            //conn.getOutputStream(): Returns an output stream that writes to this connection.
             OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
+
+            //Skriver inn data.
             wr.write( data );
             wr.flush();
 
-            //server response
+            //server response    getOutputStream(): Returns an input stream that reads from this open connection
             reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+
             StringBuilder sb = new StringBuilder();
             String line = null;
 
@@ -150,6 +158,7 @@ public class SynchJobService extends JobService{
 
             text = sb.toString();
 
+            //TODO: update last synchronize.
 
         } catch(Exception ex) {
 
@@ -167,6 +176,22 @@ public class SynchJobService extends JobService{
 
         // Show response on activity
         Toast.makeText(getApplicationContext(),text,Toast.LENGTH_SHORT).show();
-        }
 
+    }
+
+    private void getGeofencesWithThread(){
+        Thread backgroundThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                try{
+                    URL url = new URL(ip+"/geofence.php");
+                }catch (Throwable t){
+
+                }
+
+            }
+        });
+
+    }
 }

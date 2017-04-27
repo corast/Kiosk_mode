@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal" android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:weightSum="20">
+
+    <TextView
+        android:layout_weight="4"
+        android:id="@+id/text_statistics_monument"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="monument 1"
+        android:textColor="@color/black_light"
+        android:textSize="@dimen/text_medium"
+        android:textAlignment="center"/>
+    <TextView
+        android:layout_weight="3"
+        android:id="@+id/text_statistics_visitor_id"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/text_medium"
+        android:text="2"
+        android:textColor="@color/black_light"
+        android:textAlignment="center" />
+    <TextView
+        android:layout_weight="6"
+        android:id="@+id/text_statistics_date"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/text_medium"
+        android:text="2/3/2017 12:14"
+        android:textColor="@color/black_light"
+        android:textAlignment="center" />
+    <TextView
+        android:layout_weight="7"
+        android:id="@+id/text_statistics_time"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/text_medium"
+        android:text="2000000s"
+        android:textColor="@color/black_light"
+        android:textAlignment="center" />
+</LinearLayout>

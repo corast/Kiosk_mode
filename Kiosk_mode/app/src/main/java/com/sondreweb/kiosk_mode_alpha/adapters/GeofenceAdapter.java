@@ -34,7 +34,6 @@ public class GeofenceAdapter extends ArrayAdapter<GeofenceClass> {
         super(context, android.R.layout.two_line_list_item);
 
         inflater = LayoutInflater.from(context);
-
     }
 
     private static class ViewHolder{
@@ -86,7 +85,7 @@ public class GeofenceAdapter extends ArrayAdapter<GeofenceClass> {
 
         //TODO: forandre på iconene basert på hva vi trykker på.
         if (geofence != null) {
-            viewHolder.latitude.setText(String.format("%.7f",geofence.getLatLng().longitude));
+            viewHolder.latitude.setText(String.format("%.7f",geofence.getLatLng().latitude));
             viewHolder.longitude.setText(String.format("%.7f",geofence.getLatLng().longitude));
             viewHolder.radius.setText(String.format("%.0f",geofence.getRadius()));
         }

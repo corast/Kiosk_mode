@@ -7,6 +7,7 @@ import android.content.ContentProviderResult;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.OperationApplicationException;
+import android.content.SharedPreferences;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.SQLException;
@@ -15,6 +16,7 @@ import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
@@ -30,6 +32,7 @@ import com.firebase.jobdispatcher.Trigger;
 import com.sondreweb.kiosk_mode_alpha.jobscheduler.SynchJobService;
 import com.sondreweb.kiosk_mode_alpha.utils.AppUtils;
 import com.sondreweb.kiosk_mode_alpha.storage.KioskDbContract.Statistics;
+import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -78,11 +81,6 @@ public class CustomContentProvider extends ContentProvider {
     * */
 
     //content://authority/optionalPath/optionalId
-
-    private static HashMap<String, String> values; //TODO: Funn ut hva dette faktisk er(hashmap).
-    /*
-    *   Tror dette er verdiene vi skal sette inn, vi har ikke bare Stringer men..
-    * */
     //lager root noden for URI treet.
 
     static final UriMatcher URI_MATCHER;
@@ -94,7 +92,6 @@ public class CustomContentProvider extends ContentProvider {
                         STATISTIKK_ID);
         */
         //Når vi skal ha tak i kunn ett element med en ID.
-
 
         URI_MATCHER.addURI(
                 PROVIDER_NAME,
@@ -110,22 +107,7 @@ public class CustomContentProvider extends ContentProvider {
     }
 
     private SQLiteHelper sqLiteHelper = null;
-    private SQLiteDatabase sqLiteDatabaseWriteable = null;
-    private SQLiteDatabase sqLiteDatabaseReadable = null;
 
-    private SQLiteDatabase getWritableDatabase(){
-        if(sqLiteDatabaseWriteable == null){
-            sqLiteDatabaseWriteable = sqLiteHelper.getWritableDatabase();
-        }
-        return sqLiteDatabaseWriteable;
-    }
-
-    private SQLiteDatabase getReadableDatabase(){
-        if(sqLiteDatabaseReadable == null){
-            sqLiteDatabaseReadable = sqLiteHelper.getReadableDatabase();
-        }
-        return sqLiteDatabaseReadable;
-    }
 
     private final ThreadLocal<Boolean> mIsInBatchMode = new ThreadLocal<Boolean>();
 
@@ -138,9 +120,7 @@ public class CustomContentProvider extends ContentProvider {
         //initialisere databasen vår.
 
         sqLiteHelper = SQLiteHelper.getInstance(getContext()); //lager databasen dersom det ikke er gjordt.
-        /*sqLiteHelper.getWritableDatabase();
-        sqLiteHelper.onUpgrade(sqLiteHelper.getWritableDatabase(),1,1);//Upgrade database.
-        */
+        sqLiteHelper.close();
         /*
         *   A content provider is created when its hosting process is created,
         *   and remains around for as long as the process does, so there is no need to close the database --
@@ -196,35 +176,6 @@ public class CustomContentProvider extends ContentProvider {
         } */
     }
 
-
-    /*  GAMMEL KODE, MEN ER SÅ FIN.
-    *     if(URI_MATCHER.match(uri) != STATISTIKK_ID){
-            throw new IllegalArgumentException(
-                    "Unsupported URI for insertion: "+uri);
-        }
-
-        SQLiteDatabase db = sqLiteHelper.getWritableDatabase();
-        switch (URI_MATCHER.match(uri)){
-            case STATISTIKK_LIST:
-                long id = db.insert(
-                        StatisticsTable.TABLE_NAME,
-                        null,
-                        values);
-                return getUriForId(id,uri);
-        }
-        if(URI_MATCHER.match(uri) == STATISTIKK_ID){ //Legge til en rad.
-            long id = db.insert(
-                    StatisticsTable.TABLE_NAME,
-                    null,
-                    values);
-            return getUriForId(id, uri);
-        }
-
-        return null;
-    * */
-
-    //Hva gjør denne?
-
     //Sjekker at vi fikk lagt til i databasen riktig, og returnere Uri adressen på denne.
     private Uri getUriForId(long id, Uri uri){
         if(id > 0) {
@@ -236,7 +187,10 @@ public class CustomContentProvider extends ContentProvider {
 
             return itemUri;
         }
-
+        /*
+        *   Dataene ble ikke vellykket inserted.
+        *   Dataene er på feil format for å legge til databasen mest sannsynlig.
+        * */
         throw new SQLException(
                 "problem while inserting into uri: "+uri);
     }
@@ -258,7 +212,8 @@ public class CustomContentProvider extends ContentProvider {
         if(AppUtils.DEBUG) {
             Log.d(TAG, "query Uri: " + uri.toString() + " URI_MATCHER int:" + URI_MATCHER.match(uri));
         }
-        getReadableDatabase();
+        SQLiteDatabase databaseReadable = SQLiteHelper.getInstance(getContext()).getReadableDatabase();
+
         SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
         boolean useAuthorityUri = false;
         switch (URI_MATCHER.match(uri)){
@@ -294,7 +249,7 @@ public class CustomContentProvider extends ContentProvider {
         // logQuere for debugging.
         logQuery(queryBuilder,  projection, selection, sortOrder);
 
-        Cursor cursor = queryBuilder.query(sqLiteDatabaseReadable, projection, selection, selectionArgs,
+        Cursor cursor = queryBuilder.query(databaseReadable, projection, selection, selectionArgs,
                 null, null, sortOrder);
         try {
             cursor.setNotificationUri(getContext().getContentResolver(), uri);
@@ -309,7 +264,7 @@ public class CustomContentProvider extends ContentProvider {
         else {
             cursor.setNotificationUri(getContext().getContentResolver(), uri);
         } */
-        sqLiteDatabaseReadable.close();
+        databaseReadable.close();
         return cursor;
 
     /*
@@ -341,14 +296,14 @@ public class CustomContentProvider extends ContentProvider {
     }
 
     /*
-    *   For å legge til flere enn en value/rad. Men aner ikke hvordan operations fungerer.
+    *   For å legge til flere enn en value/rad. Men ikke testet ut, siden bulkInsert var enklere å bruke.
     * */
     @NonNull
     @Override
     public ContentProviderResult[] applyBatch(
             @NonNull ArrayList<ContentProviderOperation> operations)
             throws OperationApplicationException {
-        SQLiteDatabase db = sqLiteHelper.getWritableDatabase();
+        SQLiteDatabase db = SQLiteHelper.getInstance(getContext()).getWritableDatabase();
 
         db.beginTransaction();
         try {
@@ -361,6 +316,7 @@ public class CustomContentProvider extends ContentProvider {
         finally {
             mIsInBatchMode.remove();
             db.endTransaction();
+            db.close();
         }
     }
 
@@ -375,28 +331,33 @@ public class CustomContentProvider extends ContentProvider {
     @Nullable
     @Override
     public Uri insert(@NonNull Uri uri, @NonNull ContentValues values) {
-        getWritableDatabase(); //initialisere databasen som vi kan trenge.
+        SQLiteDatabase databaseWritable = SQLiteHelper.getInstance(getContext()).getWritableDatabase();
+        //getWritableDatabase(); //initialisere databasen som vi kan trenge.
         long id = 0; //Default error verdi.
         switch (URI_MATCHER.match(uri)) {
             case STATISTIKK_LIST: //Bruker denne for å legge til en rad.
 
-                id = sqLiteDatabaseWriteable.insert(
+                id = databaseWritable.insert(
                         StatisticsTable.TABLE_NAME,
                         null,
                         values);
-                sqLiteDatabaseWriteable.close();
+                databaseWritable.close();
 
-                scheduleSyncJob();
+                if(id > 0){
+                    if(PreferenceUtils.getSynchronizeAutomatically(getContext())){
+                        scheduleSyncJob();
+                    }
+                }
                 return getUriForId(id, uri);
             default:
-                sqLiteDatabaseWriteable.close();
+                databaseWritable.close();
                 throw new IllegalArgumentException("Unknown URI ? " + URI_MATCHER.match(uri));
         }
     }
 
     @Override
     public int bulkInsert(@NonNull Uri uri, @NonNull ContentValues[] valuesList) {
-        SQLiteDatabase db = getWritableDatabase();
+        SQLiteDatabase db = SQLiteHelper.getInstance(getContext()).getWritableDatabase();
 
         switch (URI_MATCHER.match(uri)){
             case STATISTIKK_LIST: //bruker denne til å legge til flere rader sammtidig.
@@ -417,8 +378,15 @@ public class CustomContentProvider extends ContentProvider {
                     db.setTransactionSuccessful();
                     numberInserted = valuesList.length;
                 } finally {
+
                     db.endTransaction();
                     db.close();
+
+                }
+                if(numberInserted > 0){ //sjekker at det ble lagt til minst en rad
+                    if(PreferenceUtils.getSynchronizeAutomatically(getContext())){//sjekker at settigen er på.
+                        scheduleSyncJob();//starter synching når vi har WIFI.
+                    }
                 }
                 return numberInserted;
             default:
@@ -432,7 +400,7 @@ public class CustomContentProvider extends ContentProvider {
     *   JobScheduling av Syncing.
     * */
 
-    public final static String synchJob = "SYNC_WITH_DATABASE_AUTOMATIC";
+    public final static String synchJob = "sync_statistics_to_database_automatic";
 
     private void scheduleSyncJob(){
         // Create a new dispatcher using the Google Play driver.

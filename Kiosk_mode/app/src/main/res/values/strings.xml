@@ -16,7 +16,6 @@
         completions."
     </string>
 
-
     <!-- AccessibilityService Strings -->
     <string name="accessibility_service_description">Lås ned enheten slik at kunn er mulig å bruke satt
         applikasjon på enheten så lenge dette er på.</string>
@@ -30,8 +29,8 @@
     <string name="home_enable_settings_default">as default launcher</string>
     <string name="home_enable_location_mode">High accuracy</string>
 
-    <!-- Strings relatert til Statuser -->
-    <string name="home_status_info_googleplay_service_true">Google Play Service innstalled</string>
+    <!-- Strings relatert til Statuser i Home screenen. -->
+    <string name="home_status_info_googleplay_service_true">Google Play Service installed</string>
     <string name="home_status_info_googleplay_service_false">Google Play Services not installed or not up to date</string>
 
     <string name="home_status_info_deviceadmin_true"></string>
@@ -40,8 +39,8 @@
     <string name="home_status_info_accessibility_service_true">Permission granted</string>
     <string name="home_status_info_accessibility_service_false">Not turned on. Enable in settings</string>
 
-    <string name="home_status_info_accessibility_service_running_true">Accessiblity service running</string>
-    <string name="home_status_info_accessibility_service_running_false">Accessiblity service not running</string>
+    <string name="home_status_info_accessibility_service_running_true">Accessibility service running</string>
+    <string name="home_status_info_accessibility_service_running_false">Accessibility service not running</string>
 
     <string name="home_status_info_touch_view_true">Quick Settings blocked</string>
     <string name="home_status_info_touch_view_false">Quick Settings reachable, tap here to turn on</string>
@@ -64,7 +63,7 @@
     <string name="home_status_info_background_service_false">background service not running, touch to start</string>
 
 
-    <!-- GeofenceTransitionService Strings -->
+    <!-- Strings relatert GeofenceTransitionService -->
     <string name="service_title">Kiosk service</string>
     <string name="service_text">Service running in the background</string>
     <string name="service_status_geofence">Geofence status: </string>
@@ -73,13 +72,17 @@
 
     <string name="service_geofence_outside_view_text">Venligst returner tilbake til området for å forsette</string>
 
-    <!-- Strings relate to AdminPanel -->
+    <!-- Strings relatert AdminPanel -->
     <string name="admin_panel_toolbar_title">Admin panel</string>
 
     <string name="admin_panel_kiosk_button_off">Turn Kiosk Mode Off</string>
     <string name="admin_panel_kiosk_button_on">Kiosk Mode is off</string>
+
     <string name="admin_panel_synchronize_empty_database">Nothing to synchronze, database is empty</string>
+
     <string name="admin_panel_synchronize_scheduled">Synchronize scheduled when WIFI is next available.</string>
+
+    <string name="admin_panel_synchronize_scheduled_geofences">Schedule synchronize of geofences</string>
 
     <string name="admin_panel_list_geofence_emtpy">No Geofences in storage</string>
 
@@ -88,27 +91,13 @@
     <string name="title_activity_admin_settings">Settings</string>
 
     <!-- Strings related to Settings -->
-    <string name="settings_data_sync_url_statistics_title">URL to synch statistics</string>
-    <string name="settings_data_sync_url_geofence_title">URL to synch geofences</string>
 
-    <string name="settings_title_location_update_interval">Location update interval</string>
-    <string name="settings_title_location_update_interval_outside_geofence">Location update interval outside geofences</string>
-
-    <string name="settings_data_sync_automatic_summary">Synchronize automatically with external server when available</string>
-    <string name="settings_data_sync_automatic_title">Synchronize automatically</string>
-
-    <string name="settings_data_sync_automatic_summary_on">Synchronize automatically when WIFI available</string>
-    <string name="settings_data_sync_automatic_summary_off">Synchronization needs to happen manually</string>
-
-    <string name="settings_notifications_vibrate">Vibrate when user leaves Geofences</string>
-    <string name="settings_notifications_vibrate_off">Turn on to vibrate when user leaves Geofences</string>
-
-    <string name="settings_notifications_geofence_overlay_on">Show overlay when user leaves Geofences</string>
-    <string name="settings_notifications_geofence_overlay_title">Overlay text on screen</string>
-
+    <!-- Geofence Strings -->
+    <string name="settings_geofence_location_interval_title">Location update interval</string>
+    <string name="settings_geofence_location_interval_outside_title">Location update interval outside geofences</string>
     <!-- Values related to UpdateIntervall in miliseconds -->
     <!-- 1000 ms -> 1 second, 60000 -> 60 seconds -->
-    <string-array name="list_preference_update_interval">
+    <string-array name="list_preference_update_interval_values">
         <item>30000</item>
         <item>60000</item>
         <item>120000</item>
@@ -137,9 +126,46 @@
         <item>10 minutes</item>
         <item>15 minutes</item>
     </string-array>
+    <string name="settings_geofence_default_value_update_interval">180000</string>
+    <string name="settings_geofence_default_outside_value_update_interval">30000</string>
 
-    <string name="default_value_update_interval">180000
-    </string>
+
+    <!-- Data & Sync strings -->
+    <string name="settings_data_sync_automatic_summary">Synchronize automatically with external server when available</string>
+    <string name="settings_data_sync_automatic_title">Synchronize automatically</string>
+
+    <string name="settings_data_sync_automatic_summary_on">Synchronize automatically when WIFI available</string>
+    <string name="settings_data_sync_automatic_summary_off">Synchronization needs to happen manually</string>
+
+    <string name="settings_data_sync_url_statistics_title">URL to synch statistics</string>
+    <string name="settings_data_sync_url_geofence_title">URL to synch geofences</string>
+    <!-- Notifications -->
+    <string name="settings_notifications_vibrate">Vibrate when user leaves Geofences</string>
+    <string name="settings_notifications_vibrate_off">Turn on to vibrate when user leaves Geofences</string>
+
+    <string name="settings_notifications_geofence_overlay_on">Show overlay when user leaves Geofences</string>
+    <string name="settings_notifications_geofence_overlay_title">Overlay text on screen</string>
+    <string name="settings_notifications_vibrate_time_title">Time to vibrate device</string>
+    <string-array name="list_preference_vibrate_titles">
+        <item>0.5 seconds</item>
+        <item>1 seconds</item>
+        <item>1.5 seconds</item>
+        <item>2 seconds</item>
+        <item>2.5 seconds</item>
+        <item>3 seconds</item>
+    </string-array>
+    <string-array name="list_preference_vibrate_values">
+        <item>500</item>
+        <item>1000</item>
+        <item>1500</item>
+        <item>2000</item>
+        <item>2500</item>
+        <item>3000</item>
+    </string-array>
+    <string name="settings_notifications_vibrate_time_default">500</string>
+    <!-- Strings relatert til Statistics overview activity -->
+    <string name="statistics_no_data_available">No Data in storage</string>
+
 
     <!-- Example General settings -->
     <string name="pref_header_general">General</string>
@@ -192,6 +218,4 @@
     <string name="pref_title_vibrate">Vibrate</string>
 
     <!--Mer stringer kommer her TODO:lag flere stringer. -->
-
-
 </resources>

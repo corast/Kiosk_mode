@@ -1,49 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 <!--TODO: fiksme -->
-    <TableLayout
+
+    <ListView
+        android:layout_alignParentTop="true"
+        android:id="@+id/list_view_statistics"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="horizontal"
-        android:weightSum="3">
+        android:background="@color/blue_50"
+        android:visibility="invisible">
 
-        <TableRow android:layout_width="match_parent"
-            android:background="@color/blue_100"
-            android:paddingBottom="4dp">
-            <TextView
-                android:layout_weight="1"
-                android:text="Monument"
-                android:textAlignment="center"
-                android:padding="4dp"
-                android:textSize="@dimen/text_medium"
-                android:textColor="@color/black"/>
-
-            <TextView
-                android:layout_weight="1"
-                android:text="Date"
-                android:textAlignment="center"
-                android:padding="4dp"
-
-                android:textSize="@dimen/text_medium"
-                android:textColor="@color/black"/>
-
-            <TextView
-                android:layout_weight="1"
-                android:text="Time(sec)"
-                android:textAlignment="center"
-                android:padding="4dp"
-                android:textSize="@dimen/text_medium"
-                android:textColor="@color/black"/>
-        </TableRow>
-    </TableLayout>
-
-    <ScrollView
+    </ListView>
+    <ViewStub
+        android:id="@+id/vs_statistics_empty"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout="@layout/empty_stastistics_list"
+        />
 
-
-    </ScrollView>
-
-</LinearLayout>
+</RelativeLayout>

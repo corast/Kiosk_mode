@@ -9,7 +9,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.InputType;
@@ -61,15 +60,16 @@ import java.util.Random;
 public class AdminPanelActivity extends AppCompatActivity {
 
     private static final String TAG = AdminPanelActivity.class.getSimpleName();
-    public static final String synchJob = "SYNC_WITH_DATABASE_MANUAL";
+    public static final String synchStatisticsJob = "sync_statistics_to_database";
+    public static final String synchGeofenceJob = "sync_geofences_with_database";
 
     Toolbar toolbar;
 
     EditText edit_text_pref_kiosk;
     Button kiosk_button;
 
-    Button button_schedule_sync;
-    Button button_schedule_geofence;
+    Button button_schedule_sync_statistics;
+    Button button_schedule_sync_geofence;
 
     TextView statistics_text;
     TextView textView_schedule_geofence;
@@ -93,7 +93,7 @@ public class AdminPanelActivity extends AppCompatActivity {
         setContentView(R.layout.activity_admin_panel);
 
         kiosk_button = (Button) findViewById(R.id.button_admin_panel_kiosk_mode);
-        button_schedule_sync = (Button) findViewById(R.id.button_schedule_sync);
+        button_schedule_sync_statistics = (Button) findViewById(R.id.button_schedule_sync);
 
         statistics_text = (TextView) findViewById(R.id.text_view_content_provider_test);
 
@@ -104,7 +104,7 @@ public class AdminPanelActivity extends AppCompatActivity {
         edit_text_pref_kiosk = (EditText) findViewById(R.id.edit_text_pref_kiosk_mode);
         edit_text_pref_kiosk.setInputType(InputType.TYPE_TEXT_VARIATION_URI);
 
-        button_schedule_geofence = (Button) findViewById(R.id.button_schedule_sync_geofence) ;
+        button_schedule_sync_geofence = (Button) findViewById(R.id.button_schedule_sync_geofence) ;
 
         textView_schedule_sync = (TextView) findViewById(R.id.text_schedule_statistics);
 
@@ -156,7 +156,7 @@ public class AdminPanelActivity extends AppCompatActivity {
         boolean overlay = sharedPreferences.getBoolean(getResources().getString(R.string.KEY_SECURITY_GEOFENCE_OVERLAY),false);
         boolean test = sharedPreferences.getBoolean("android.settings.SYNC_SETTINGS",false);
         Toast.makeText(getApplicationContext(),
-                "overlay: "+ overlay + ", sync_settings: "+test,
+                "overlay: "+ overlay + ", sync_settings: "+test + "vibrateTime: " + PreferenceUtils.getVibrateTimeSettings(getApplicationContext()),
                 Toast.LENGTH_SHORT)
                 .show();
         /*
@@ -200,7 +200,6 @@ public class AdminPanelActivity extends AppCompatActivity {
                 Intent statisticsIntent = new Intent(this, StatisticsActivity.class);
                 startActivity(statisticsIntent);
         }
-
         return super.onOptionsItemSelected(item);
     }
 
@@ -231,15 +230,16 @@ public class AdminPanelActivity extends AppCompatActivity {
             kiosk_button.setAlpha(0.4f);
         }
 
-        //Dersom ingen til å synchronisere.
         if(SQLiteHelper.getInstance(getApplicationContext()).checkDataInStatisticsTable()){
-            button_schedule_sync.setText(getResources().getString(R.string.admin_panel_synchronize_scheduled));
-            button_schedule_sync.setClickable(true);
-
+            //Det er noe å synchronizere, aktiver knappen.
+            button_schedule_sync_statistics.setText(getResources().getString(R.string.admin_panel_synchronize_scheduled));
+            button_schedule_sync_statistics.setClickable(true);
         }else{
-            button_schedule_sync.setText(getResources().getString(R.string.admin_panel_synchronize_empty_database));
-            button_schedule_sync.setClickable(false);
+            //Databasen er tom.
+            button_schedule_sync_statistics.setText(getResources().getString(R.string.admin_panel_synchronize_empty_database));
+            button_schedule_sync_statistics.setClickable(false);
         }
+
     }
 
     public void turnOffKioskMode(View view){
@@ -284,20 +284,11 @@ public class AdminPanelActivity extends AppCompatActivity {
         geofenceAdapter.addAll(list);
     }
 
-
-    public void checkIfDataInStatisticsTable(View view){
-       if(SQLiteHelper.getInstance(getApplicationContext()).checkDataInStatisticsTable()){
-            //Det er data i databasen med statistikk.
-
-       }else{
-           Toast.makeText(getApplicationContext(), "Det er Ikke Statistikk tilgjengelig", Toast.LENGTH_SHORT).show();
-       }
-    }
-
-
     public final static String jobTag = "SYNC_WITH_DATABASE";
 
+    //Når vi trykker på Synchronize shedule
     public void scheduleSync(View view){
+        Log.d(TAG,"Data in statisticsTable: "+SQLiteHelper.getInstance(getApplicationContext()).checkDataInStatisticsTable());
         if(SQLiteHelper.getInstance(getApplicationContext()).checkDataInStatisticsTable()){
             //scheduleJobNow();
             //TODO: forandre på teksten på knappen?
@@ -307,7 +298,7 @@ public class AdminPanelActivity extends AppCompatActivity {
         }
     }
 
-    private void scheduleJobNow(){
+    private void scheduleSynchStatisticsJobNow(){
         //TODO: schedule synchronize. Krever forsatt wifi, men trenger ikke å være ladd.
         FirebaseJobDispatcher dispatcher = new FirebaseJobDispatcher(new GooglePlayDriver(getApplicationContext()));
 
@@ -316,16 +307,16 @@ public class AdminPanelActivity extends AppCompatActivity {
                 .setService(SynchJobService.class)
 
                 // uniquely identifies the job
-                .setTag(jobTag)
+                .setTag(synchStatisticsJob)
 
                 // one-off job
                 .setRecurring(false)
 
                 // persist past a device reboot
-                .setLifetime(Lifetime.FOREVER)
+                .setLifetime(Lifetime.UNTIL_NEXT_BOOT)
 
                 // start between 0 and 120 seconds from now after constraints met.
-                .setTrigger(Trigger.executionWindow(0, 20))
+                .setTrigger(Trigger.NOW)
 
                 // overwrite an existing job with the same tag
                 .setReplaceCurrent(true)
@@ -341,7 +332,44 @@ public class AdminPanelActivity extends AppCompatActivity {
                 .build();
 
         dispatcher.mustSchedule(myJob);
-        dispatcher.schedule(myJob);
+    }
+
+    private void scheduleSynchGeofencesJobNow(){
+        // Create a new dispatcher using the Google Play driver.
+        FirebaseJobDispatcher dispatcher = new FirebaseJobDispatcher(new GooglePlayDriver(getApplicationContext()));
+
+        Job myJob = dispatcher.newJobBuilder()
+                // the JobService that will be called
+                .setService(SynchJobService.class)
+
+                // uniquely identifies the job
+                .setTag(synchGeofenceJob)
+
+                // one-off job
+                .setRecurring(false)
+
+                // persist past a device reboot
+                .setLifetime(Lifetime.UNTIL_NEXT_BOOT)
+
+                // start between 0 and 120 seconds from now after constraints met.
+                .setTrigger(Trigger.NOW)
+
+                // overwrite an existing job with the same tag
+                .setReplaceCurrent(true)
+
+                // retry with exponential backoff
+                .setRetryStrategy(RetryStrategy.DEFAULT_EXPONENTIAL)
+
+                // constraints that need to be satisfied for the job to run
+                .setConstraints(
+                        // only run on an unmetered network, i vårt tilfelle Ikke mobilnett som koster penger.
+                        Constraint.ON_UNMETERED_NETWORK
+                        // only run when the device is charging
+                        //Constraint.DEVICE_CHARGING
+                )
+                .build();
+
+        dispatcher.mustSchedule(myJob);
     }
 
     /*
@@ -371,7 +399,8 @@ public class AdminPanelActivity extends AppCompatActivity {
         contentValue.put(StatisticsTable.COLUMN_VISITOR_ID,visitor_id);
 
         Uri uri = getContentResolver().insert(KioskDbContract.Statistics.CONTENT_URI, contentValue);
-        Log.d(TAG,"Uri: "+uri);
+
+        //Log.d(TAG,"Uri: "+uri);
         //Uri yri = getContentResolver().bulkInsert()
         Toast.makeText(this, "New Statistics added", Toast.LENGTH_SHORT).show();
     }

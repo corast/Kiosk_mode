@@ -5,25 +5,25 @@
     <!-- VIKTIG: Nye strenger bør ha translatable="false" for å ikke gi problemer ved ulike språk.-->
 
     <!-- Settings keys -->
-    <string translatable="false" name="KEY_SECURITY_GEOFENCE_OVERLAY">security_enable_geofence_overlay</string>
 
     <string translatable="false" name="KEY_SECURITY_ACCESSIBILITY">security_enable_acccesibility</string>
+    <!-- Hvor kommer denne fra? -->
 
-    <string translatable="false" name="KEY_SECURITY_WINDOW_DELAY">security_window_delay</string>
-
+    <!-- Data & sync settings -->
     <string translatable="false" name="KEY_DATA_SYNCHRONIZE_AUTOMATIC">data_automatic_synching_to_server</string>
-
     <string translatable="false" name="KEY_URL_SERVER_STATISTICS">data_url_synching_to_server_statistics</string>
     <string translatable="false" name="KEY_URL_SERVER_GEOFENCE">data_url_synching_to_server_geofence</string>
 
     <string translatable="false" name="DEFAULT_URL_SERVER_STATISTICS">54.69.169.144/statistikk.php</string>
     <string translatable="false" name="DEFAULT_URL_SERVER_GEOFENCE">54.69.169.144/geofence.php</string>
-
+    <!-- Notifications settings -->
+    <string translatable="false" name="KEY_NOTIFICATIONS_VIBRATE_OUTISDE_GEOFENCE">notifications_vibrate_outside_geofence</string>
+    <string translatable="false" name="KEY_SECURITY_GEOFENCE_OVERLAY">security_enable_geofence_overlay</string>
+    <string translatable="false" name="KEY_NOTIFICATIONS_VIBRATE_TIME">notifications_vibrate_time</string>
         <!-- 1000 ms , 1 sekund. -->
     <string translatable="false" name="DEFAULT_GEOFENCE_UPDATEINTERVAL">1000</string>
-
+    <!-- Geofence settings -->
     <string translatable="false" name="KEY_GEOFENCE_UPDATEINTERVAL">geofence_update_interval</string>
-
     <string translatable="false" name="KEY_OUTSIDE_GEOFENCE_UPDATE_INTERVAL">outside_geofence_update_interval</string>
 
     <!-- PreferenceUtil keys -->

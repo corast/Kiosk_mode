@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal" android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:weightSum="20"
+    android:paddingBottom="4dp">
+    <TextView
+        android:layout_weight="4"
+        android:id="@+id/text_statistics_monument"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Object"
+        android:textColor="@color/black"
+        android:textSize="@dimen/text_medium"
+        android:textAlignment="center"
+        android:background="@color/blue_100"/>
+    <TextView
+        android:layout_weight="3"
+        android:id="@+id/text_statistics_visitor_id"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/text_medium"
+        android:text="Visitor id"
+        android:textColor="@color/black"
+        android:textAlignment="center"
+        android:background="@color/blue_100"/>
+    <TextView
+        android:layout_weight="6"
+        android:id="@+id/text_statistics_date"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/text_medium"
+        android:text="Date"
+        android:textColor="@color/black"
+        android:textAlignment="center"
+        android:background="@color/blue_100"/>
+    <TextView
+        android:layout_weight="7"
+        android:id="@+id/text_statistics_time"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/text_medium"
+        android:text="Time (sec)"
+        android:textColor="@color/black"
+        android:textAlignment="center"
+        android:background="@color/blue_100"/>
+</LinearLayout>

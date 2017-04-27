@@ -51,7 +51,6 @@
         android:id="@+id/button_schedule_sync"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Schedule synchronize with Statistics"
         android:layout_below="@id/content_view"
         android:onClick="scheduleSync"
         android:layout_alignParentStart="true"/>
@@ -60,8 +59,8 @@
         android:id="@+id/text_schedule_statistics"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="last synchronize::"
-        android:paddingLeft="20dp"
+        android:text="last synchronize:"
+        android:paddingStart="20dp"
         android:layout_below="@id/button_schedule_sync"
         android:layout_alignParentStart="true"/>
 
@@ -80,7 +79,7 @@
             android:id="@+id/button_schedule_sync_geofence"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Schedule synchronize with Geofences"
+            android:text="@string/admin_panel_synchronize_scheduled_geofences"
             android:layout_alignParentEnd="true"
             android:layout_centerInParent="true"/>
 
@@ -134,7 +133,6 @@
         android:layout_below="@id/table_colums"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-
     </ListView>
 
     <ViewStub
@@ -148,38 +146,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout="@layout/empt_list"/>
+        android:layout="@layout/empt_geofences_list"/>
 
-    <!--
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/layout_admin_panel_geofence">
-        <TableLayout
-            android:id="@+id/table_layout_geofences"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-            <TableRow
-                android:weightSum="3">
-                <TextView android:text="Latitude"
-                    android:layout_width="100dp"
-                    android:layout_column="0"
-                    android:layout_weight="1"/>
-                <TextView android:text="Longitude"
-                    android:layout_width="30dp"
-                    android:layout_column="1"
-                    android:layout_weight="1">
-                </TextView>
-                <TextView android:text="Radius(meters)"
-                    android:layout_width="30dp"
-                    android:layout_column="2"
-                    android:layout_weight="1">
-                </TextView>
-            </TableRow>
-
-        </TableLayout>
-    </ScrollView>
-  -->
     <TextView
         android:id="@+id/text_view_content_provider_test"
         android:layout_width="wrap_content"
@@ -187,6 +155,14 @@
         android:text="bla bla masse tekst...."
         android:visibility="gone"/>
 
+    <Button
+        android:layout_below="@id/list_view_geofences"
+        android:text="Insert test data statistics"
+        android:id="@+id/button_admin_panel_insertData"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:onClick="insertDataTest"/>
 
     <Button
         android:id="@+id/button_admin_panel_kiosk_mode"

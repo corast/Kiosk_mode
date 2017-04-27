@@ -6,11 +6,13 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
+import android.util.Log;
 
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.model.LatLng;
 import com.sondreweb.kiosk_mode_alpha.classes.GeofenceClass;
 import com.sondreweb.kiosk_mode_alpha.classes.GeofenceStatus;
+import com.sondreweb.kiosk_mode_alpha.utils.AppUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,8 +33,6 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
     private static SQLiteHelper instance; //viss databasen er åpen kan vi bare bruke denne.
 
-    private static Context sContext = null;
-
     public static final String DATABASE_NAME = "geofence.db";
 
     //dette er samme som FeedReaderDbHelper fra developer.android om databaser.
@@ -45,8 +45,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     //så vi kan slippe å close databasen og bare la den stå oppe, og bruke denn viss ledig.
     public static synchronized SQLiteHelper getInstance(Context context){
         if(instance == null){
-            instance = new SQLiteHelper(context);
-            sContext = context;
+            instance = new SQLiteHelper(context.getApplicationContext());
         }
         return instance;
     }
@@ -209,11 +208,11 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         Cursor cursor = db.rawQuery(selectQuery, null);
 
         if(cursor.moveToFirst()){
-            if(cursor.getInt(0) == 0){ //Sjekker om antall rader er 0.
-                return true;
+            if(cursor.getInt(0) > 0){ //Sjekker om antall rader er mer enn 0.
+                return true; //er data
             }
         }
-        return false;
+        return false; //er ikke data.
     }
 
     public Cursor getStatistics(String id, String[] projection, String selection, String[] selectionArgs, String sortOrder){
@@ -283,7 +282,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     /*
     *   Returnere en liste med all statistikk som ligger i datasen nå.
     * */
-    public ArrayList<ContentValues> getAllStatistics(){
+    public synchronized ArrayList<ContentValues> getAllStatistics(){
         ArrayList<ContentValues> statisticsList = new ArrayList<>();
 
         SQLiteDatabase dbReadable = this.getReadableDatabase();
@@ -293,7 +292,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         Cursor cursor = queryBuilder.query(dbReadable, null, null, null,
                 null, null, null);
 
-        ContentValues contentValues = new ContentValues();
+        ContentValues contentValues;
 
         if(cursor.moveToFirst()){//Flytter oss til først rad dersom den eksisterer
             do {  //Legger til alle Geofence fra database i Arrayet med korrekte atributter.
@@ -307,7 +306,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
                 statisticsList.add(contentValues);
             }while (cursor.moveToNext()); //beveger oss til neste rad.
         }
-            //Returnere ArrayListen med verdiene fra alle radene.
+            //Returnerer ArrayListen med verdiene fra alle radene.
         return statisticsList;
     }
 

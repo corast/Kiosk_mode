@@ -17,6 +17,10 @@ import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
 
 public class RestartBroadcastReceiver extends WakefulBroadcastReceiver {
 
+    private static final String ACTION_SHUTDOWN = "android.intent.action.ACTION_SHUTDOWN";
+
+    //
+
     private final static String TAG = RestartBroadcastReceiver.class.getSimpleName();
 
     //denne lytter kunn til com.sondreweb.GeoFencingAlpha.Activity.RestartGeofencing.
@@ -36,10 +40,20 @@ public class RestartBroadcastReceiver extends WakefulBroadcastReceiver {
                 checkIfServiceRunning(context);
                 sendToast(context);
                 break;
-            case GeofenceTransitionService.OUTSIDE_GEOFENCE_TRIGGERED:
-                Log.d(TAG," ALARM !");
-                Log.d(TAG,"  RING!");
-                Log.d(TAG," ALARM !");
+            case ACTION_SHUTDOWN:
+                if(PreferenceUtils.isKioskModeActivated(context)){
+                    /*
+                    *   Viss vi havner her, betyr det av enheten skrus av, selv i Kiosk mode. Ikke bra.
+                    * */
+
+                    //TODO: sende en respons på dette over mobilnett, gitt at dette går kjapt nok
+                    //  dersom vi har oppretholdt forbildensen hele tiden kanskje.
+                }
+                /*
+                *   Når vi skal skru av telefonen havner vi her.
+                * */
+                break;
+
             default:
                 Log.d(TAG,"Action som ble motatt i BroadcastReceiver:"+ action);
         }

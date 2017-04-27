@@ -4,8 +4,6 @@ package com.sondreweb.kiosk_mode_alpha.services;
  * Created by sondre on 03-Mar-17.
  */
 
-import android.app.AlarmManager;
-import android.app.LauncherActivity;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -13,7 +11,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.location.Location;
 import android.os.Build;
@@ -33,13 +30,13 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -67,6 +64,7 @@ import com.sondreweb.kiosk_mode_alpha.storage.SQLiteHelper;
 import com.sondreweb.kiosk_mode_alpha.utils.AppUtils;
 import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -96,7 +94,6 @@ import java.util.List;
 *   View.post(Runnable)
 *   View.postDelayed(Runnable, long)
 * */
-
 
 /**
  *  Hendelser som starter Servicen, som altså kjører OnStartCommand.
@@ -199,7 +196,6 @@ public class GeofenceTransitionService extends Service implements
 
     private PowerManager.WakeLock wakeLock;
     private boolean isLocationPollingEnabled = true;
-    private static Context sContext;
 
     private static final int vibrateTime = 500; //500 milisekunder.
 
@@ -223,21 +219,19 @@ public class GeofenceTransitionService extends Service implements
         notificationBuilder = new NotificationCompat.Builder(this); //Instansiate the NotificatioBuilder.
         startInForeground(); //setter opp notifikasjonen for å kjøre i forgrunn.
 
+        //Intent filter
         IntentFilter filter = new IntentFilter();
-        filter.addAction(Intent.ACTION_SCREEN_OFF);
-        filter.addAction(STOP_KIOSK);
+        filter.addAction(Intent.ACTION_SCREEN_OFF);//Tar imot når skjermen skrus av
+        filter.addAction(STOP_KIOSK);   //Når vi skrur av Kiosk mode via notifikasjonsbar.
+        //BroadcastRecieveren vår
         serviceBroadcastReceiver = new ServiceBroadcastReceiver();
 
-        // Registrer Recievereren vi trenger for å fange SCREEN_OFF.
+        // Registrer Recievereren for bruk, med filter vi lagde over.
         registerReceiver(serviceBroadcastReceiver, filter);
-        sContext = getApplicationContext();
     }
 
-    public Context getsContext(){
-        if(sContext == null){
-            sContext = getApplicationContext(); //kan være null i noen tilfeller.
-        }
-        return sContext;
+    public Context getContext(){
+        return getApplicationContext();
     }
 
 
@@ -287,7 +281,7 @@ public class GeofenceTransitionService extends Service implements
                     *           GEOFENCE_TOO_MANY_PENDING_INTENTS : You have provided more than 5 different PendingIntents to
                     *                               the addGeofences(GoogleApiClient, GeofencingRequest, PendingIntent) call.
                     * */
-                    if( ! AppUtils.checkLocationAvailabillity(getsContext(),getGoogleApiClient())){
+                    if( ! AppUtils.checkLocationAvailabillity(getContext(),getGoogleApiClient())){
                         //Betyr at vi ikke har Location eller GoogleAPiClient ikke har Location tilgjengelig.
                         Log.e(TAG,"Vi har ikke location tilgjengelig");
                     }
@@ -295,8 +289,10 @@ public class GeofenceTransitionService extends Service implements
                 //sender event videre.
                 updateGeofenceStatus(geofencingEvent.getGeofenceTransition(), geofencingEvent.getTriggeringGeofences());
                 }
+
                 break;
             case START_SERVICE:
+                //når vi starte servicen, men er ingen ekstre ting som må gjøres her.
                 break;
             case STOP_GEOFENCE_MONITORING:
                 stopGeofenceMonitoring();
@@ -318,12 +314,9 @@ public class GeofenceTransitionService extends Service implements
         */ //TODO: Compass for navigasjon for brukeren, med en pil i retning mot sentrum av Geofencet. (Dette bør gå ganske greit).
         //startGeofencing();
 
-
-
         // TODO: start in foreground(to show notification that service is running to confirm).
 
         return START_STICKY; //When service is killed by the system, it will start up again.
-
     }
         /**
          *
@@ -338,8 +331,8 @@ public class GeofenceTransitionService extends Service implements
 
         //Mangler å lage Geofencene fra SQL databasen.
 
-        List<Geofence> geofenceList = SQLiteHelper.getInstance(getsContext()).getAllGeofences();
-        SQLiteHelper.getInstance(getsContext()).getAllGeofences();
+        List<Geofence> geofenceList = SQLiteHelper.getInstance(getContext()).getAllGeofences();
+        SQLiteHelper.getInstance(getContext()).getAllGeofences();
 
         //Vi må lage en Liste med Geofence Statuser utifra dette.
         for (Geofence geofence:
@@ -353,7 +346,7 @@ public class GeofenceTransitionService extends Service implements
         GeofencingRequest geofenceRequest = createGeofenceRequest(geofenceList);
 
         //Starter locationUpdates.
-        startLocationUpdates(getsContext());
+        startLocationUpdates(getContext());
 
         //Sender dette GeofenceReuestet videre til LocationServices.GeofencingApi.addGeofences.
         addGeofencesToMonitor(geofenceRequest);
@@ -373,6 +366,9 @@ public class GeofenceTransitionService extends Service implements
 
     private void updateGeofenceStatus(int geofenceTransition,List<Geofence> triggeredeGeofences){
 
+        if(AppUtils.DEBUG){
+            Log.d(TAG, DateFormat.getDateTimeInstance().format(new Date()));
+        }
         /*
         if(AppUtils.DEBUG){
             Log.d(TAG,"før oppdatering:");
@@ -392,8 +388,10 @@ public class GeofenceTransitionService extends Service implements
             }
         }
 
+        String transition = geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER ? "Enter" : "Exit";
+
         if(AppUtils.DEBUG){
-            Log.d(TAG,"Etter oppdatering:");
+            Log.d(TAG,"Etter oppdatering: " + transition);
             for(GeofenceStatus geofenceStatus :geofenceStatusList){
                 Log.d(TAG,"Geofence navn:"+ geofenceStatus.getGeofence().getRequestId() +", innefor status:"+geofenceStatus.getInsideStatus());
             }
@@ -401,27 +399,32 @@ public class GeofenceTransitionService extends Service implements
         //TODO sjekk om vi er innefor minst ett Geofence.
 
         if( ! checkIfInsideAtleastOneGeofence()){
+            /*
+            *   Koden som kommer etter her håndtere hva vi gjør dersom brukeren er utenfor geofencene våre.
+            * */
+
            //TODO: Si ifra om at brukeren har beveget seg utenfor Geofencet vårt.
             if(AppUtils.DEBUG){
                 Log.d(TAG,"VIKTIG: Vi er utenfor geofencene!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             }
-            fastLocationUpdates = true; //setter slik at vi skal starte med fast LocationUpdates.
-            //startFastLocationUpdates();
 
-            //starte alarm som skal gå av inne 5 minutter og varsle brukeren på å bevege seg innenfor Geofence igjenn.
-            AlarmManager alarmManager = (AlarmManager) getsContext().getSystemService(Context.ALARM_SERVICE);
-            Intent alarmIntent = new Intent(getsContext(),GeofenceTransitionService.class);
-            alarmIntent.setAction(GeofenceTransitionService.OUTSIDE_GEOFENCE_TRIGGERED);
+            //Må sjekke om vi allrede har startet med rask oppdatering av location updates.
+            if(fastLocationUpdates){//Dersom denne er true, vill det si at vi allerede drev med å hente rask lokasjon.
+                //Vi skal da heller ikke oppdatere eller gjore noe.
 
-            /*
-            *   Lager et pendintIntent som sender en broadcast, med intent alarmIntent.
-            *   Vi må lytte på denne i systemet som skal håndtere dette.
-            *   context, privateRequestCode, intent, flagg
-            * */
-            PendingIntent alarmPintent = PendingIntent.getBroadcast(getsContext(),0, alarmIntent,0);
+            }else{
+                setLocationUpdateChange(true); //Setter fastLocationUpdate to true, og starter rasker oppdatering.
 
-            vibratePhone(500);
-            //kan virbrere telefonen her, men er bedre om aktivitetn i vindu gjør dette for oss.
+                if(PreferenceUtils.getVibrateSettings(getContext())){
+                    vibratePhone(500);
+                    //kan virbrere telefonen her, men er bedre om aktivitetn i vindu gjør dette for oss.
+
+                }
+                //TESTING av å vise noe på skjermen.
+                tellUserToGoInsideButton();
+            }
+
+            //fastLocationUpdates = true; //setter slik at vi skal starte med fast LocationUpdates.
 
 
 
@@ -429,35 +432,36 @@ public class GeofenceTransitionService extends Service implements
             mHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(getsContext(), "Vi er utenfor et geofence!!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Vi er utenfor et geofence!!", Toast.LENGTH_SHORT).show();
                 }
             });
 
-            //TESTING av å vise noe på skjermen.
             //tellUserToGoInsideGeofence();
-            tellUserToGoInsideButton();
 
-            /*
-            Log.d(TAG, "lager en alarm som går av etter :" + (10)+" sekunder");
-            alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime()+
-                    10*1000, alarmPintent);
-                    */
         }else{
-            //Går tilbake til trengere intervall.
-            fastLocationUpdates = false;
-            if(AppUtils.DEBUG){
-                Log.d(TAG,"Vi er innefor minst ett geofence");
-                WindowManager windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
-                try {
-                    if(overLayButton != null){
-                        windowManager.removeView(overLayButton);
+            //må sjekke om vi driver med normal oppdatering av lokasjon
+            if(fastLocationUpdates){ //dersom denne er false, vill det si at vi er innefor geofencene, og at vi er på riktig intervalltid.
+                //Trenger ikke gjøre noe her.
+            }else{
+
+                setLocationUpdateChange(false);
+                //Går tilbake til trengere intervall.
+                fastLocationUpdates = false;
+                if(AppUtils.DEBUG){
+                    Log.d(TAG,"Vi er innefor minst ett geofence");
+                    WindowManager windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+                    try {
+                        if(overLayButton != null){
+                            windowManager.removeView(overLayButton);
+                        }
+                    }catch (IllegalArgumentException e){
+                        Log.e(TAG, e.getMessage());
                     }
-                }catch (IllegalArgumentException e){
-                    Log.e(TAG, e.getMessage());
                 }
             }
-            startLocationUpdates(getsContext());
+            //startLocationUpdates(getContext());
         }
+
     }
 
     HudView mView;
@@ -544,7 +548,7 @@ public class GeofenceTransitionService extends Service implements
     //For når brukere bevegers seg utenfor Geofence og vi trenger å få deres oppmerksomhet.
     public void vibratePhone(int timeInMillis){
         //vibre i angitte time i ms.
-        Vibrator vibrator = (Vibrator) this.getsContext().getSystemService(Context.VIBRATOR_SERVICE);
+        Vibrator vibrator = (Vibrator) this.getContext().getSystemService(Context.VIBRATOR_SERVICE);
 
         vibrator.vibrate(timeInMillis); //Hvor lenge skal vi vibrere?
 
@@ -611,7 +615,6 @@ public class GeofenceTransitionService extends Service implements
     //GeofenceBuilder.setInitialTrigger: Sets the geofence notification behavior at the moment when the geofences are added.
     /*
     *   Legger til flere Gofence samtidig i en Request.
-    *
     * */
     @NonNull
     private GeofencingRequest createGeofenceRequest(List<Geofence> geofences) {
@@ -640,7 +643,7 @@ public class GeofenceTransitionService extends Service implements
         if(AppUtils.DEBUG){
             Log.d(TAG, "addGeofence()");
         }
-        if (AppUtils.checkLocationPermission(getsContext())) {//om vi har rettigheter til å få tilgang til Lokasjon.
+        if (AppUtils.checkLocationPermission(getContext())) {//om vi har rettigheter til å få tilgang til Lokasjon.
             LocationServices.GeofencingApi.addGeofences(
                     googleApiClient, //GoogleApiClienten servicen har koblet seg til.
                     geofenceRequest, //GeofenceRequestet vi lagde med alle geofencene våre.
@@ -652,7 +655,6 @@ public class GeofenceTransitionService extends Service implements
             }
         }
     }
-
 
     /*
     *   Stop monitorering av Geofencene, siden vi ikke skal ha enheten i bruk lenger.
@@ -703,8 +705,6 @@ public class GeofenceTransitionService extends Service implements
         * */
     }
 
-
-
     /* Notification build up:
     * | Icon | Title
     *         SubText
@@ -736,9 +736,10 @@ public class GeofenceTransitionService extends Service implements
         //Intent for å sette KioskMode til OFF/kunn for testing.
         if(AppUtils.DEBUG){
             Intent stopKiosk = new Intent(STOP_KIOSK);
-            PendingIntent pendingStopKiosk = PendingIntent.getBroadcast(getsContext(),0,stopKiosk,PendingIntent.FLAG_UPDATE_CURRENT);
-            //notificationBuilder.addAction(R.drawable.unlock_50, "Stop Kioks Mode",pendingStopKiosk);
+            PendingIntent pendingStopKiosk = PendingIntent.getBroadcast(getContext(),0,stopKiosk,PendingIntent.FLAG_UPDATE_CURRENT);
+            notificationBuilder.addAction(R.drawable.unlock_50, "Stop Kioks Mode",pendingStopKiosk);
         }
+
         //TODO: koble opp mot Innlogging, gjøres ved å ta ibruk
         //notificationBuilder.setContentIntent(pendingIntent);
         notificationBuilder.addAction(R.drawable.login_48, "Log Inn", pendingInlogging );
@@ -836,7 +837,7 @@ public class GeofenceTransitionService extends Service implements
 
     private LocationRequest locationRequest;
     private LocationRequest fastLocationRequest;
-    private boolean fastLocationUpdates = false;
+    private boolean fastLocationUpdates = false; //Default verdi:
 
 
     /*
@@ -848,25 +849,19 @@ public class GeofenceTransitionService extends Service implements
 
     //starter location updates.
     public void startLocationUpdates(Context context) {//TODO: Bytt til GPS kordinater, fremfor Wifi etc.
-        Log.i(TAG, "startLocationUpdates()");
-        //henter intervall fra SharedPreferences, default så er interval på tiden 2 minutter, og fastestIntervall er på 10 sekunder.
         /*
         * setIntervall vill si tiden mellom hver etterspørsel av lokasjon. Ivertfall da vi prøver å hente lokasjon.
         *   dersom dette ikke skulle gå så får vi ikke noen lokasjon til neste intervalls tid.
         * setFasterIntervall forteller hvor ofte vi tillater oss å lese av nyeste lokasjon og oppdatere vår egen,
         *     dersom andre applikasjoner osv henter lokasjon sammtidig, kan vi også få inn resultatet.
-        *
-
         * */
-
-        //Må sjekke om fastLocationRequest er null og at boolean på at vi er utenfor er satt.
-        if (fastLocationUpdates) {
-            //siden denne er true, så må vi anta at vi forsatt driver med gamle Reuquesten med googleApiClient.
-        } else {
+        if(AppUtils.DEBUG){
+            Log.d(TAG,"startLocationUpdates()");
+        }
         locationRequest = locationRequest.create()
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY) //request the most accurate locations available. (tror dette alltid er GPS).
-                .setInterval(PreferenceUtils.getPrefGeofenceUpdateInterval(context))
-                .setFastestInterval(PreferenceUtils.getPrefGeofenceFastestUpdateInterval(context));
+                .setInterval(PreferenceUtils.getGeofenceUpdateInterval(context))
+                .setFastestInterval(PreferenceUtils.DEFAULT_GEOFENCE_FASTEST_UPDATE_INTERVAL);
 
         if (AppUtils.checkLocationPermission(context)) {
             //starter å hente lokasjonen med requesten.
@@ -875,32 +870,42 @@ public class GeofenceTransitionService extends Service implements
             isLocationPollingEnabled = true;
             //this refererer til callbacks, som er oss selv.
         }
-        //locationRequest.
-        }
     }
 
+    /*
+    *   Bytte Update intervall på lokasjon
+    * */
     public void setLocationUpdateChange(boolean fastUpdate){
-        fastLocationUpdates = fastUpdate;
-        if(fastLocationUpdates){
-            startLocationUpdates(getsContext());
-        }else{
+        /*
+        *   Denne må fungere som en flanke trigger.
+        * */
+        //Vi drev med normal lokasjons intervall, men må bytte til raskere intervall
+        if(! fastLocationUpdates && fastUpdate){ // Vi driver med normal lokasjons intervall
+            LocationServices.FusedLocationApi.removeLocationUpdates(getGoogleApiClient(), this); //fjerne oppdatering fra cliente.
             startFastLocationUpdates();
+        }else if(fastLocationUpdates && !fastUpdate){ //Vi drev med raskt intervall, men må bytte til tregere intervall
+            //Siden vi bytter locationUpdate metode, må vi stoppe oppdatering på lokasjon.
+            LocationServices.FusedLocationApi.removeLocationUpdates(getGoogleApiClient(), this); //fjerne oppdatering fra cliente.
+            startLocationUpdates(getContext());
+        }else{ //vi skal ikke gjøre noe her. Siden vi drev alerede med normal oppdatering og skal heller ikke bytte til fastUpdate.
+
         }
+
+        fastLocationUpdates = fastUpdate; //oppdatere verdien.
     }
 
 
         private void startFastLocationUpdates(){
-            LocationServices.FusedLocationApi.removeLocationUpdates(getGoogleApiClient(), this);
 
             fastLocationRequest = LocationRequest.create()
                     .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                     .setInterval(PreferenceUtils.THIRTY_SECONDS_IN_MILLIS)
                     .setFastestInterval(PreferenceUtils.ONE_SECOND_IN_MILLIS);
 
-            if (AppUtils.checkLocationPermission(getsContext())) {
+            if (AppUtils.checkLocationPermission(getContext())) {
                 //starter å hente lokasjonen med requesten.
                 if(AppUtils.DEBUG) {
-                    Log.d(TAG, "startLocationUpdate() checkLocationPermission: true");
+                    Log.d(TAG, "startFastLocationUpdate()");
                 }
 
                 LocationServices.FusedLocationApi.requestLocationUpdates(getGoogleApiClient(),fastLocationRequest,this);
@@ -967,7 +972,6 @@ public class GeofenceTransitionService extends Service implements
         if(AppUtils.DEBUG) {
             Log.d(TAG, "LocationChanged location: " + location.getLatitude() +", "+ location.getLongitude());
         }
-
     }
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -978,13 +982,13 @@ public class GeofenceTransitionService extends Service implements
 
     @Override
     public void onConnectionSuspended(int cause) {
-        if(PreferenceUtils.isKioskModeActivated(getsContext())){
+        if(PreferenceUtils.isKioskModeActivated(getContext())){
             //Dersom vi forsatt skal egentlig være connected, så er dette et problem.
             if(AppUtils.DEBUG){
                 Log.d(TAG,"onConnectionSuspended");
             }
 
-            if(PreferenceUtils.isKioskModeActivated(getsContext())){
+            if(PreferenceUtils.isKioskModeActivated(getContext())){
                 //Dette kan våre et problem.
             }
 
@@ -997,7 +1001,6 @@ public class GeofenceTransitionService extends Service implements
         * Applications should disable UI components that require the service, and wait for a call to onConnected(Bundle) to re-enable them.
         * */
     }
-
 
     /*
     *   Når Vi connecter til Google API Client.

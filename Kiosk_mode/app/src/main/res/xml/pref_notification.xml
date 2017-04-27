@@ -11,9 +11,18 @@
 
     <SwitchPreference
         android:defaultValue="true"
-        android:key="notifications_new_message_vibrate"
+        android:key="@string/KEY_NOTIFICATIONS_VIBRATE_OUTISDE_GEOFENCE"
         android:title="@string/pref_title_vibrate"
         android:summary="@string/settings_notifications_vibrate"
+        />
+    <ListPreference
+        android:key="@string/KEY_NOTIFICATIONS_VIBRATE_TIME"
+        android:dependency="@string/KEY_NOTIFICATIONS_VIBRATE_OUTISDE_GEOFENCE"
+        android:title="@string/settings_notifications_vibrate_time_title"
+        android:positiveButtonText="Testing"
+        android:entries="@array/list_preference_vibrate_titles"
+        android:entryValues="@array/list_preference_vibrate_values"
+        android:defaultValue="@string/settings_notifications_vibrate_time_default"
         />
 
 

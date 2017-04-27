@@ -82,6 +82,7 @@
     <!-- Git oss tilates for å få enheten til å vibrere -->
     <uses-permission android:name="android.permission.VIBRATE" />
 
+
     <!--     <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE"/> -->
     <application
         android:allowBackup="true"
@@ -237,6 +238,10 @@
             <intent-filter>
                 <action android:name="com.monumentvandring.launcher.outside.geofence" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.ACTION_SHUTDOWN" />
+            </intent-filter>
+
         </receiver>
 
         <meta-data

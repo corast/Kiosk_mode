@@ -4,13 +4,13 @@
 <!-- Geofence oppdateringstid -->
 
     <ListPreference
-        android:defaultValue="180000"
+        android:defaultValue="@string/settings_geofence_default_value_update_interval"
         android:entries="@array/list_preference_update_interval_titles"
-        android:entryValues="@array/list_preference_update_interval"
+        android:entryValues="@array/list_preference_update_interval_values"
         android:key="@string/KEY_GEOFENCE_UPDATEINTERVAL"
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
-        android:title="@string/settings_title_location_update_interval"
+        android:title="@string/settings_geofence_location_interval_title"
         />
 
 
@@ -19,13 +19,13 @@
 <!-- Utenfor Geofence oppdateringstid -->
 
     <ListPreference
-        android:defaultValue="180000"
+        android:defaultValue="@string/settings_geofence_default_outside_value_update_interval"
         android:entries="@array/list_preference_update_interval_titles"
-        android:entryValues="@array/list_preference_update_interval"
+        android:entryValues="@array/list_preference_update_interval_values"
         android:key="@string/KEY_OUTSIDE_GEOFENCE_UPDATE_INTERVAL"
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
-        android:title="@string/settings_title_location_update_interval_outside_geofence"
+        android:title="@string/settings_geofence_location_interval_outside_title"
         />
 
 </PreferenceScreen>
