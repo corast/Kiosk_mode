@@ -52,7 +52,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/content_view"
-        android:onClick="scheduleSync"
+        android:onClick="scheduleStatisticsSync"
         android:layout_alignParentStart="true"/>
     <TextView
         android:textSize="@dimen/text_medium"
@@ -81,7 +81,8 @@
             android:layout_height="wrap_content"
             android:text="@string/admin_panel_synchronize_scheduled_geofences"
             android:layout_alignParentEnd="true"
-            android:layout_centerInParent="true"/>
+            android:layout_centerInParent="true"
+            android:onClick="sheduleGeofenceSync"/>
 
         <TextView
             android:id="@+id/text_schedule_geofence"
@@ -161,8 +162,9 @@
         android:id="@+id/button_admin_panel_insertData"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:visibility="gone"
-        android:onClick="insertDataTest"/>
+        android:visibility="visible"
+        android:onClick="insertDataTest"
+        android:layout_centerHorizontal="true"/>
 
     <Button
         android:id="@+id/button_admin_panel_kiosk_mode"

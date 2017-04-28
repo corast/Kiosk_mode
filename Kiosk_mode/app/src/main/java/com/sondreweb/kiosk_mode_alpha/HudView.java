@@ -47,7 +47,7 @@ public class HudView extends ViewGroup {
         //return super.onTouchEvent(event);
         Toast.makeText(getContext(),"onTouchEvent", Toast.LENGTH_LONG).show();
         Log.d("HudView","onTouchEvent blabla");
-        return true;
+        return super.onTouchEvent(event);
     }
 
 

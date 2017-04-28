@@ -77,7 +77,7 @@ public class StatisticsActivity extends AppCompatActivity {
         if(!statisticsAdapter.isEmpty()){
             statisticsAdapter.clear();
         }
-
+        //TODO: gjør dette på en tråd. Men går kjapt nok til av vi kommer unnå nå i første omgang.
         ArrayList<ContentValues> statisticsList = SQLiteHelper.getInstance(getApplicationContext()).getAllStatistics();
         if(AppUtils.DEBUG){
             Log.d(TAG,statisticsList.toString());

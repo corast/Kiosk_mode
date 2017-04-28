@@ -6,6 +6,7 @@ import android.app.admin.DevicePolicyManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -23,14 +24,17 @@ import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.GridView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -38,6 +42,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.model.LatLng;
 import com.sondreweb.kiosk_mode_alpha.CustomView;
+import com.sondreweb.kiosk_mode_alpha.HudView;
 import com.sondreweb.kiosk_mode_alpha.classes.GeofenceClass;
 import com.sondreweb.kiosk_mode_alpha.classes.StatusInfo;
 import com.sondreweb.kiosk_mode_alpha.adapters.StatusAdapter;
@@ -67,7 +72,7 @@ public class HomeActivity extends FragmentActivity implements
     public final static String TAG = HomeActivity.class.getSimpleName();
     private final static String APP = "com.sondreweb.geofencingalpha";
 
-    final float BATTERY_LIMIT = 80f; //hvor mange proset batteriet må minst være på.
+    final float BATTERY_LIMIT = 40f; //hvor mange proset batteriet må minst være på.
     private TextView statusText, googleClientText;
 
     private GridView gridView;
@@ -899,19 +904,40 @@ public class HomeActivity extends FragmentActivity implements
             Log.d(TAG, "Kiosk mode not ready");
             return;
         }
+        //TODO: sjekk at ikke "no.aplicaton.found" er satt.
 
-        setKioskMode(true);
+        final String appNavn = AppUtils.getApplicationName(getApplicationContext(),PreferenceUtils.getPrefkioskModeApp(getApplicationContext()));
+        //TODO: confirmation box.
+        AlertDialog alertDialog = new AlertDialog.Builder(getContext())
+                .setTitle("Start Kiosk Mode")
+                .setMessage("Are you sure you want to start Kiosk mode on "+appNavn+"? \nRemember, you have to log in to turn off Kiosk mode")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        //TODO: start KioskMode.
+                        setKioskMode(true);
+                        updateStartKioskGui();
+
+                        if (startPrefKioskModeApp()) {
+
+                        } else {
+                            setKioskMode(false);
+                        }
+                        updateStartKioskGui();
+                    }
+                })
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                })
+                .show();
+
+
         //startKioskButton.setLayoutParams(new RelativeLayout.LayoutParams(100,100));
-        updateStartKioskGui();
 
         //TODO: Hopp til MonumentVandring
-
-        if (startPrefKioskModeApp()) {
-
-        } else {
-            setKioskMode(false);
-        }
-        updateStartKioskGui();
     }
 
     /*
@@ -959,6 +985,105 @@ public class HomeActivity extends FragmentActivity implements
                     //TODO: stop app her.
                 }
                 break;
+            }
+        }
+    }
+
+
+    /*
+    *   Test funksjon på å vise fram Overlay når brukeren går utenfor et geofencene våre.
+    * */
+    private LinearLayout linearLayout; //Slik at vi kan slette viewet senere.
+
+    public void tellUserToGoInsideLinearLayout(){
+
+        LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View screenView = inflater.inflate(R.layout.activity_home,null);
+
+        linearLayout = new LinearLayout(this);
+        linearLayout.setOrientation(LinearLayout.VERTICAL);
+        linearLayout.setBackgroundResource(R.color.colorPrimary);
+
+        overLayTextview = new TextView(this);
+        overLayTextview.setText(getResources().getString(R.string.service_geofence_outside_view_text));
+        overLayTextview.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
+        overLayTextview.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
+
+        linearLayout.addView(overLayTextview);
+        WindowManager windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+        //windowManager.addView(linearLayout);
+
+    }
+
+    private TextView overLayTextview;
+    boolean toggle = true;
+    public void toggleView(View view){
+        WindowManager windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);;
+        if(toggle){
+            //TODO: Vis viewet
+            Log.d(TAG, "Toogle View true");
+            overLayTextview = new TextView(this);
+            overLayTextview.setText(getResources().getString(R.string.service_geofence_outside_view_text));
+            overLayTextview.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
+            overLayTextview.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
+            overLayTextview.setBackgroundResource(R.color.light_yellow3);
+
+            WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                    WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT,
+                    WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                    PixelFormat.TRANSLUCENT);
+            params.gravity = Gravity.CENTER;
+
+            windowManager.addView(overLayTextview,params);
+            toggle = false;
+        }else{
+            Log.d(TAG, "Toogle View false");
+            //TODO: fjern Viewet.
+            if(overLayTextview != null){
+                try{
+                    windowManager.removeView(overLayTextview);
+                }catch (IllegalArgumentException e){
+                    Log.e(TAG, e.getMessage());
+                }
+            }
+            toggle = true;
+        }
+    }
+
+    // Test overlay med Hub
+    HudView mView;
+    boolean toggleTextView = true;
+    public void tellUserToGoInsideGeofence(View view){
+        WindowManager windowManager;
+        if(true) {
+            toggleTextView = false;
+            Log.d(TAG, "Toogle View true");
+            mView = new HudView(this);
+            //mView.setBackgroundResource(R.color.light_yellow3);
+            //HudView mView = new HudView(this);
+            WindowManager.LayoutParams params = new WindowManager.LayoutParams();
+
+            params.type = WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY;
+            //params.gravity = WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
+            params.flags = WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
+            params.format = PixelFormat.TRANSLUCENT; //gjennomsiktig view.
+            //params.format = PixelFormat.RGB_565;
+            params.gravity = Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL ;
+            params.setTitle("Load Average");
+            windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+            windowManager.addView(mView, params);
+        }
+        else
+        {
+            Log.d(TAG, "Toogle View false");
+            toggleTextView = true;
+            if(overLayTextview != null){
+                try{
+                    windowManager.removeView(overLayTextview);
+                }catch (IllegalArgumentException e){
+                    Log.e(TAG, e.getMessage());
+                }
             }
         }
     }
@@ -1020,6 +1145,11 @@ public class HomeActivity extends FragmentActivity implements
     }
 
    public void testGeofence(View view){
+
+       if(! AppUtils.isGooglePlayServicesAvailable(getApplicationContext())){
+           Toast.makeText(getApplicationContext(),"Google Play Services ikke tilgjengelig eller ikke oppdatert",Toast.LENGTH_SHORT);
+           return;
+       }
        //TODO: lag geofencen våre og be servicens tarte Geofence turen.
        SQLiteHelper sqLiteHelper = SQLiteHelper.getInstance(this);
 
@@ -1056,7 +1186,6 @@ public class HomeActivity extends FragmentActivity implements
        PreferenceUtils.setKioskModeActive(context, true);
        Toast.makeText(context,"Starter Geofence monitorering testing",Toast.LENGTH_SHORT).show();
    }
-
 
    public void startAdminPanel(View view){
        startActivity(new Intent(context,AdminPanelActivity.class));

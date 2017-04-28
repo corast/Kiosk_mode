@@ -152,7 +152,6 @@ public class GeofenceTransitionService extends Service implements
     private static boolean geofence_running = false;
     GoogleApiClient googleApiClient;
 
-
         //Testing:
         private Button overLayButton;
 
@@ -295,7 +294,10 @@ public class GeofenceTransitionService extends Service implements
                 //når vi starte servicen, men er ingen ekstre ting som må gjøres her.
                 break;
             case STOP_GEOFENCE_MONITORING:
-                stopGeofenceMonitoring();
+                //toggleView();
+                //tellUserToGoInsideButtonToggle();
+                tellUserToGoInsideGeofence();
+                //stopGeofenceMonitoring();
                 break;
             default:
                 //Dette vill si at vi servicen starter opp av seg selv, eller at vi simpelten starter den opp i bakgrunn.
@@ -411,6 +413,7 @@ public class GeofenceTransitionService extends Service implements
             //Må sjekke om vi allrede har startet med rask oppdatering av location updates.
             if(fastLocationUpdates){//Dersom denne er true, vill det si at vi allerede drev med å hente rask lokasjon.
                 //Vi skal da heller ikke oppdatere eller gjore noe.
+                //Og siden vi forsatt viser Viewet, så skal vi ikke gjøre noe mer der heller.
 
             }else{
                 setLocationUpdateChange(true); //Setter fastLocationUpdate to true, og starter rasker oppdatering.
@@ -464,24 +467,76 @@ public class GeofenceTransitionService extends Service implements
 
     }
 
+        private TextView overLayTextview;
+        boolean toggle = true;
+        public void toggleView(){
+            WindowManager windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);;
+            if(toggle){
+                //TODO: Vis viewet
+                Log.d(TAG, "Toogle View true");
+                overLayTextview = new TextView(this);
+                overLayTextview.setText(getResources().getString(R.string.service_geofence_outside_view_text));
+                overLayTextview.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
+                overLayTextview.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
+                overLayTextview.setBackgroundResource(R.color.light_yellow3);
+
+                WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                        WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT,
+                        WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                        PixelFormat.TRANSLUCENT);
+                params.gravity = Gravity.CENTER;
+
+                windowManager.addView(overLayTextview,params);
+                toggle = false;
+            }else{
+                Log.d(TAG, "Toogle View false");
+                //TODO: fjern Viewet.
+                if(overLayTextview != null){
+                    try{
+                        windowManager.removeView(overLayTextview);
+                    }catch (IllegalArgumentException e){
+                        Log.e(TAG, e.getMessage());
+                    }
+                }
+                toggle = true;
+            }
+        }
+
+
+
     HudView mView;
-
+    boolean toggleTextView = true;
     public void tellUserToGoInsideGeofence(){
+        WindowManager windowManager;
+        if(true) {
+            toggleTextView = false;
+            Log.d(TAG, "Toogle View true");
+            mView = new HudView(this);
+            //HudView mView = new HudView(this);
+            WindowManager.LayoutParams params = new WindowManager.LayoutParams();
 
-        mView = new HudView(this);
-        //HudView mView = new HudView(this);
-        WindowManager.LayoutParams params = new WindowManager.LayoutParams();
+            params.type = WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY;
 
-        params.type = WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY;
-
-        //params.gravity = WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
-        params.format = PixelFormat.TRANSLUCENT; //gjennomsiktig view.
-        params.gravity = Gravity.RIGHT | Gravity.TOP;
-        params.setTitle("Load Average");
-        WindowManager windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
-        windowManager.addView(mView, params);
-
-
+            params.gravity = WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
+            params.format = PixelFormat.TRANSLUCENT; //gjennomsiktig view.
+            params.gravity = Gravity.END | Gravity.TOP;
+            params.setTitle("Load Average");
+            windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+            windowManager.addView(mView, params);
+        }
+        else
+        {
+            Log.d(TAG, "Toogle View false");
+            toggleTextView = true;
+            if(overLayTextview != null){
+                try{
+                    windowManager.removeView(overLayTextview);
+                }catch (IllegalArgumentException e){
+                    Log.e(TAG, e.getMessage());
+                }
+            }
+        }
     }
 
     public LinearLayout linearLayout;
@@ -493,7 +548,7 @@ public class GeofenceTransitionService extends Service implements
 
         linearLayout = new LinearLayout(this);
         linearLayout.setOrientation(LinearLayout.VERTICAL);
-        linearLayout.setBackgroundResource(R.color.lightGreen);
+        linearLayout.setBackgroundResource(R.color.colorPrimary);
 
         TextView textView = new TextView(this);
         textView.setText(getResources().getString(R.string.service_geofence_outside_view_text));
@@ -506,6 +561,42 @@ public class GeofenceTransitionService extends Service implements
 
 
     }
+
+        boolean isToggle = true;
+        public void tellUserToGoInsideButtonToggle(){
+            WindowManager windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);;
+            if(true){
+                isToggle = false;
+                overLayButton = new Button(this);
+                overLayButton.setText("Tekst");
+                overLayButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
+                overLayButton.setOnTouchListener(new View.OnTouchListener() {
+                    @Override
+                    public boolean onTouch(View v, MotionEvent event) {
+                        //Toast.makeText(getApplicationContext(), "Testing", Toast.LENGTH_SHORT).show();
+                        return false;
+                    }
+                });
+                overLayButton.setBackgroundResource(R.color.lightGreen);
+                WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                        WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT,
+                        WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                        PixelFormat.TRANSLUCENT);
+                params.gravity = Gravity.CENTER;
+                windowManager.addView(overLayButton, params);
+            }else{
+                isToggle = true;
+                if(overLayTextview != null){
+                    try{
+                        windowManager.removeView(overLayTextview);
+                    }catch (IllegalArgumentException e){
+                        Log.e(TAG, e.getMessage());
+                    }
+                }
+
+            }
+        }
 
     public void tellUserToGoInsideButton(){
         overLayButton = new Button(this);
@@ -530,6 +621,8 @@ public class GeofenceTransitionService extends Service implements
         windowManager.addView(overLayButton, params);
 
     }
+
+
 
         //Sjekker listen på om vi er innefor minst ett geofence.
     public boolean checkIfInsideAtleastOneGeofence(){
@@ -890,7 +983,6 @@ public class GeofenceTransitionService extends Service implements
         }else{ //vi skal ikke gjøre noe her. Siden vi drev alerede med normal oppdatering og skal heller ikke bytte til fastUpdate.
 
         }
-
         fastLocationUpdates = fastUpdate; //oppdatere verdien.
     }
 

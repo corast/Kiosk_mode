@@ -132,7 +132,9 @@
             android:excludeFromRecents="true"
             android:label="AdminPanel"
             android:noHistory="true"
+            android:windowSoftInputMode="adjustPan"
             android:theme="@style/AppThemeKiosk" />
+
 
         <activity
             android:name=".settings.AdminSettingsActivity"

@@ -68,6 +68,8 @@ public class SynchJobService extends JobService{
                 //TODO: sync statistikken nå. Egentlig samme job som automatiske versjonen.
                 if(SQLiteHelper.getInstance(getApplicationContext()).checkDataInStatisticsTable()) {
                     //Gjør jobben...
+
+                    PreferenceUtils.updatePrefLastSynchronizeGeofence(getApplicationContext());
                 }
                 break;
             case AdminPanelActivity.synchGeofenceJob:

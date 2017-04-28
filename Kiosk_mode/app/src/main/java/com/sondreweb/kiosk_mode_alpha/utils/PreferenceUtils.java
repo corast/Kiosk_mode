@@ -47,7 +47,7 @@ public class PreferenceUtils {
 
     //kan være hva som helst
     //TODO: si ifra om at Kiosk Mode app ikke er satt.
-    private static final String DEFAULT_APP = "no.app.found";
+    public static final String DEFAULT_APP = "no.app.found";
             //"com.android.chrome"; //VI setter Chrome nå i starten for å teste.
 
     //private static final String DEFAULT_APP_TEST = "com.Company.Monumentvandring"; //VI setter Chrome nå i starten for å teste.

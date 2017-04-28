@@ -154,11 +154,8 @@ public class AdminPanelActivity extends AppCompatActivity {
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         boolean overlay = sharedPreferences.getBoolean(getResources().getString(R.string.KEY_SECURITY_GEOFENCE_OVERLAY),false);
-        boolean test = sharedPreferences.getBoolean("android.settings.SYNC_SETTINGS",false);
-        Toast.makeText(getApplicationContext(),
-                "overlay: "+ overlay + ", sync_settings: "+test + "vibrateTime: " + PreferenceUtils.getVibrateTimeSettings(getApplicationContext()),
-                Toast.LENGTH_SHORT)
-                .show();
+        boolean test = sharedPreferences.getBoolean("android.settings.SYNC_SETTINGS",false); //funger ikke-
+
         /*
         View view = this.getCurrentFocus();
         if (view != null) {
@@ -287,7 +284,7 @@ public class AdminPanelActivity extends AppCompatActivity {
     public final static String jobTag = "SYNC_WITH_DATABASE";
 
     //Når vi trykker på Synchronize shedule
-    public void scheduleSync(View view){
+    public void scheduleStatisticsSync(View view){
         Log.d(TAG,"Data in statisticsTable: "+SQLiteHelper.getInstance(getApplicationContext()).checkDataInStatisticsTable());
         if(SQLiteHelper.getInstance(getApplicationContext()).checkDataInStatisticsTable()){
             //scheduleJobNow();
@@ -296,6 +293,13 @@ public class AdminPanelActivity extends AppCompatActivity {
         }else{
             Toast.makeText(getApplicationContext(), getResources().getString(R.string.admin_panel_synchronize_empty_database), Toast.LENGTH_SHORT).show();
         }
+    }
+
+    public void sheduleGeofenceSync(View view){
+        Toast.makeText(getApplicationContext(),"synchronize geofence with server", Toast.LENGTH_SHORT).show();
+        //Noe som må sjekkes? Nope.
+
+        //start schedule på synch geofence.
     }
 
     private void scheduleSynchStatisticsJobNow(){

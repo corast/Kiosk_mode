@@ -35,7 +35,6 @@ public class AppsLoader extends AsyncTaskLoader<ArrayList<AppModel>> {
 
     public AppsLoader(Context context){
         super(context);
-
         // Retrieve the package manager for later use; note we don't
         // use 'context' directly but instead the save global application
         // context returned by getContext().
@@ -101,12 +100,10 @@ public class AppsLoader extends AsyncTaskLoader<ArrayList<AppModel>> {
         //ArrayList<AppModel> allowedItems = new ArrayList<AppModel>();
 
         //sorterer listen med applikasjoner.
-        Collections.sort(items,AppModel.ALPHA_COMPARATOR);
+        Collections.sort(items,AppModel.ALPHA_COMPARATOR); //strent tatt unødvendig for meg med kunn en applikasjon her.
 
         return items;
     }
-
-
 
     /**
      * Handles a request to start the Loader.

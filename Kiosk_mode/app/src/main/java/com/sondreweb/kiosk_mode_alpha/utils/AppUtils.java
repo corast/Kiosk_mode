@@ -9,6 +9,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.net.Uri;
@@ -75,10 +76,11 @@ public class AppUtils{
                 //TODO: Først må vi sjekke at filen er tilstede, dersom den er det så kan vi innstalere denne.
                 if(resultCode != ConnectionResult.SUCCESS) {
                     googleApiAvailbility.getErrorDialog(activity, resultCode, 2404).show();
-
                 }
+
                 /* Kode for å innstalere fra fil, men problemet er at filen må være tilstede og den må være krevd versjon av
                 *  Google play Services, noe som er helt umulig å godkjenne her.
+                *  Sammtidig er det vansklig å vite om filen blir innstalert, ellers så skal man gjøre det fra google play. Så begge popper opp samtidig omtrent.
                 * */
 
                 /*if (googleApiAvailbility.isUserResolvableError(resultCode)) {
@@ -339,7 +341,6 @@ public class AppUtils{
             return batteryLevel;
             //statusText.append("\n Battery nivå: " + batteryLevel + " %");
         }
-
     }
 
     /*
@@ -350,6 +351,28 @@ public class AppUtils{
         ArrayList<IntentFilter> filters = new ArrayList<IntentFilter>();
         context.getPackageManager().getPreferredActivities(filters, components, null);
         return components.contains(component);
+    }
+
+
+    /*
+    *   Henter ut applikasjons navn via packagename
+    * */
+    public static String getApplicationName(final Context context,String packagename){
+        if(packagename.equalsIgnoreCase(PreferenceUtils.DEFAULT_APP)){//Dersom denne er lik no.app.found har vi ikke satt en app.
+            return "No application selected";
+        }else{
+            //try get package name from package manager
+            Log.d(TAG,"getApplicationName on "+packagename);
+            final PackageManager pm = context.getPackageManager();
+            ApplicationInfo info;
+            try{
+                info = pm.getApplicationInfo(packagename,0);
+            }catch (final PackageManager.NameNotFoundException e){
+                //return "No application with package name: "+packagename + " found.";
+                info = null;
+            }
+            return (String)(info !=null ? pm.getApplicationLabel(info) : ("No application with package name: "+packagename + " found."));
+        }
     }
 
 /*

@@ -39,13 +39,11 @@ public class StatusAdapter extends ArrayAdapter<StatusInfo>{
     }
 
     private static class ViewHolder{
-
         ImageView icon;
         TextView label;
         TextView info;
         RelativeLayout rLayout;
     }
-
 
     public void setData(ArrayList<StatusInfo> data){
         //clear();
