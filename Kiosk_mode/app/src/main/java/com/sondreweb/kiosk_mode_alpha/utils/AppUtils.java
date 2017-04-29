@@ -12,6 +12,8 @@ import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Build;
@@ -387,6 +389,22 @@ public class AppUtils{
         }
         return false;
     } */
+
+
+     //sjekker om vi har nett.
+    public static boolean checkIfNetwork(Context context){
+        try {
+            ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+            NetworkInfo activNetwork = connectivityManager.getActiveNetworkInfo();
+            boolean isConnected = (activNetwork != null && activNetwork.isConnectedOrConnecting());
+            return isConnected;
+        }catch (NullPointerException e){
+            e.printStackTrace();
+            return false; //av en eller anne grunn så kan connectivityManger være null, tror det er noe med contexten.
+        }
+        //Det som er litt rart, er at selv om jeg skrur av Wifi på emulatoren så returnere denne true.
+    }
 
 
 

@@ -38,7 +38,7 @@
     <EditTextPreference
         android:defaultValue="@string/DEFAULT_URL_SERVER_GEOFENCE"
         android:inputType="textUri"
-        android:key="@string/KEY_URL_SERVER_STATISTICS"
+        android:key="@string/KEY_URL_SERVER_GEOFENCE"
         android:selectAllOnFocus="false"
         android:title="@string/settings_data_sync_url_geofence_title"
         />

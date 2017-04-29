@@ -5,6 +5,7 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="text_large">22sp</dimen>
     <dimen name="text_medium">18sp</dimen>
+    <dimen name="text_mediumSmall">16sp</dimen>
     <dimen name="text_small">14sp</dimen>
 
 

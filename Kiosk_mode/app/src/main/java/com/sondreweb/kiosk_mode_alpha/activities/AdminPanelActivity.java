@@ -1,11 +1,13 @@
 package com.sondreweb.kiosk_mode_alpha.activities;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
@@ -13,6 +15,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.InputType;
 import android.util.Log;
+import android.util.Patterns;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -42,9 +45,22 @@ import com.sondreweb.kiosk_mode_alpha.storage.StatisticsTable;
 import com.sondreweb.kiosk_mode_alpha.utils.AppUtils;
 import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+//import java.util.stream.Stream;
 
 /**
  * Created by sondre on 14-Apr-17.
@@ -77,7 +93,7 @@ public class AdminPanelActivity extends AppCompatActivity {
 
     TableLayout tableLayout;
     ListView geofenceListView;
-    GeofenceAdapter geofenceAdapter;
+    public static GeofenceAdapter geofenceAdapter;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -108,27 +124,7 @@ public class AdminPanelActivity extends AppCompatActivity {
 
         textView_schedule_sync = (TextView) findViewById(R.id.text_schedule_statistics);
 
-        //tableLayout = (TableLayout) findViewById(R.id.table_layout_geofences);
         geofenceListView = (ListView) findViewById(R.id.list_view_geofences);
-
-        /*
-        TextView emptyView = new TextView(getApplicationContext());
-        emptyView.setGravity(LinearLayout.HORIZONTAL);
-        emptyView.setLayoutParams(
-                new WindowManager.LayoutParams(
-                        WindowManager.LayoutParams.MATCH_PARENT,
-                        WindowManager.LayoutParams.MATCH_PARENT
-                ));
-        emptyView.setTextColor(ContextCompat.getColor(getApplicationContext(),R.color.black));
-        emptyView.setText(R.string.admin_panel_list_geofence_emtpy);
-        emptyView.setTextSize(20);
-        emptyView.setVisibility(View.GONE);
-        emptyView.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
-
-        ((ViewGroup) geofenceListView.getParent()).addView(emptyView);
-        geofenceListView.setEmptyView(emptyView);
-        */
-
 
         toolbar = (Toolbar) findViewById(R.id.toolbar_main);
         setSupportActionBar(toolbar);
@@ -155,7 +151,7 @@ public class AdminPanelActivity extends AppCompatActivity {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         boolean overlay = sharedPreferences.getBoolean(getResources().getString(R.string.KEY_SECURITY_GEOFENCE_OVERLAY),false);
         boolean test = sharedPreferences.getBoolean("android.settings.SYNC_SETTINGS",false); //funger ikke-
-
+        Toast.makeText(getApplicationContext(),PreferenceUtils.getSynchGeofenceUrl(getApplicationContext()),Toast.LENGTH_SHORT).show();
         /*
         View view = this.getCurrentFocus();
         if (view != null) {
@@ -267,39 +263,155 @@ public class AdminPanelActivity extends AppCompatActivity {
         }
     }
 
+   static List GeofenceList = null;
+
     public void updateGeofenceTable(){
 
         if(!geofenceAdapter.isEmpty()){
             geofenceAdapter.clear();
         }
 
-        List list = SQLiteHelper.getInstance(getApplicationContext()).getAllGeofencesClass();
+        GeofenceList = SQLiteHelper.getInstance(getApplicationContext()).getAllGeofencesClass();
         if(AppUtils.DEBUG){
-            Log.d(TAG, list.toString());
+            Log.d(TAG, GeofenceList.toString());
         }
         //TODO gå gjennom hele listen og skriv ut til tabell.
-        geofenceAdapter.addAll(list);
+        geofenceAdapter.addAll(GeofenceList);
+    }
+
+    public static void staticUpdateGeofenceTable(Context context){
+        if(GeofenceList != null) {
+            GeofenceList = SQLiteHelper.getInstance(context).getAllGeofencesClass();
+            geofenceAdapter.setData(GeofenceList);
+            geofenceAdapter.notifyDataSetChanged();
+        }
     }
 
     public final static String jobTag = "SYNC_WITH_DATABASE";
 
-    //Når vi trykker på Synchronize shedule
+    //Når vi trykker på Schedune Synchronize statistics knappen
     public void scheduleStatisticsSync(View view){
         Log.d(TAG,"Data in statisticsTable: "+SQLiteHelper.getInstance(getApplicationContext()).checkDataInStatisticsTable());
-        if(SQLiteHelper.getInstance(getApplicationContext()).checkDataInStatisticsTable()){
-            //scheduleJobNow();
-            //TODO: forandre på teksten på knappen?
-            Toast.makeText(getApplicationContext(), getResources().getString(R.string.admin_panel_synchronize_scheduled), Toast.LENGTH_SHORT).show();
+
+        if(Patterns.WEB_URL.matcher(PreferenceUtils.getSynchStatisticsUrl(getApplicationContext())).matches()){
+            if(SQLiteHelper.getInstance(getApplicationContext()).checkDataInStatisticsTable()){
+                new RetrieveFeedTask().execute();
+                //startStatisticsSync();
+                //scheduleSynchStatisticsJobNow();
+                //TODO: forandre på teksten på knappen?
+                Toast.makeText(getApplicationContext(), getResources().getString(R.string.admin_panel_synchronize_scheduled), Toast.LENGTH_SHORT).show();
+            }else{
+                Toast.makeText(getApplicationContext(), getResources().getString(R.string.admin_panel_synchronize_empty_database), Toast.LENGTH_SHORT).show();
+            }
         }else{
-            Toast.makeText(getApplicationContext(), getResources().getString(R.string.admin_panel_synchronize_empty_database), Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(),PreferenceUtils.getSynchGeofenceUrl(getApplicationContext())+"\n Not an valid URL",Toast.LENGTH_LONG);
+        }
+
+    }
+
+
+    class RetrieveFeedTask extends AsyncTask<String, Void, String> {
+
+        private Exception exception;
+
+        @Override
+        protected String doInBackground(String... params) {
+
+            SQLiteHelper sqLiteHelper = SQLiteHelper.getInstance(getApplicationContext());
+            ArrayList<ContentValues> list = sqLiteHelper.getAllStatistics();
+
+            for (ContentValues contentValue : list) {
+                PostStatistics(contentValue);
+            }
+
+            return null;
+        }
+
+        protected void onPostExecute(String feed) {
+            // TODO: check this.exception
+            // TODO: do something with the feed
+        }
+    }
+    public void startStatisticsSync(){
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                SQLiteHelper sqLiteHelper = SQLiteHelper.getInstance(getApplicationContext());
+                ArrayList<ContentValues> list = sqLiteHelper.getAllStatistics();
+
+                for (ContentValues contentValue : list) {
+                    PostStatistics(contentValue);
+                }
+            }
+        }).run();
+    }
+
+    private void PostStatistics(ContentValues contentValues){
+        contentValues.toString();
+        HttpURLConnection urlConnection = null; // Will do the connection
+        BufferedReader reader;                  // Will receive the data from web
+        String strJsonOut;                      // JSON to send to server
+        try {
+            //HttpURLConnection
+            //HttpClient httpClient = new DefaultHttpClient();
+            //(URL url = new URL(buildUri.toString().trim());
+            URL url = new URL(PreferenceUtils.getSynchStatisticsUrl(getApplicationContext()));
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setReadTimeout(0);
+            urlConnection.setConnectTimeout(1500); // timeout of connection
+            urlConnection.setRequestProperty("Content-Type", "text/plain; charset=utf-8"); // what format will you send
+            urlConnection.setRequestMethod("POST");
+            urlConnection.setDoInput(true); // will receive
+            urlConnection.setDoOutput(true); // will send
+            urlConnection.connect();
+            OutputStream outputStream = urlConnection.getOutputStream();
+            OutputStreamWriter ow = new OutputStreamWriter(outputStream);
+            //PHPObject
+            JSONObject objLogin = new JSONObject();
+            objLogin.put("navn",contentValues.getAsString(StatisticsTable.COLUMN_MONUMENT));
+            objLogin.put("besoksId",contentValues.getAsString(StatisticsTable.COLUMN_VISITOR_ID));
+            objLogin.put("dato",contentValues.getAsString(StatisticsTable.COLUMN_DATE));
+            objLogin.put("tid",contentValues.getAsString(StatisticsTable.COLUMN_TIME));
+            ow.write(objLogin.toString());
+            ow.close();
+
+//information sent by server
+            InputStream inputStream = urlConnection.getInputStream();
+            StringBuffer buffer = new StringBuffer();
+            if (inputStream == null) {
+
+                // response is empty, do someting
+                return;
+            }
+            reader = new BufferedReader(new InputStreamReader(inputStream));
+            String strJsonServer = buffer.toString();
+            JSONObject objServerResponse = new JSONObject(strJsonServer);
+            boolean status = objServerResponse.getBoolean("status");
+
+            //return status; // Your response, do what you want.
+
+        }catch (IOException e){
+            Log.e(TAG, e.getMessage());
+        }
+        catch (JSONException e)
+        {
+            Log.e(TAG, e.getMessage());
+            // error on the conversion or connection
         }
     }
 
+    /*
+    *   Starter når vi trykker på Schedune Synch Geofence knappen.
+    * */
     public void sheduleGeofenceSync(View view){
         Toast.makeText(getApplicationContext(),"synchronize geofence with server", Toast.LENGTH_SHORT).show();
         //Noe som må sjekkes? Nope.
-
-        //start schedule på synch geofence.
+        if(Patterns.WEB_URL.matcher(PreferenceUtils.getSynchGeofenceUrl(getApplicationContext())).matches()){
+            scheduleSynchGeofencesJobNow();
+        }else{
+            Toast.makeText(getApplicationContext(),PreferenceUtils.getSynchGeofenceUrl(getApplicationContext())+"\n Not an valid URL",Toast.LENGTH_LONG);
+        }
     }
 
     private void scheduleSynchStatisticsJobNow(){
@@ -319,7 +431,7 @@ public class AdminPanelActivity extends AppCompatActivity {
                 // persist past a device reboot
                 .setLifetime(Lifetime.UNTIL_NEXT_BOOT)
 
-                // start between 0 and 120 seconds from now after constraints met.
+                // start as quick as possible after trigger
                 .setTrigger(Trigger.NOW)
 
                 // overwrite an existing job with the same tag
@@ -355,7 +467,7 @@ public class AdminPanelActivity extends AppCompatActivity {
                 // persist past a device reboot
                 .setLifetime(Lifetime.UNTIL_NEXT_BOOT)
 
-                // start between 0 and 120 seconds from now after constraints met.
+                // start as fast as avalible
                 .setTrigger(Trigger.NOW)
 
                 // overwrite an existing job with the same tag

@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+    <!-- Transparency verdier. Første to verdiene er transparancey, Default er 100%
+    100% - FF,  95% - F2, 90% - E6, 85% - D9, 80% - CC, 75% - BF, 70% - B3, 65% - A6, 60% - 99, 55% - 8C,
+    50% - 80, 45% - 73, 40% - 66, 35% - 59, 30% - 4D, 25% - 40, 20% - 33, 15% - 26, 10% - 1A, 5% - 0D, 0% - 00 -->
+
     <color name="colorPrimaryVeryLight">#606fc8</color>
     <color name="colorPrimaryLight">#4d5ec1</color>
     <color name="colorPrimary">#3F51B5</color>
@@ -12,6 +17,7 @@
     <color name="transparent_red">#40FF4081</color>
 
     <color name="light_yellow3">#FFFF66</color>
+    <color name="light_yellow3_transparent">#BFFFFF66</color>
 
     <color name="light_grey">#D3D3D360</color>
     <color name="silver">#C0C0C0</color>
@@ -22,7 +28,5 @@
     <color name="black_light">#3b444b</color>
     <color name="blue_50">#E3F2FD</color>
     <color name="blue_100">#BBDEFB</color>
-
-
 
 </resources>

@@ -228,6 +228,17 @@ public class PreferenceUtils {
         String value = sharedPreferences.getString(context.getString(R.string.KEY_OUTSIDE_GEOFENCE_UPDATE_INTERVAL),context.getString(R.string.DEFAULT_GEOFENCE_UPDATEINTERVAL));
         return Integer.parseInt(value);
     }
+    public static String getOutsideGeofenceUpdateIntervalAsString(final Context context){
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        String value = sharedPreferences.getString(context.getString(R.string.KEY_OUTSIDE_GEOFENCE_UPDATE_INTERVAL),context.getString(R.string.DEFAULT_GEOFENCE_UPDATEINTERVAL));
+        int iValue = Integer.parseInt(value) / 1000;
+        int min = iValue / 60;
+        int sec = iValue % 60;
+        if(min == 0){
+            return sec+" sec";
+        }
+        return min + "min "+ sec +" sec";
+    }
 
     public static final String no_url = "No URL found";
     public static String getSynchGeofenceUrl(final Context context){

@@ -13,8 +13,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.database.sqlite.SQLiteConstraintException;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.PixelFormat;
 import android.os.BatteryManager;
 import android.os.Build;
@@ -39,7 +37,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.model.LatLng;
 import com.sondreweb.kiosk_mode_alpha.CustomView;
 import com.sondreweb.kiosk_mode_alpha.HudView;
@@ -53,8 +50,6 @@ import com.sondreweb.kiosk_mode_alpha.utils.AppUtils;
 import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
 import com.sondreweb.kiosk_mode_alpha.R;
 import com.sondreweb.kiosk_mode_alpha.services.AccessibilityService;
-
-import com.sondreweb.kiosk_mode_alpha.storage.SQLiteHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -713,6 +708,10 @@ public class HomeActivity extends FragmentActivity implements
         return false;
     }
 
+
+    /*
+    *   View som dekker Quicksettings, slik at vi ikke kan swipe for å få opp den fra notifikasjons baren.
+    * */
     public void startConsumeView() {
         if (this.findViewById(R.id.view_notification) == null) {//vi legger bare till dersom det er null, som vill si at det ikke eksiterer allerede.
 
@@ -1005,7 +1004,7 @@ public class HomeActivity extends FragmentActivity implements
         linearLayout.setBackgroundResource(R.color.colorPrimary);
 
         overLayTextview = new TextView(this);
-        overLayTextview.setText(getResources().getString(R.string.service_geofence_outside_view_text));
+        overLayTextview.setText(getResources().getString(R.string.service_geofence_outside_view_text_nor));
         overLayTextview.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
         overLayTextview.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
 
@@ -1023,7 +1022,7 @@ public class HomeActivity extends FragmentActivity implements
             //TODO: Vis viewet
             Log.d(TAG, "Toogle View true");
             overLayTextview = new TextView(this);
-            overLayTextview.setText(getResources().getString(R.string.service_geofence_outside_view_text));
+            overLayTextview.setText(getResources().getString(R.string.service_geofence_outside_view_text_nor));
             overLayTextview.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
             overLayTextview.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
             overLayTextview.setBackgroundResource(R.color.light_yellow3);
@@ -1051,10 +1050,18 @@ public class HomeActivity extends FragmentActivity implements
         }
     }
 
+    //TEST overlay fra servicen. Skal bare vise et testFelt.
+    public void toogleViewService(View view){
+        Intent intent = new Intent(getApplicationContext(),GeofenceTransitionService.class);
+        intent.setAction(GeofenceTransitionService.TEST_OVERLAY);
+        startService(intent);
+    }
+
     // Test overlay med Hub
     HudView mView;
     boolean toggleTextView = true;
     public void tellUserToGoInsideGeofence(View view){
+
         WindowManager windowManager;
         if(true) {
             toggleTextView = false;

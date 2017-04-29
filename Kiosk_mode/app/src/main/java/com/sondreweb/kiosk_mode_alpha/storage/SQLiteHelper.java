@@ -171,25 +171,20 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     //TODO sjekk gamel versjon av databasen, for om den trenger syncing eller ikke.
 
     //For syncing av databasen.
-    public boolean replaceGeofences(List<GeofenceClass> geofences){
+    public boolean replaceGeofences(List<ContentValues> geofences){
         SQLiteDatabase db = this.getWritableDatabase();
         //TODO lagre en kopi av gamel data også
 
         //Slette all data fra databasen.
-        db.execSQL("DELETE FROM "+GeofenceTable.TABLE_NAME);
+        db.execSQL("DELETE FROM "+GeofenceTable.TABLE_NAME); //tømmer databasen.
 
-        for (GeofenceClass geofence:
+        for (ContentValues geofence:
                 geofences) {
-            //Legger til alle Geofence objektene.
-            addGeofence(geofence.getLatLng(), geofence.getRadius());
-        }
 
-        for (GeofenceClass geofence:
-             geofences) {
+            addGeofence(new LatLng(geofence.getAsDouble(GeofenceTable.COLUMN_LATITUDE),geofence.getAsDouble(GeofenceTable.COLUMN_LONGITUDE)),geofence.getAsInteger(GeofenceTable.COLUMN_RADIUS));
             //Legger til alle Geofence objektene.
-            addGeofence(geofence.getLatLng(), geofence.getRadius());
+            //addGeofence(geofence.getLatLng(), geofence.getRadius());
         }
-
         return true;
     }
 

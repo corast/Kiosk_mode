@@ -20,6 +20,7 @@ import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Created by sondre on 21-Apr-17.
@@ -54,7 +55,7 @@ public class GeofenceAdapter extends ArrayAdapter<GeofenceClass> {
             }
         }
     }
-    public void setData(ArrayList<GeofenceClass> data){
+    public void setData(List<GeofenceClass> data){
         //clear();
         if(data != null){
             addAll(data);

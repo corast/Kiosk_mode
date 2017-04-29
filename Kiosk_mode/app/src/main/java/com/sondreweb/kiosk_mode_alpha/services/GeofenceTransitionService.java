@@ -23,6 +23,7 @@ import android.os.Vibrator;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.util.TypedValue;
 
@@ -30,6 +31,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -149,6 +151,10 @@ public class GeofenceTransitionService extends Service implements
 
     private static final String STOP_KIOSK = "com.sondreweb.STOP_KIOSK";
 
+
+    public static final String TEST_OVERLAY = "com.test.overlay";
+
+
     private static boolean geofence_running = false;
     GoogleApiClient googleApiClient;
 
@@ -196,7 +202,9 @@ public class GeofenceTransitionService extends Service implements
     private PowerManager.WakeLock wakeLock;
     private boolean isLocationPollingEnabled = true;
 
-    private static final int vibrateTime = 500; //500 milisekunder.
+    private WindowManager windowManager;
+
+
 
     //Holder oversikt over alle statusene på Geofencene. Om vi er innefor ett eller flere geofence sammtidig.
     private List<GeofenceStatus> geofenceStatusList = null;
@@ -227,6 +235,8 @@ public class GeofenceTransitionService extends Service implements
 
         // Registrer Recievereren for bruk, med filter vi lagde over.
         registerReceiver(serviceBroadcastReceiver, filter);
+
+        windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);;
     }
 
     public Context getContext(){
@@ -296,30 +306,25 @@ public class GeofenceTransitionService extends Service implements
             case STOP_GEOFENCE_MONITORING:
                 //toggleView();
                 //tellUserToGoInsideButtonToggle();
-                tellUserToGoInsideGeofence();
+                //tellUserToGoInsideGeofence();
                 //stopGeofenceMonitoring();
+                break;
+            case TEST_OVERLAY:
+                Log.d(TAG,"ToogleOverLay Testing :::::::::::::::::::::::::::::::::::::::");
+                //toggleView(); Fungerte ikke..
+                //tellUserToGoInsideLinearLayout();
+                toggleView();
                 break;
             default:
                 //Dette vill si at vi servicen starter opp av seg selv, eller at vi simpelten starter den opp i bakgrunn.
                 break;
         }
-
-        //this can create Error the first time this service is started. We will have to figure out what to do.
-
-                //ellers så er det bare at vi starter Servicen fra hvilket som helst annet sted.
-
         //Error handeling
-
-        /*TODO sjekk hvilken av eventene fant sted, dersom det er ENTER, så vet vi at brukeren befinner seg innenfor området, og kan trygt fortsette(starte opp Monumentvandringen)
-         dersom det er EXIT, så må vi sende en advarsem som varer i 5 minutter om at brukeren må gå tilbake innenfor specifisert område. Dersom EMTER evemten trer inn, stopper vi denne
-         Tellingen. Men dersom ENTER ikke finner sted, så må vi låse enheten, slik at den ikke kan brukes til annet enn å finne veien tilbake.
-        */ //TODO: Compass for navigasjon for brukeren, med en pil i retning mot sentrum av Geofencet. (Dette bør gå ganske greit).
         //startGeofencing();
-
-        // TODO: start in foreground(to show notification that service is running to confirm).
-
         return START_STICKY; //When service is killed by the system, it will start up again.
     }
+
+
         /**
          *
          *  StartGeofenceMonitoring:
@@ -408,13 +413,19 @@ public class GeofenceTransitionService extends Service implements
            //TODO: Si ifra om at brukeren har beveget seg utenfor Geofencet vårt.
             if(AppUtils.DEBUG){
                 Log.d(TAG,"VIKTIG: Vi er utenfor geofencene!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                Handler mHandler = new Handler();
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getContext(), "Vi er utenfor et geofence!!", Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
 
             //Må sjekke om vi allrede har startet med rask oppdatering av location updates.
             if(fastLocationUpdates){//Dersom denne er true, vill det si at vi allerede drev med å hente rask lokasjon.
                 //Vi skal da heller ikke oppdatere eller gjore noe.
                 //Og siden vi forsatt viser Viewet, så skal vi ikke gjøre noe mer der heller.
-
             }else{
                 setLocationUpdateChange(true); //Setter fastLocationUpdate to true, og starter rasker oppdatering.
 
@@ -423,23 +434,9 @@ public class GeofenceTransitionService extends Service implements
                     //kan virbrere telefonen her, men er bedre om aktivitetn i vindu gjør dette for oss.
 
                 }
-                //TESTING av å vise noe på skjermen.
-                tellUserToGoInsideButton();
+                //Legger Viewet over på skjermen.
+                showViewOnScreen();
             }
-
-            //fastLocationUpdates = true; //setter slik at vi skal starte med fast LocationUpdates.
-
-
-
-            Handler mHandler = new Handler();
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(getContext(), "Vi er utenfor et geofence!!", Toast.LENGTH_SHORT).show();
-                }
-            });
-
-            //tellUserToGoInsideGeofence();
 
         }else{
             //må sjekke om vi driver med normal oppdatering av lokasjon
@@ -451,7 +448,6 @@ public class GeofenceTransitionService extends Service implements
                 //Går tilbake til trengere intervall.
                 fastLocationUpdates = false;
                 if(AppUtils.DEBUG){
-                    Log.d(TAG,"Vi er innefor minst ett geofence");
                     WindowManager windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
                     try {
                         if(overLayButton != null){
@@ -461,37 +457,112 @@ public class GeofenceTransitionService extends Service implements
                         Log.e(TAG, e.getMessage());
                     }
                 }
+
             }
+            try {
+                if(overLayTextview != null) {
+                    windowManager.removeView(overLayTextview);
+                }
+            }catch (IllegalArgumentException e){
+                Log.e(TAG, e.getMessage());
+            }catch (Exception e){ //denne skal fange alle errorer.
+                Log.e(TAG, e.getMessage());
+            }
+
             //startLocationUpdates(getContext());
         }
 
     }
 
-        private TextView overLayTextview;
+    //TextViewet som vi legger over skjermen, ved behov.
+    private TextView overLayTextview;
+
+        //vis et overlayView på skjermen som dimmer bakgrunn og viser noe tekst.
+    private void showViewOnScreen(){
+        overLayTextview = new TextView(this);
+        //Lager teksten som skal være inni tekstboksen over.
+        String textToShow = "Overstepping boundary!\n"
+                + getResources().getString(R.string.service_geofence_outside_view_text_eng)+"\n"
+                + "Oversteget grensene!\n"
+                + getResources().getString(R.string.service_geofence_outside_view_text_nor)
+                + "\n"+getResources().getString(R.string.service_geofence_outside_view_update_text)
+                +" "+ PreferenceUtils.getOutsideGeofenceUpdateIntervalAsString(getApplicationContext());
+        //Setter teksten på tekstboksen.
+        overLayTextview.setText(textToShow);
+        //Legger til en bakgrunns farge på tekstboksen som er litt gjennomskinnelig(translucent).
+        overLayTextview.setBackgroundResource(R.color.light_yellow3_transparent);
+        //Forandrer tekst fargen.
+        overLayTextview.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.black));
+        //Gir testfeltet en større boks en selve teksten.30dp left, 10dp top, 30dp right og 30dp bottom.
+        overLayTextview.setPadding(30,10,30,30);
+        //Setter posisjon på tekten i tekstbokse, sentrert i dette tilfelle horisontalt.
+        overLayTextview.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        //Forandrer tekst størrelse
+        overLayTextview.setTextSize(getResources().getDimension(R.dimen.text_mediumSmall));
+        //lager parameterene som gjelder for TextViewet.
+        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT,
+                //Hva slags type View det er vi legger over, SYSTEM_OVERLAY er det vi har.
+                WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY,
+                //Setter at skjermen skal Dimme det som ikke er tekstboksen når det blir vist.
+                WindowManager.LayoutParams.FLAG_DIM_BEHIND,
+                //gjør at systemet velger et format som gir oss tilgang til å forandre på hvor mye transulsent hele viewet skal være.
+                PixelFormat.TRANSLUCENT);
+        //Posisjonerer tekstboksen i sentrum.
+        params.gravity = Gravity.CENTER;
+        //Hvor mye skjermen skal dimme, når tekstboksen vises.
+        params.dimAmount = 0.5f;
+        //Legger dette til window.
+        windowManager.addView(overLayTextview,params);
+    }
+
+
+    //Testing av å legge til et View på skjermen.
         boolean toggle = true;
         public void toggleView(){
             WindowManager windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);;
             if(toggle){
                 //TODO: Vis viewet
-                Log.d(TAG, "Toogle View true");
+                //initialiserer en ny tekstbosk.
                 overLayTextview = new TextView(this);
-                overLayTextview.setText(getResources().getString(R.string.service_geofence_outside_view_text));
-                overLayTextview.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
-                overLayTextview.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
-                overLayTextview.setBackgroundResource(R.color.light_yellow3);
+                //Lager teksten som skal være inni tekstboksen over.
+                String textToShow = "Overstepping boundary!\n"
+                        + getResources().getString(R.string.service_geofence_outside_view_text_eng)+"\n"
+                        + "Oversteget grensene!\n"
+                        + getResources().getString(R.string.service_geofence_outside_view_text_nor)
+                        + "\n"+getResources().getString(R.string.service_geofence_outside_view_update_text)
+                        +" "+ PreferenceUtils.getOutsideGeofenceUpdateIntervalAsString(getApplicationContext());
 
+                //Setter teksten på tekstboksen.
+                overLayTextview.setText(textToShow);
+                //Legger til en bakgrunns farge på tekstboksen som er litt gjennomskinnelig(translucent).
+                overLayTextview.setBackgroundResource(R.color.light_yellow3_transparent);
+                //Forandrer tekst fargen.
+                overLayTextview.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.black));
+                //Gir testfeltet en større boks en selve teksten.40dp left, 10dp top, 40dp right og 30dp bottom.
+                overLayTextview.setPadding(40,10,40,30);
+                //Setter posisjon på tekten i tekstbokse, sentrert i dette tilfelle horisontalt.
+                overLayTextview.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                //Forandrer tekst størrelse
+                overLayTextview.setTextSize(getResources().getDimension(R.dimen.text_mediumSmall));
+                //lager parameterene som gjelder for TextViewet.
                 WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                         WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT,
-                        WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
-                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                        //Hva slags type View det er vi legger over, SYSTEM_OVERLAY er det vi har.
+                        WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY,
+                        //Setter at skjermen skal Dimme det som ikke er tekstboksen når det blir vist.
+                        WindowManager.LayoutParams.FLAG_DIM_BEHIND,
+                        //gjør at systemet velger et format som gir oss tilgang til å forandre på hvor mye transulsent hele viewet skal være.
                         PixelFormat.TRANSLUCENT);
+                //Posisjonerer tekstboksen i sentrum.
                 params.gravity = Gravity.CENTER;
-
+                //Hvor mye skjermen skal dimme, når tekstboksen vises.
+                params.dimAmount = 0.5f;
+                //Legger dette til window.
                 windowManager.addView(overLayTextview,params);
+                //forandrer boolean til false, slik at vi fjerner overLayViewet ved neste kjøring.
                 toggle = false;
             }else{
-                Log.d(TAG, "Toogle View false");
-                //TODO: fjern Viewet.
                 if(overLayTextview != null){
                     try{
                         windowManager.removeView(overLayTextview);
@@ -499,144 +570,23 @@ public class GeofenceTransitionService extends Service implements
                         Log.e(TAG, e.getMessage());
                     }
                 }
+                //forandrer boolean til tru, slik at vi legger til overLayViewet ved neste kjøring.
                 toggle = true;
             }
         }
 
-
-
-    HudView mView;
-    boolean toggleTextView = true;
-    public void tellUserToGoInsideGeofence(){
-        WindowManager windowManager;
-        if(true) {
-            toggleTextView = false;
-            Log.d(TAG, "Toogle View true");
-            mView = new HudView(this);
-            //HudView mView = new HudView(this);
-            WindowManager.LayoutParams params = new WindowManager.LayoutParams();
-
-            params.type = WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY;
-
-            params.gravity = WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
-            params.format = PixelFormat.TRANSLUCENT; //gjennomsiktig view.
-            params.gravity = Gravity.END | Gravity.TOP;
-            params.setTitle("Load Average");
-            windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
-            windowManager.addView(mView, params);
-        }
-        else
-        {
-            Log.d(TAG, "Toogle View false");
-            toggleTextView = true;
-            if(overLayTextview != null){
-                try{
-                    windowManager.removeView(overLayTextview);
-                }catch (IllegalArgumentException e){
-                    Log.e(TAG, e.getMessage());
-                }
-            }
-        }
-    }
-
-    public LinearLayout linearLayout;
-
-    public void tellUserToGoInsideLinearLayout(){
-
-        LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View screenView = inflater.inflate(R.layout.activity_home,null);
-
-        linearLayout = new LinearLayout(this);
-        linearLayout.setOrientation(LinearLayout.VERTICAL);
-        linearLayout.setBackgroundResource(R.color.colorPrimary);
-
-        TextView textView = new TextView(this);
-        textView.setText(getResources().getString(R.string.service_geofence_outside_view_text));
-        textView.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
-        textView.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
-
-        linearLayout.addView(textView);
-        WindowManager windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
-        //windowManager.addView(linearLayout);
-
-
-    }
-
-        boolean isToggle = true;
-        public void tellUserToGoInsideButtonToggle(){
-            WindowManager windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);;
-            if(true){
-                isToggle = false;
-                overLayButton = new Button(this);
-                overLayButton.setText("Tekst");
-                overLayButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
-                overLayButton.setOnTouchListener(new View.OnTouchListener() {
-                    @Override
-                    public boolean onTouch(View v, MotionEvent event) {
-                        //Toast.makeText(getApplicationContext(), "Testing", Toast.LENGTH_SHORT).show();
-                        return false;
-                    }
-                });
-                overLayButton.setBackgroundResource(R.color.lightGreen);
-                WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                        WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT,
-                        WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
-                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-                        PixelFormat.TRANSLUCENT);
-                params.gravity = Gravity.CENTER;
-                windowManager.addView(overLayButton, params);
-            }else{
-                isToggle = true;
-                if(overLayTextview != null){
-                    try{
-                        windowManager.removeView(overLayTextview);
-                    }catch (IllegalArgumentException e){
-                        Log.e(TAG, e.getMessage());
-                    }
-                }
-
-            }
-        }
-
-    public void tellUserToGoInsideButton(){
-        overLayButton = new Button(this);
-        overLayButton.setText("Tekst");
-        overLayButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
-        overLayButton.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                //Toast.makeText(getApplicationContext(), "Testing", Toast.LENGTH_SHORT).show();
-                return false;
-            }
-        });
-        overLayButton.setBackgroundResource(R.color.lightGreen);
-        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-                PixelFormat.TRANSLUCENT);
-        params.gravity = Gravity.CENTER;
-
-        WindowManager windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
-        windowManager.addView(overLayButton, params);
-
-    }
-
-
-
-        //Sjekker listen på om vi er innefor minst ett geofence.
+        //Sjekker listen på om vi er innefor minst et geofence.
     public boolean checkIfInsideAtleastOneGeofence(){
-        //Må sjekke om alle er false.
-        //altså vi må sjekke om minst et er true, så kan vi returne.
+        //vi må sjekke om minst et er true, så kan vi returne true, ellers er vi utenfor alle.
         for (GeofenceStatus geofenceStatus: geofenceStatusList) {
-            //geofenceStatus returnere True dersom siste trigger er ENTER på geofencet.
+            //geofenceStatus returnere true dersom siste trigger er ENTER på geofencet.
             if(geofenceStatus.getInsideStatus()){
+                //geofenceStatus.getInsideStatus  returner en bool på om
                 return true;
             }
         }
         return false;
     }
-
 
     //For når brukere bevegers seg utenfor Geofence og vi trenger å få deres oppmerksomhet.
     public void vibratePhone(int timeInMillis){
@@ -648,9 +598,9 @@ public class GeofenceTransitionService extends Service implements
     }
 
 /*
-*   Geofence funksjoner nedover her...
+*   Geofence funksjoner
 * */
-
+        //lager et geofence, og returnere det. Men ble heller gjordt direkte i SQLitehelperen.
     private Geofence createGeofence(LatLng latLng, float radius){
         return new Geofence.Builder()
                 .setCircularRegion(latLng.latitude, latLng.longitude,radius)
@@ -693,21 +643,21 @@ public class GeofenceTransitionService extends Service implements
     *   Alle vi er innenfor triggere Enter, mens alle vi er utenfor triggere EXIT. VI får da 2 EventLister tilbake med geofence tilbake.
     *   ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
     * */
-
-    //create GeofenceRequests, vi spesifisere også hva som triggeres
+    //create GeofenceRequests
 
     @NonNull
     private GeofencingRequest createGeofenceRequest(Geofence geofence) {
         Log.d(TAG, "createGeofenceRequest()");
         return new GeofencingRequest.Builder()
-                .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER | GeofencingRequest.INITIAL_TRIGGER_EXIT)  //.setInitialTrigger: Sets the geofence notification behavior at the moment when the geofences are added.
+                //.setInitialTrigger: Sets the geofence notification behavior at the moment when the geofences are added.
+                .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER | GeofencingRequest.INITIAL_TRIGGER_EXIT)
                 .addGeofence(geofence) //.addGeofence : Adds a geofence to be monitored by geofencing service.
                 .build();
-    }  //Kan hente alle geofence med denne Requesteren.
+    }
 
     //GeofenceBuilder.setInitialTrigger: Sets the geofence notification behavior at the moment when the geofences are added.
     /*
-    *   Legger til flere Gofence samtidig i en Request.
+    *   Legger til flere Geofence samtidig i en  og samme Request.
     * */
     @NonNull
     private GeofencingRequest createGeofenceRequest(List<Geofence> geofences) {
@@ -845,9 +795,9 @@ public class GeofenceTransitionService extends Service implements
     private int getNotificationIcon(){//Versjons kontroll på hvilket bilde å bruke.
         boolean useWhiteIcon = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
         //return useWhiteIcon ? R.drawable.visible_64 : R.drawable.visible_50;
-        return R.drawable.visible_50;
-        
-        // FIXME: 10-Apr-17
+        return
+                R.drawable.visible_50;
+
     }
 
     private void setGeofence_running(boolean running){
@@ -930,8 +880,8 @@ public class GeofenceTransitionService extends Service implements
 
     private LocationRequest locationRequest;
     private LocationRequest fastLocationRequest;
-    private boolean fastLocationUpdates = false; //Default verdi:
 
+    private boolean fastLocationUpdates = false;
 
     /*
     *   setPriority: PRIORITY_BALANCED_POWER_ACCURACY : request "block" level accuracy.
@@ -970,7 +920,7 @@ public class GeofenceTransitionService extends Service implements
     * */
     public void setLocationUpdateChange(boolean fastUpdate){
         /*
-        *   Denne må fungere som en flanke trigger.
+        *   Denne må fungere som en flanke trigger. Når vi bytter fra false til true, og fra false til true, ikke ellers.
         * */
         //Vi drev med normal lokasjons intervall, men må bytte til raskere intervall
         if(! fastLocationUpdates && fastUpdate){ // Vi driver med normal lokasjons intervall

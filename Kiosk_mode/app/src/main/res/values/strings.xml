@@ -33,9 +33,6 @@
     <string name="home_status_info_googleplay_service_true">Google Play Service installed</string>
     <string name="home_status_info_googleplay_service_false">Google Play Services not installed or not up to date</string>
 
-    <string name="home_status_info_deviceadmin_true"></string>
-    <string name="home_status_info_deviceadmin_false"></string>
-
     <string name="home_status_info_accessibility_service_true">Permission granted</string>
     <string name="home_status_info_accessibility_service_false">Not turned on. Enable in settings</string>
 
@@ -70,7 +67,10 @@
     <string name="service_geofence_on">On</string>
     <string name="service_geofence_off">Off</string>
 
-    <string name="service_geofence_outside_view_text">Venligst returner tilbake til området for å forsette</string>
+    <string name="service_geofence_outside_view_text_nor">Venligst returner tilbake til området for å forsette.</string>
+    <string name="service_geofence_outside_view_text_eng">Please return back to the area to continue.</string>
+    <string name="service_geofence_outside_view_update_text">Update period:</string>
+
 
     <!-- Strings relatert AdminPanel -->
     <string name="admin_panel_toolbar_title">Admin panel</string>

@@ -10,7 +10,7 @@
         android:padding="50dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/service_geofence_outside_view_text"
+        android:text="Testing"
         android:layout_centerInParent="true"
         android:textSize="@dimen/text_large" />
     <TextView

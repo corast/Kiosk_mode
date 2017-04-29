@@ -20,8 +20,8 @@
 
     <ListPreference
         android:defaultValue="@string/settings_geofence_default_outside_value_update_interval"
-        android:entries="@array/list_preference_update_interval_titles"
-        android:entryValues="@array/list_preference_update_interval_values"
+        android:entries="@array/list_preference_update_interval_titles_fast"
+        android:entryValues="@array/list_preference_update_interval_values_fast"
         android:key="@string/KEY_OUTSIDE_GEOFENCE_UPDATE_INTERVAL"
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
