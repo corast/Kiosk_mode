@@ -83,7 +83,6 @@
     <!-- Git oss tilates for å få enheten til å vibrere -->
     <uses-permission android:name="android.permission.VIBRATE" />
 
-
     <!--     <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE"/> -->
     <application
         android:allowBackup="true"
@@ -91,6 +90,7 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
         <activity
             android:name=".activities.HomeActivity"
             android:clearTaskOnLaunch="true"
@@ -99,21 +99,18 @@
             android:launchMode="singleInstance"
             android:screenOrientation="userLandscape"
             android:stateNotNeeded="true"
-            android:theme="@style/Theme.AppCompat">
+            android:theme="@style/Theme.AppCompat"
+            android:windowSoftInputMode="adjustPan">
 
             <!-- singleInstace: slik at vi ikke kan kjøre flere instanser. -->
             <!-- TODO: Fiks orientasjon, slik at vi faktisk bare viser en orientasjon slik som resten av tangoen gjør. -->
             <intent-filter android:label="@string/app_name">
+                <!-- Hoved activity for appen -->
                 <action android:name="android.intent.action.MAIN" />
-
+                <!-- En av valgene for Default Launcher, og vi kan navigere til denne via Home -->
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
-
-                <!--
-                Become the Car Mode activity
-                <category android:name="android.intent.category.CAR_DOCK" />
-                -->
             </intent-filter>
         </activity>
 
@@ -211,7 +208,6 @@
                 android:resource="@xml/device_admin" />
 
             <intent-filter>
-
                 <!--
             is the primary action that a DeviceAdminReceiver subclass must handle to be allowed to manage a device.
             This is set to the receiver when the user enables the device admin app. Your code typically handles this in onEnabled()

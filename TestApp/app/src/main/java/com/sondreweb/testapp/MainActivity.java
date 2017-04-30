@@ -46,4 +46,5 @@ public class MainActivity extends AppCompatActivity {
         //Uri yri = getContentResolver().bulkInsert()
         Toast.makeText(this, "New Statistics added", Toast.LENGTH_SHORT).show();
     }
+
 }

@@ -212,7 +212,7 @@ public class PreferenceUtils {
         return Integer.parseInt(value);
     }
 
-    public static boolean getPrefOverlay(final Context context){
+    public static boolean getPrefOverlayOn(final Context context){
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         return sharedPreferences.getBoolean(context.getString(R.string.KEY_SECURITY_GEOFENCE_OVERLAY), false);
     }
@@ -228,6 +228,7 @@ public class PreferenceUtils {
         String value = sharedPreferences.getString(context.getString(R.string.KEY_OUTSIDE_GEOFENCE_UPDATE_INTERVAL),context.getString(R.string.DEFAULT_GEOFENCE_UPDATEINTERVAL));
         return Integer.parseInt(value);
     }
+
     public static String getOutsideGeofenceUpdateIntervalAsString(final Context context){
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         String value = sharedPreferences.getString(context.getString(R.string.KEY_OUTSIDE_GEOFENCE_UPDATE_INTERVAL),context.getString(R.string.DEFAULT_GEOFENCE_UPDATEINTERVAL));

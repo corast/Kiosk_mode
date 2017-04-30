@@ -25,16 +25,11 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
-import android.util.TypedValue;
 
 import android.view.Gravity;
-import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -58,7 +53,6 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
 
-import com.sondreweb.kiosk_mode_alpha.HudView;
 import com.sondreweb.kiosk_mode_alpha.R;
 import com.sondreweb.kiosk_mode_alpha.activities.LoginAdminActivity;
 import com.sondreweb.kiosk_mode_alpha.classes.GeofenceStatus;
@@ -71,6 +65,10 @@ import java.util.List;
 
 /**
  * Created by sondre on 26-Jan-17.
+ * Servicen skal kjøre i bakgrunn.
+ *
+ *
+ *
  * The Service that will run in the background on a seperate thread(mostly)
  *  and do the work it is tasked with.
  *  Run events when the users reacts with a GeofenceClass.
@@ -96,33 +94,6 @@ import java.util.List;
 *   View.post(Runnable)
 *   View.postDelayed(Runnable, long)
 * */
-
-/**
- *  Hendelser som starter Servicen, som altså kjører OnStartCommand.
- *      1-Start fra Home screen.
- *
- *      2-Start fra RestartBroadCastReceiver
- *          a) Må sjekke om vi skal være i Kiosk_mode
- *              1: Da må vi gjøre alt på nytt egentlig, Lage Geofencene, Starte location request, og legge til Geofence i Monitorering.
- *      3-Start fra StartGeofenceKnapp, som signalisere at vi skal starte å tracke med geofencene.
- *
- *
- *        Geofence monitorering som er nødvendig:
- *          1. Lage en liste med alle geofence, dette kan forhåpentligvis gjøres ved hvert triggering event en gang.
- *
- *           Når Trigger intreffer må vi oppdatere denne listen.
- *              Listen skal inneholde GeofenceID + sisteEvent som intraff på de.
- *
- *
- * **/
-
-    /*  TODO: Detect actions from system from broadcastReciever:
-    *       android.intent.action.ACTION_SHUTDOWN
-    *       android.intent.action.QUICKBOOT_POWEROFF
-    *       BOOT_COMPLETED
-     *        -> Starting av geofence når vi oppdater
-    *
-    * */
 
     /**
      * Steg som må gjennomføres for å starte opp GeofenceMonitorering.
@@ -221,10 +192,10 @@ public class GeofenceTransitionService extends Service implements
     public void onCreate() {
         super.onCreate();
         Log.d(TAG,"onCreate");
-        //locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+
         notificationMananger = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationBuilder = new NotificationCompat.Builder(this); //Instansiate the NotificatioBuilder.
-        startInForeground(); //setter opp notifikasjonen for å kjøre i forgrunn.
+        notificationBuilder = new NotificationCompat.Builder(this); //Instansier NotificatioBuilder.
+        startInForeground(); //setter opp notifikasjonen for å kjøre i forgrunn(høy prioritet på ressursbruk av systemet).
 
         //Intent filter
         IntentFilter filter = new IntentFilter();
@@ -259,28 +230,31 @@ public class GeofenceTransitionService extends Service implements
 
             case START_GEOFENCE: //når vi trykker på knappen for å starte opp locationRequests og slike ting.
                 Log.d(TAG, "Start LocationRequests fra servicen  ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤");
-                //TODO: opprette Geofencene og lagre hvor vi er innefor og slikt.
                 if (createGoogleApi()) {
                     if (!googleApiClient.isConnected()) {
                         googleApiClient.connect(); //Connecter til googleApiClient.
                     } else { //Dersom man allerede er connectet så må man sjekke om vi må refreshe GeofenceListen vår.
-                        //TODO: hent alle geofence vi har nå og hent en ny list fra database, dersom de er like så er det ikke noe å gjøre annet å sjekke at vi forsatt monitorere de.
                     }
                 }
                 break;
             case RESTART_GEOFENCES:
                 //Dersom enheten er restertet under vandring.
-                //TODO: reRegistrer Geofencene fra , og sørg for at vi forsatt fdatabasenår hentet ut Location en gang i blandt.
-                if(createGoogleApi()){
-                    if(!googleApiClient.isConnected()){
-                        googleApiClient.connect();
+                if(PreferenceUtils.isKioskModeActivated(getApplicationContext())){
+                    if(createGoogleApi()){
+                        if(!googleApiClient.isConnected()){
+                            googleApiClient.connect();
+                        }
+                        //GoogleApiClient er connected. så alt skal forhåpentligvis være oppe og gå.
+                        //TODO gjør det vi må. her.
                     }
-                    //TODO gjør det vi må. her.
                 }
+
                 break;
             case TRIGGERED_GEOFENCE: //betyr at vi er kommet hit pga et eller flere Geofence er triggered.
-                Log.d(TAG, "Triggered Geofence motatt ++++++++++++++");
-                //TODO: gjør oppdatering på geofencene.
+                if(AppUtils.DEBUG) {
+                    Log.d(TAG, "Triggered Geofence motatt ++++++++++++++");
+                }
+
                 geofencingEvent = GeofencingEvent.fromIntent(intent); //henter Geofencet fra intent viss intent kommer fra et GeofenceClass.
                 if (geofencingEvent.hasError()) {
                     /*
@@ -295,25 +269,23 @@ public class GeofenceTransitionService extends Service implements
                         Log.e(TAG,"Vi har ikke location tilgjengelig");
                     }
                 } else {
-                //sender event videre.
-                updateGeofenceStatus(geofencingEvent.getGeofenceTransition(), geofencingEvent.getTriggeringGeofences());
+                    //sender event videre.
+                    updateGeofenceStatus(geofencingEvent.getGeofenceTransition(), geofencingEvent.getTriggeringGeofences());
                 }
-
                 break;
             case START_SERVICE:
-                //når vi starte servicen, men er ingen ekstre ting som må gjøres her.
+                //når vi starte servicen, men er ingen ekstre ting som må gjøres her foreløpig.
                 break;
             case STOP_GEOFENCE_MONITORING:
                 //toggleView();
                 //tellUserToGoInsideButtonToggle();
                 //tellUserToGoInsideGeofence();
-                //stopGeofenceMonitoring();
+                stopGeofenceMonitoring();
                 break;
             case TEST_OVERLAY:
+                //Kunn til utvikling hensikt.
                 Log.d(TAG,"ToogleOverLay Testing :::::::::::::::::::::::::::::::::::::::");
-                //toggleView(); Fungerte ikke..
-                //tellUserToGoInsideLinearLayout();
-                toggleView();
+                //toggleView();
                 break;
             default:
                 //Dette vill si at vi servicen starter opp av seg selv, eller at vi simpelten starter den opp i bakgrunn.
@@ -326,67 +298,54 @@ public class GeofenceTransitionService extends Service implements
 
 
         /**
-         *
          *  StartGeofenceMonitoring:
          *  lager nødvendige Lister.
          *  Henter Alle Geofence fra databasen og starter opp det med å monitorere osv.
          */
 
     public void startGeofenceMonitoring(){
+        //ArrayList som holder på alle Geofence med deres status, som et GeofenceStatus object.
         geofenceStatusList = new ArrayList<>();
-        //Vi er conncted til GoogleApiClient
 
-        //Mangler å lage Geofencene fra SQL databasen.
-
+        //Henter listen over alle Geofence som er lagret i Database.
         List<Geofence> geofenceList = SQLiteHelper.getInstance(getContext()).getAllGeofences();
         SQLiteHelper.getInstance(getContext()).getAllGeofences();
 
-        //Vi må lage en Liste med Geofence Statuser utifra dette.
+        //Går igjennom hvert geofence.
         for (Geofence geofence:
              geofenceList) {
-            //For hvert geofence, må vi lage en liten oversiktsliste.
+            //For hvert geofence, må vi lage status av denne og legge til en oversikts liste.
             geofenceStatusList.add(new GeofenceStatus(geofence));
         }
 
         //sender med alle Geofence som vi skal monitorere for å lage et GeofenceRequest av disse.
-
         GeofencingRequest geofenceRequest = createGeofenceRequest(geofenceList);
 
-        //Starter locationUpdates.
+        //Starter locationUpdates, gjør slik at enheten polle etter GPS koordinatene sine i valgt intervall,
+        // trengs for å oppdatere posisjonen regelmessig mee Geofencet.
         startLocationUpdates(getContext());
 
         //Sender dette GeofenceReuestet videre til LocationServices.GeofencingApi.addGeofences.
+        // Ber om at disse geofenen skal monitoreres. Når vi da oppdatere Posisjonen vår, blir disse sjekket.
         addGeofencesToMonitor(geofenceRequest);
 
+        //Setter en boolean på at geofence kjørere.
         setGeofence_running(true);
-        //Vi starter ikke locationUpdates enda, men tror vi må det også.
-
     }
 
     /*
+    *  Oppdatere Geofencen sin status, utifra hvilken som ble triggered med hvilken transtion id(ENTER eller EXIT)
     *   Geofence har alle Request Id lik geofence_+(Tall de registret i listen)
     * */
-
-    //Oppdatere de ulike geofencene våre
-
-    //Må lage listen med Geofence oversikt.
-
     private void updateGeofenceStatus(int geofenceTransition,List<Geofence> triggeredeGeofences){
 
         if(AppUtils.DEBUG){
             Log.d(TAG, DateFormat.getDateTimeInstance().format(new Date()));
         }
-        /*
-        if(AppUtils.DEBUG){
-            Log.d(TAG,"før oppdatering:");
-            for(GeofenceStatus geofenceStatus :geofenceStatusList){
-                Log.d(TAG,"Geofence navn:"+ geofenceStatus.getGeofence().getRequestId() +", innefor status:"+geofenceStatus.getInsideStatus());
-            }
-        } */
 
         //For hvert Geofence som triggere må vi finne tilsvarende GeofenceStatus og oppdatere denne.
         for (Geofence geofence : triggeredeGeofences)
-        {
+        {   //Finner tilsvarende geofence i status listen og oppdaterer.
             for(GeofenceStatus geofenceStatus : geofenceStatusList){
                 if(geofence.getRequestId().equalsIgnoreCase(geofenceStatus.getGeofence().getRequestId())){
                     //siden de er like, så må vi oppdatere denne
@@ -395,22 +354,18 @@ public class GeofenceTransitionService extends Service implements
             }
         }
 
-        String transition = geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER ? "Enter" : "Exit";
-
-        if(AppUtils.DEBUG){
+        if(AppUtils.DEBUG){//Debug info.
+            String transition = geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER ? "Enter" : "Exit";
             Log.d(TAG,"Etter oppdatering: " + transition);
             for(GeofenceStatus geofenceStatus :geofenceStatusList){
                 Log.d(TAG,"Geofence navn:"+ geofenceStatus.getGeofence().getRequestId() +", innefor status:"+geofenceStatus.getInsideStatus());
             }
         }
-        //TODO sjekk om vi er innefor minst ett Geofence.
 
+            //Sjekker at vi er minst innenfor et Geofence.
         if( ! checkIfInsideAtleastOneGeofence()){
-            /*
-            *   Koden som kommer etter her håndtere hva vi gjør dersom brukeren er utenfor geofencene våre.
-            * */
+            //Kommer vi hit vill det si at brukeren er utenfor alle Geofencene som er satt opp.
 
-           //TODO: Si ifra om at brukeren har beveget seg utenfor Geofencet vårt.
             if(AppUtils.DEBUG){
                 Log.d(TAG,"VIKTIG: Vi er utenfor geofencene!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                 Handler mHandler = new Handler();
@@ -422,8 +377,9 @@ public class GeofenceTransitionService extends Service implements
                 });
             }
 
-            //Må sjekke om vi allrede har startet med rask oppdatering av location updates.
+            //Må sjekke om vi allerede har startet med rask oppdatering av location updates.
             if(fastLocationUpdates){//Dersom denne er true, vill det si at vi allerede drev med å hente rask lokasjon.
+
                 //Vi skal da heller ikke oppdatere eller gjore noe.
                 //Og siden vi forsatt viser Viewet, så skal vi ikke gjøre noe mer der heller.
             }else{
@@ -434,44 +390,32 @@ public class GeofenceTransitionService extends Service implements
                     //kan virbrere telefonen her, men er bedre om aktivitetn i vindu gjør dette for oss.
 
                 }
-                //Legger Viewet over på skjermen.
-                showViewOnScreen();
-            }
 
+                if(PreferenceUtils.getPrefOverlayOn(getApplicationContext())){//Kjapp sjekk på om vi faktisk har på Overlay.
+                    //Legger Viewet over på skjermen, som blokerer brukergrensnittet.
+                    showViewOnScreen();
+                }
+            }
+            //Brukeren er innfor minst ett Geofence.
         }else{
             //må sjekke om vi driver med normal oppdatering av lokasjon
             if(fastLocationUpdates){ //dersom denne er false, vill det si at vi er innefor geofencene, og at vi er på riktig intervalltid.
                 //Trenger ikke gjøre noe her.
-            }else{
-
-                setLocationUpdateChange(false);
+            }else{ //Betyr at brukeren nettop gikk tilbake innenfor geofencene.
                 //Går tilbake til trengere intervall.
-                fastLocationUpdates = false;
-                if(AppUtils.DEBUG){
-                    WindowManager windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
-                    try {
-                        if(overLayButton != null){
-                            windowManager.removeView(overLayButton);
-                        }
-                    }catch (IllegalArgumentException e){
-                        Log.e(TAG, e.getMessage());
+                setLocationUpdateChange(false);
+                try {
+                    if(overLayTextview != null) { //Dersom den er initialisert, vill det si at vi har brukt den.
+                        //Fjerner overlayViewet fra winduet, siden vi er innefor Geofencene igjen.
+                        windowManager.removeView(overLayTextview);
                     }
+                }catch (IllegalArgumentException e){
+                    //Feilhåndtering, dersom det er noe med overLayTextview som tilsier at vi ikke kan remove det.
+                    Log.e(TAG, e.getMessage());
                 }
-
             }
-            try {
-                if(overLayTextview != null) {
-                    windowManager.removeView(overLayTextview);
-                }
-            }catch (IllegalArgumentException e){
-                Log.e(TAG, e.getMessage());
-            }catch (Exception e){ //denne skal fange alle errorer.
-                Log.e(TAG, e.getMessage());
-            }
-
             //startLocationUpdates(getContext());
         }
-
     }
 
     //TextViewet som vi legger over skjermen, ved behov.
@@ -493,8 +437,8 @@ public class GeofenceTransitionService extends Service implements
         overLayTextview.setBackgroundResource(R.color.light_yellow3_transparent);
         //Forandrer tekst fargen.
         overLayTextview.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.black));
-        //Gir testfeltet en større boks en selve teksten.30dp left, 10dp top, 30dp right og 30dp bottom.
-        overLayTextview.setPadding(30,10,30,30);
+        //Gir testfeltet en større boks en selve teksten.40dp left, 10dp top, 40dp right og 30dp bottom.
+        overLayTextview.setPadding(40,10,40,30);
         //Setter posisjon på tekten i tekstbokse, sentrert i dette tilfelle horisontalt.
         overLayTextview.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         //Forandrer tekst størrelse
@@ -517,65 +461,7 @@ public class GeofenceTransitionService extends Service implements
     }
 
 
-    //Testing av å legge til et View på skjermen.
-        boolean toggle = true;
-        public void toggleView(){
-            WindowManager windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);;
-            if(toggle){
-                //TODO: Vis viewet
-                //initialiserer en ny tekstbosk.
-                overLayTextview = new TextView(this);
-                //Lager teksten som skal være inni tekstboksen over.
-                String textToShow = "Overstepping boundary!\n"
-                        + getResources().getString(R.string.service_geofence_outside_view_text_eng)+"\n"
-                        + "Oversteget grensene!\n"
-                        + getResources().getString(R.string.service_geofence_outside_view_text_nor)
-                        + "\n"+getResources().getString(R.string.service_geofence_outside_view_update_text)
-                        +" "+ PreferenceUtils.getOutsideGeofenceUpdateIntervalAsString(getApplicationContext());
-
-                //Setter teksten på tekstboksen.
-                overLayTextview.setText(textToShow);
-                //Legger til en bakgrunns farge på tekstboksen som er litt gjennomskinnelig(translucent).
-                overLayTextview.setBackgroundResource(R.color.light_yellow3_transparent);
-                //Forandrer tekst fargen.
-                overLayTextview.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.black));
-                //Gir testfeltet en større boks en selve teksten.40dp left, 10dp top, 40dp right og 30dp bottom.
-                overLayTextview.setPadding(40,10,40,30);
-                //Setter posisjon på tekten i tekstbokse, sentrert i dette tilfelle horisontalt.
-                overLayTextview.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-                //Forandrer tekst størrelse
-                overLayTextview.setTextSize(getResources().getDimension(R.dimen.text_mediumSmall));
-                //lager parameterene som gjelder for TextViewet.
-                WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                        WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT,
-                        //Hva slags type View det er vi legger over, SYSTEM_OVERLAY er det vi har.
-                        WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY,
-                        //Setter at skjermen skal Dimme det som ikke er tekstboksen når det blir vist.
-                        WindowManager.LayoutParams.FLAG_DIM_BEHIND,
-                        //gjør at systemet velger et format som gir oss tilgang til å forandre på hvor mye transulsent hele viewet skal være.
-                        PixelFormat.TRANSLUCENT);
-                //Posisjonerer tekstboksen i sentrum.
-                params.gravity = Gravity.CENTER;
-                //Hvor mye skjermen skal dimme, når tekstboksen vises.
-                params.dimAmount = 0.5f;
-                //Legger dette til window.
-                windowManager.addView(overLayTextview,params);
-                //forandrer boolean til false, slik at vi fjerner overLayViewet ved neste kjøring.
-                toggle = false;
-            }else{
-                if(overLayTextview != null){
-                    try{
-                        windowManager.removeView(overLayTextview);
-                    }catch (IllegalArgumentException e){
-                        Log.e(TAG, e.getMessage());
-                    }
-                }
-                //forandrer boolean til tru, slik at vi legger til overLayViewet ved neste kjøring.
-                toggle = true;
-            }
-        }
-
-        //Sjekker listen på om vi er innefor minst et geofence.
+    //Sjekker listen på om vi er innefor minst et geofence.
     public boolean checkIfInsideAtleastOneGeofence(){
         //vi må sjekke om minst et er true, så kan vi returne true, ellers er vi utenfor alle.
         for (GeofenceStatus geofenceStatus: geofenceStatusList) {
@@ -711,7 +597,6 @@ public class GeofenceTransitionService extends Service implements
                     googleApiClient,
                     getGeofencePendingIntent()
             ).setResultCallback(this);
-
             LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
             if (googleApiClient.isConnected()) {
                 getGoogleApiClient().disconnect();
@@ -935,34 +820,29 @@ public class GeofenceTransitionService extends Service implements
         }
         fastLocationUpdates = fastUpdate; //oppdatere verdien.
     }
+    //Bytter hastighet vi henter ut lokasjonen via GPS.
+    private void startFastLocationUpdates(){
+        fastLocationRequest = LocationRequest.create()
+                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                .setInterval(PreferenceUtils.getOutsideGeofenceUpdateInterval(getApplicationContext()))
+                .setFastestInterval(PreferenceUtils.ONE_SECOND_IN_MILLIS);
 
-
-        private void startFastLocationUpdates(){
-
-            fastLocationRequest = LocationRequest.create()
-                    .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                    .setInterval(PreferenceUtils.THIRTY_SECONDS_IN_MILLIS)
-                    .setFastestInterval(PreferenceUtils.ONE_SECOND_IN_MILLIS);
-
-            if (AppUtils.checkLocationPermission(getContext())) {
+        if (AppUtils.checkLocationPermission(getContext())) {
                 //starter å hente lokasjonen med requesten.
-                if(AppUtils.DEBUG) {
-                    Log.d(TAG, "startFastLocationUpdate()");
-                }
-
-                LocationServices.FusedLocationApi.requestLocationUpdates(getGoogleApiClient(),fastLocationRequest,this);
-
-                isLocationPollingEnabled = true;
+            if(AppUtils.DEBUG) {
+                Log.d(TAG, "startFastLocationUpdate()");
             }
+            //Starter opp denne fastLocationRequest via location APIet.
+            LocationServices.FusedLocationApi.requestLocationUpdates(getGoogleApiClient(),fastLocationRequest,this);
+
+            isLocationPollingEnabled = true;
         }
+    }
+    //###############################LOCATION UPDATE END############################
 
-
-
-    //###############################LOCATION UPDATE ENDING############################
     /*
-    *   Wake screen kode.
+    *   Wake screen kode. Ikke sikkert denne koden fungere på nyere APIer enn 19. Fra de må dette håndteres på en annen måte.
     * */
-
     PowerManager.WakeLock fullWakeLock; //Holder på Wakelocken. Viss vi trenger den til senere.
 
     public PowerManager.WakeLock getFullWakeLock(){
@@ -973,20 +853,15 @@ public class GeofenceTransitionService extends Service implements
             }
         return fullWakeLock;
     }
-
     /*
     *   End Keep screen awake code.
     * */
 
     /*  ResultCallback
-    *
     *   Ved addGeofencesToMonitor får vi tilbake melding her på hvordan dette gikk
-    *
     * */
-
     @Override
     public void onResult(@NonNull Status status) {
-        Log.i(TAG,"onResult(): "+status);
         if(status.isSuccess()){
             //Toast.makeText(this,"Geofences created successfully", Toast.LENGTH_SHORT).show();
         }else if(status.hasResolution()){
@@ -999,10 +874,6 @@ public class GeofenceTransitionService extends Service implements
         }
     }
 
-    /*
-    *   LocationRequest
-    * */
-
     /**¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
      *  LocationListener
      *  ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
@@ -1010,7 +881,6 @@ public class GeofenceTransitionService extends Service implements
 
     @Override
     public void onLocationChanged(Location location) { //lytter til når location forandres, på denne måten kan vi lytte etter locationChange flere steder.
-        //TODO: gjør noe med denne eller?
         if(AppUtils.DEBUG) {
             Log.d(TAG, "LocationChanged location: " + location.getLatitude() +", "+ location.getLongitude());
         }
@@ -1022,7 +892,7 @@ public class GeofenceTransitionService extends Service implements
     *    ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
     * */
 
-    @Override
+    @Override  //Mister connection med GoogleApiClient
     public void onConnectionSuspended(int cause) {
         if(PreferenceUtils.isKioskModeActivated(getContext())){
             //Dersom vi forsatt skal egentlig være connected, så er dette et problem.
@@ -1046,7 +916,7 @@ public class GeofenceTransitionService extends Service implements
 
     /*
     *   Når Vi connecter til Google API Client.
-    *   Veldig viktig at vi her starter med allt vi må.
+    *   Veldig viktig at vi her starter med alt vi må.
     * */
     @Override
     public void onConnected(@Nullable Bundle bundle) {
@@ -1054,9 +924,7 @@ public class GeofenceTransitionService extends Service implements
         if(AppUtils.DEBUG){
             Log.d(TAG, "onConnected()+++++++++++++++++++++++++++++++++++++++++++++++");
         }
-
         startGeofenceMonitoring();
-        Log.d(TAG, "Vi er connected til google api client.");
     }
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     /*  ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤

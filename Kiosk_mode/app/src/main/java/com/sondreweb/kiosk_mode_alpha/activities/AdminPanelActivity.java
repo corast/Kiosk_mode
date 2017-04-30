@@ -192,6 +192,9 @@ public class AdminPanelActivity extends AppCompatActivity {
             case R.id.action_statistics:
                 Intent statisticsIntent = new Intent(this, StatisticsActivity.class);
                 startActivity(statisticsIntent);
+                break;
+            case R.id.system_settings:
+                startActivityForResult(new Intent(android.provider.Settings.ACTION_SETTINGS),0);
         }
         return super.onOptionsItemSelected(item);
     }
