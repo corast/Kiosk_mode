@@ -70,7 +70,7 @@ public class AppAdapter extends ArrayAdapter<AppModel> {
 
         if(convertView == null){
             viewHolder = new ViewHolder();
-            convertView = inflater.inflate(R.layout.list_item_icon_text_test, parent,false);
+            convertView = inflater.inflate(R.layout.list_item_icon_text, parent,false);
 
             viewHolder.icon = (ImageView) convertView.findViewById(R.id.icon);
             viewHolder.label = (TextView) convertView.findViewById(R.id.label);
