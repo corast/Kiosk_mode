@@ -411,18 +411,6 @@ public class HomeActivity extends FragmentActivity implements
         return true;
     }
 
-    public boolean allStatusTrueTest() {
-        Log.d(TAG, "PrefUtils.isKiosk: " + PreferenceUtils.isKioskModeActivated(context));
-        Log.d(TAG, "AppUtils.isAccesibillitySettingsOn: " + AppUtils.isAccessibilitySettingsOn(context));
-
-
-        if (PreferenceUtils.isKioskModeActivated(context) && AppUtils.isAccessibilitySettingsOn(context) && AppUtils.isDefault(context, this.getComponentName())) {
-            //Dersom Accessibility service er på og KioskModeActivated og isDefault, så kan vi faktisk starte.
-            return true;
-        }
-        return false;
-    }
-
     //Starter opp valg Applikasjon som skal låses inn.
     private boolean startPrefKioskModeApp() {
         if (PreferenceUtils.isKioskModeActivated(context)) {//vi skal bare gjøre noe dersom KiosMode er satt til True.
@@ -450,10 +438,13 @@ public class HomeActivity extends FragmentActivity implements
     protected void onStart() {//Ved onstart burde vi sjekke ulike ting.
         statusText.setText("");
         Log.d(TAG, "onStart()");
-        if (allStatusTrueTest()) {
+        //Sjekker om at Kiosk mode er på, dersom det er det, så skal vi bare gå til den appen.
+        if (PreferenceUtils.isKioskModeActivated(getApplicationContext())) {
             //dette betyr av vi egentlig skal gå til MonumentVandring.
             startPrefKioskModeApp();
         }
+
+
 
         //Registerer BroadcastRecievern for battery med IntentFilter ACTION_BATTERY_CHANGED.
         Intent intent = registerReceiver(batteryBroadcastReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
@@ -466,6 +457,7 @@ public class HomeActivity extends FragmentActivity implements
             Log.e(TAG, e.toString());
         }
 
+
         createAndUpdateStatusList(); //oppdaterer listen.
 
 
@@ -474,26 +466,12 @@ public class HomeActivity extends FragmentActivity implements
 
         } else {
             statusText.append("\nLocation GPS provider er disabled");
-            // Intent settingsIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-            // this.startActivity(settingsIntent);
         }
 
         if (AppUtils.isNetworkProviderAvailable(this)) {
             statusText.append("\nLocation Network provider er enabled");
         } else {
             statusText.append("\nLocation Network provider er disabled");
-        }
-
-
-        Intent batteryIntent = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        int level = batteryIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1); //Nåværende battery level. fra 0 til scale.
-        int scale = batteryIntent.getIntExtra(BatteryManager.EXTRA_SCALE, -1); //Maximun battery level
-
-        float batteryLevel = ((float) level / (float) scale) * 100.0f;
-        if (level == -1 || scale == -1) {
-            //error tror jeg?
-        } else {
-            statusText.append("\n Battery nivå: " + batteryLevel + " %");
         }
 
         if(AppUtils.DEBUG){
@@ -504,7 +482,6 @@ public class HomeActivity extends FragmentActivity implements
 
         //TODO: dersom alt er OK her, og vi egentlig skal være i Kiosk, så må vi hoppe til den appen.
         if (PreferenceUtils.isKioskModeActivated(context)) {
-
             PreferenceUtils.getPrefkioskModeApp(context);
         }
 
@@ -515,13 +492,12 @@ public class HomeActivity extends FragmentActivity implements
     protected void onResume() {
         //litt feil.
         createAndUpdateStatusList();
+
         Log.d(TAG, "onResume() i Home");
-        if (allStatusTrueTest()) {
+        if (PreferenceUtils.isKioskModeActivated(getApplicationContext())) {
             //dette betyr av vi egentlig skal gå til MonumentVandring.
             startPrefKioskModeApp();
         }
-
-        Log.d(TAG, "Forbi startActivity %:%:%:%:%:%:%:%:%");
 
         super.onResume();
         //createAndUpdateStatusList();
@@ -533,7 +509,7 @@ public class HomeActivity extends FragmentActivity implements
 
     @Override
     protected void onRestart() {
-        if (allStatusTrueTest()) {
+        if (PreferenceUtils.isKioskModeActivated(getApplicationContext())) {
             //dette betyr av vi egentlig skal gå til MonumentVandring.
             startPrefKioskModeApp();
         }
@@ -543,7 +519,6 @@ public class HomeActivity extends FragmentActivity implements
     SharedPreferences.OnSharedPreferenceChangeListener listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-            //TODO: oppdater GUI når noe forandres her.
             switch (key) {
                 case PreferenceUtils.PREF_KIOSK_MODE:
                     updateStartKioskGui();
@@ -555,13 +530,12 @@ public class HomeActivity extends FragmentActivity implements
     protected void onPostResume() {
         //Kan vi kanskje hoppe her ifra istede?
         sharedPreferences.registerOnSharedPreferenceChangeListener(listener);
-        if (allStatusTrueTest()) {
+        if (PreferenceUtils.isKioskModeActivated(getApplicationContext())) {
             //dette betyr av vi egentlig skal gå til MonumentVandring.
             startPrefKioskModeApp();
         }
         super.onPostResume();
     }
-
 
     @Override
     protected void onPause() {
@@ -611,16 +585,25 @@ public class HomeActivity extends FragmentActivity implements
     /**
      * Opdater Bruker grense snittet, slik at når vi gjør forandringer, så skal det syntes her.
      */
-    public void updateStartKioskGui() {
-        if (PreferenceUtils.isKioskModeActivated(this)) {
-            //Må sette knappen til å være Disabled
+
+    public void updateStartKioskGui(){
+        if(PreferenceUtils.isKioskModeActivated(this)){//Da skal knappen være disabled.
             startKioskButton.setClickable(false);
-            startKioskButton.setAlpha(0.5f); //greyer ut knappen litt.
+            startKioskButton.setAlpha(0.4f); //Setter den 100% synnelig.
             startKioskButton.setText("Kiosk mode is On");
-        } else {
-            startKioskButton.setClickable(true);
-            startKioskButton.setAlpha(1); //Setter den 100% synnelig.
-            startKioskButton.setText("Start Kiosk Mode");
+            startKioskButton.setTextColor(ContextCompat.getColor(context, R.color.white));
+        }else {//Må sjekke om vi skal ha tilgang til å starte.
+            if (checkIfEveryStatusOkay()) {
+                startKioskButton.setClickable(true);
+                startKioskButton.setAlpha(1f); //greyer ut knappen litt.
+                startKioskButton.setText("Start Kiosk Mode");
+                startKioskButton.setTextColor(ContextCompat.getColor(context, R.color.white));
+            } else {
+                startKioskButton.setClickable(false);
+                startKioskButton.setAlpha(0.4f); //greyer ut knappen litt.
+                startKioskButton.setText("Not ready to start");
+                startKioskButton.setTextColor(ContextCompat.getColor(context, R.color.light_grey));
+            }
         }
     }
 
@@ -805,12 +788,11 @@ public class HomeActivity extends FragmentActivity implements
     public void onBackPressed() {
         Log.d(TAG, "onBackPressed()");
         //super.onBackPressed(); //Siden vi er Bunnen av aplikasjons stacken, så er det ikke vits i å trykke onBack, den gjør heller ikke noe her ifra.
-        if (allStatusTrueTest()) {
+        if (PreferenceUtils.isKioskModeActivated(getApplicationContext())) {
             //dette betyr av vi egentlig skal gå til MonumentVandring.
             startPrefKioskModeApp();
         }
     }
-
 
     public Context getContext() {
         if (context != null)
@@ -819,13 +801,7 @@ public class HomeActivity extends FragmentActivity implements
             return this.getApplicationContext();
     }
 
-    public void startMap(View view) {
-        Intent intent = new Intent();
-        intent.setAction("com.sondreweb.geofencingalpha");
-        //context.startActivity(intent);
-    }
-
-    //TODO: Bruke en App object istedet, litt tryggere på errors.
+    //For å starte applikasjoner via packageName
     public void StartApp(String packageName) {
         Log.d(TAG, "StartApp: " + packageName);
         Intent intent = this.getPackageManager().getLaunchIntentForPackage(packageName);
@@ -887,33 +863,30 @@ public class HomeActivity extends FragmentActivity implements
         MonumentVandring appen må også være innstalert og satt og korrekt(med monumentene lastet inn).
     * */
     public boolean kioskModeReady() {//KioskMode er ikke ready
-        if (AppUtils.isAccessibilitySettingsOn(this)) {
-            return true;
-        } else {
+        //Her må vi sjekke alle statuser egentlig.
+        return checkIfEveryStatusOkay();
+    }
 
-            Intent intent = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
-            startActivityForResult(intent, 0);
+    public boolean checkIfEveryStatusOkay(){
+        if(statusList.isEmpty() || statusList == null){
+            createAndUpdateStatusList();
             return false;
         }
+
+        for (StatusInfo status: statusList) {
+            if(!status.getStatus()){ //Sjekker om noen av de er false. Altså ikke klar.
+                return false;
+            }
+        }
+        return true;
     }
 
-    /*  Start Loging Activity for admin users.
-    *   Ikke ferdig.
-    *
-    * */
-    public void startAdminLogin(View view) {
-        Intent intent = new Intent(this, LoginAdminActivity.class);
-        startActivity(intent);
-    }
 
     /*
     *   Callback for når vi requester permission for å hente ut lokasjon.
     * */
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        Log.d(TAG, "onRequestPermissionResult()");
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
             case AppUtils.REQ_PERMISSION: {
@@ -928,7 +901,6 @@ public class HomeActivity extends FragmentActivity implements
             }
         }
     }
-
 
     /*
     *   Test funksjon på å vise fram Overlay når brukeren går utenfor et geofencene våre.

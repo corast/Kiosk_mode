@@ -55,6 +55,7 @@
         android:visibility="gone"/>
 
     <fragment
+        android:layout_marginTop="20dp"
         android:layout_below="@id/grid_status_view"
         android:layout_centerHorizontal="true"
         android:layout_centerInParent="true"

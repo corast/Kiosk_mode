@@ -1,6 +1,5 @@
 package com.sondreweb.kiosk_mode_alpha.utils;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -123,7 +122,7 @@ public class PreferenceUtils {
     /*
     *   lagrer unna når vi synchroniserer data.
     * */
-    private static final String SYNCHRONIZATION_TIME = "last_synchronize";
+    public static final String SYNCHRONIZATION_STATISTICS_KEY = "last_synchronize";
     private static final String SYNCHRONIZATION_TIME_DEFAULT = "Never";
     public static void setSynchronizationTime(final Context context, String time){
         //henter datoen nå og lagrer denne unna.
@@ -135,19 +134,19 @@ public class PreferenceUtils {
             String timeC = c.get(Calendar.DAY_OF_MONTH) + "/" + c.get(Calendar.MONTH) +
                     "/" + c.get(Calendar.YEAR) + " " + c.get(Calendar.HOUR_OF_DAY) +
                     ":" + c.get(Calendar.MINUTE) + ":" + c.get(Calendar.SECOND);
-            sharedPreferences.edit().putString(SYNCHRONIZATION_TIME,timeC).apply();
+            sharedPreferences.edit().putString(SYNCHRONIZATION_STATISTICS_KEY,timeC).apply();
         }else
         {
-            sharedPreferences.edit().putString(SYNCHRONIZATION_TIME,time).apply();
+            sharedPreferences.edit().putString(SYNCHRONIZATION_STATISTICS_KEY,time).apply();
         }
     }
 
     public static String getTimeSinceLastSynchronization(final Context context){
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        return sharedPreferences.getString(SYNCHRONIZATION_TIME,SYNCHRONIZATION_TIME_DEFAULT);
+        return sharedPreferences.getString(SYNCHRONIZATION_STATISTICS_KEY,SYNCHRONIZATION_TIME_DEFAULT);
     }
 
-    private static final String SYNCHRONIZE_GEOFENCE_KEY = "pref_synchronize_geofence";
+    public static final String SYNCHRONIZE_GEOFENCE_KEY = "pref_synchronize_geofence";
     private static final String SYNCHRONIZE_GEOFENCE_DEFAULT = "Never";
 
     public static String getPrefLastSynchroizeGeofence(final Context context) {

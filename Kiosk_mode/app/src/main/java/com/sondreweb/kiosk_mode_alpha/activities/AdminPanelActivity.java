@@ -7,7 +7,6 @@ import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
@@ -20,6 +19,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewStub;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -27,6 +27,16 @@ import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.firebase.jobdispatcher.Constraint;
 import com.firebase.jobdispatcher.FirebaseJobDispatcher;
 import com.firebase.jobdispatcher.GooglePlayDriver;
@@ -36,7 +46,10 @@ import com.firebase.jobdispatcher.RetryStrategy;
 import com.firebase.jobdispatcher.Trigger;
 import com.sondreweb.kiosk_mode_alpha.R;
 import com.sondreweb.kiosk_mode_alpha.adapters.GeofenceAdapter;
+import com.sondreweb.kiosk_mode_alpha.application.ApplicationController;
 import com.sondreweb.kiosk_mode_alpha.jobscheduler.SynchJobService;
+import com.sondreweb.kiosk_mode_alpha.network.CustomRequest;
+import com.sondreweb.kiosk_mode_alpha.network.postJSONRequest;
 import com.sondreweb.kiosk_mode_alpha.services.GeofenceTransitionService;
 import com.sondreweb.kiosk_mode_alpha.settings.AdminSettingsActivity;
 import com.sondreweb.kiosk_mode_alpha.storage.KioskDbContract;
@@ -45,6 +58,7 @@ import com.sondreweb.kiosk_mode_alpha.storage.StatisticsTable;
 import com.sondreweb.kiosk_mode_alpha.utils.AppUtils;
 import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -55,10 +69,11 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 //import java.util.stream.Stream;
 
@@ -73,7 +88,14 @@ import java.util.Random;
  *          Velge hvilken applikasjon som vi skal låse enheten til.
  */
 
-public class AdminPanelActivity extends AppCompatActivity {
+
+
+public class AdminPanelActivity extends AppCompatActivity implements Response.Listener {
+
+    @Override
+    public void onResponse(Object response) {
+
+    }
 
     private static final String TAG = AdminPanelActivity.class.getSimpleName();
     public static final String synchStatisticsJob = "sync_statistics_to_database";
@@ -111,7 +133,6 @@ public class AdminPanelActivity extends AppCompatActivity {
         kiosk_button = (Button) findViewById(R.id.button_admin_panel_kiosk_mode);
         button_schedule_sync_statistics = (Button) findViewById(R.id.button_schedule_sync);
 
-        statistics_text = (TextView) findViewById(R.id.text_view_content_provider_test);
 
         textView_schedule_geofence = (TextView) findViewById(R.id.text_schedule_geofence);
 
@@ -151,15 +172,21 @@ public class AdminPanelActivity extends AppCompatActivity {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         boolean overlay = sharedPreferences.getBoolean(getResources().getString(R.string.KEY_SECURITY_GEOFENCE_OVERLAY),false);
         boolean test = sharedPreferences.getBoolean("android.settings.SYNC_SETTINGS",false); //funger ikke-
-        Toast.makeText(getApplicationContext(),PreferenceUtils.getSynchGeofenceUrl(getApplicationContext()),Toast.LENGTH_SHORT).show();
-        /*
+
         View view = this.getCurrentFocus();
         if (view != null) {
             InputMethodManager imm = (InputMethodManager)getSystemService(getApplicationContext().INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(view.getWindowToken(), InputMethodManager.HIDE_IMPLICIT_ONLY);
-        } */
+        }
 
         //tableLayout.addView();
+        updateSyncText();
+
+        updateGeofenceTable();
+        super.onStart();
+    }
+
+    public void updateSyncText(){
         String textLastStatSync = getResources().getString(R.string.admin_panel_synchronize_text)
                 .concat(": ")
                 .concat(PreferenceUtils.getTimeSinceLastSynchronization(getApplicationContext()));
@@ -168,9 +195,6 @@ public class AdminPanelActivity extends AppCompatActivity {
                 .concat(": ")
                 .concat(PreferenceUtils.getPrefLastSynchroizeGeofence(getApplicationContext()));
         textView_schedule_geofence.setText(textLastGeoSync);
-
-        updateGeofenceTable();
-        super.onStart();
     }
 
     @Override
@@ -266,7 +290,7 @@ public class AdminPanelActivity extends AppCompatActivity {
         }
     }
 
-   static List GeofenceList = null;
+   static List geofenceListS = null;
 
     public void updateGeofenceTable(){
 
@@ -274,18 +298,21 @@ public class AdminPanelActivity extends AppCompatActivity {
             geofenceAdapter.clear();
         }
 
-        GeofenceList = SQLiteHelper.getInstance(getApplicationContext()).getAllGeofencesClass();
+        geofenceListS = SQLiteHelper.getInstance(getApplicationContext()).getAllGeofencesClass();
         if(AppUtils.DEBUG){
-            Log.d(TAG, GeofenceList.toString());
+            Log.d(TAG, geofenceListS.toString());
         }
         //TODO gå gjennom hele listen og skriv ut til tabell.
-        geofenceAdapter.addAll(GeofenceList);
+        geofenceAdapter.addAll(geofenceListS);
     }
 
     public static void staticUpdateGeofenceTable(Context context){
-        if(GeofenceList != null) {
-            GeofenceList = SQLiteHelper.getInstance(context).getAllGeofencesClass();
-            geofenceAdapter.setData(GeofenceList);
+        if(geofenceListS != null) {
+            geofenceListS.clear();
+            geofenceListS = SQLiteHelper.getInstance(context).getAllGeofencesClass();
+
+            geofenceAdapter = new GeofenceAdapter(context);
+            geofenceAdapter.setData(geofenceListS);
             geofenceAdapter.notifyDataSetChanged();
         }
     }
@@ -298,7 +325,7 @@ public class AdminPanelActivity extends AppCompatActivity {
 
         if(Patterns.WEB_URL.matcher(PreferenceUtils.getSynchStatisticsUrl(getApplicationContext())).matches()){
             if(SQLiteHelper.getInstance(getApplicationContext()).checkDataInStatisticsTable()){
-                new RetrieveFeedTask().execute();
+                postStatistics();
                 //startStatisticsSync();
                 //scheduleSynchStatisticsJobNow();
                 //TODO: forandre på teksten på knappen?
@@ -313,43 +340,143 @@ public class AdminPanelActivity extends AppCompatActivity {
     }
 
 
-    class RetrieveFeedTask extends AsyncTask<String, Void, String> {
+    public void postStatistics(){
 
-        private Exception exception;
+        final String URLRequest = PreferenceUtils.getSynchStatisticsUrl(getApplicationContext());
 
-        @Override
-        protected String doInBackground(String... params) {
+        SQLiteHelper sqLiteHelper = SQLiteHelper.getInstance(getApplicationContext());
+        ArrayList<ContentValues> list = sqLiteHelper.getAllStatistics();
 
-            SQLiteHelper sqLiteHelper = SQLiteHelper.getInstance(getApplicationContext());
-            ArrayList<ContentValues> list = sqLiteHelper.getAllStatistics();
-
-            for (ContentValues contentValue : list) {
-                PostStatistics(contentValue);
+        //Lager Json objectet fra dette.
+        JSONObject statistics = new JSONObject();
+        JSONArray statisticsArray = new JSONArray();
+        JSONObject object = new JSONObject();
+        for (ContentValues contentValue:list) {
+            try {
+                object = new JSONObject();
+                object.put("navn", contentValue.getAsString(KioskDbContract.Statistics.COLUMN_MONUMENT));
+                object.put("besokId", contentValue.getAsString(KioskDbContract.Statistics.COLUMN_VISITOR_ID));
+                object.put("dato", contentValue.getAsString(KioskDbContract.Statistics.COLUMN_DATE));
+                object.put("tid", contentValue.getAsString(KioskDbContract.Statistics.COLUMN_TIME));
+                statisticsArray.put(object);
+            }catch (JSONException e){
+                Log.e(TAG,e.getMessage());
             }
-
-            return null;
+        }
+        try {
+            statistics.put("statistics", statisticsArray);
+        }catch (JSONException e){
+            Log.e(TAG,e.getMessage());
         }
 
-        protected void onPostExecute(String feed) {
-            // TODO: check this.exception
-            // TODO: do something with the feed
-        }
-    }
-    public void startStatisticsSync(){
+        Log.d(TAG, statistics.toString());
 
-        new Thread(new Runnable() {
+        final JsonObjectRequest req = new JsonObjectRequest(URLRequest, statistics,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            Log.d(TAG, response.toString());
+                            VolleyLog.v("Response:%n %s", response.toString(4));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
             @Override
-            public void run() {
-                SQLiteHelper sqLiteHelper = SQLiteHelper.getInstance(getApplicationContext());
-                ArrayList<ContentValues> list = sqLiteHelper.getAllStatistics();
-
-                for (ContentValues contentValue : list) {
-                    PostStatistics(contentValue);
-                }
+            public void onErrorResponse(VolleyError error) {
+                Log.e(TAG,error.toString());
+                VolleyLog.e("Error: ", error.getMessage());
             }
-        }).run();
+        });
+
+
+        //RequestQueue queue = Volley.newRequestQueue(this);
+
+        //queue.add(req);
+
+        JsonObjectRequest reqTest = new JsonObjectRequest(Request.Method.POST, URLRequest, statistics,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            Log.d(TAG, "onResponse: "+response.toString());
+                            VolleyLog.v("Response:%n %s", response.toString(4));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+                Log.e(TAG,"statusCode:"+ error.networkResponse.statusCode);
+                VolleyLog.e("Error: ", error.getMessage());
+            }
+        });
+
+        RequestQueue queue2 = Volley.newRequestQueue(this);
+
+        //queue2.add(reqTest);
+
+        //Response r = new Response.Listener<>()
+        RequestQueue requestQueue = Volley.newRequestQueue(this);
+        CustomRequest jsObjRequest = new CustomRequest(Request.Method.POST, URLRequest, statistics, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                Log.d(TAG, "onRespons" + response.toString());
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e(TAG,"onErrorRespons; "+error.getMessage());
+            }
+        });
+
+        requestQueue.add(jsObjRequest);
+
+        /*
+       JsonArrayRequest request =  new JsonArrayRequest(Request.Method.POST,URLRequest,
+               statisticsArray, new Response.Listener<JSONObject>() {
+           @Override
+           public void onResponse(JSONObject response) {
+               Log.e("Response:", response.toString());
+                response.
+               if (listener != null)
+                   listener.onResultJsonObject(response);
+               else
+                   Log.e(TAG,"Error: SetServerResponse interface not set");
+           }
+       }, new Response.ErrorListener() {
+           @Override
+           public void onErrorResponse(VolleyError error) {
+               VolleyLog.e("Error: ", error.getMessage());
+           }
+       }) */
+
+        /*
+        JsonObjectRequest req = new JsonObjectRequest(URLRequest, object,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            VolleyLog.v("Response:%n %s", response.toString(4));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                VolleyLog.e("Error: ", error.getMessage());
+            }
+        }); */
+
+// add the request object to the queue to be executed
+
     }
 
+    //Test funksjon, som ikke fungerer.
     private void PostStatistics(ContentValues contentValues){
         contentValues.toString();
         HttpURLConnection urlConnection = null; // Will do the connection
@@ -379,7 +506,7 @@ public class AdminPanelActivity extends AppCompatActivity {
             ow.write(objLogin.toString());
             ow.close();
 
-//information sent by server
+            //information sent by server
             InputStream inputStream = urlConnection.getInputStream();
             StringBuffer buffer = new StringBuffer();
             if (inputStream == null) {
@@ -403,6 +530,7 @@ public class AdminPanelActivity extends AppCompatActivity {
             // error on the conversion or connection
         }
     }
+
 
     /*
     *   Starter når vi trykker på Schedune Synch Geofence knappen.

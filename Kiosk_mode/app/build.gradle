@@ -40,6 +40,10 @@ dependencies {
     * */
     compile 'com.firebase:firebase-jobdispatcher:0.6.0'
 
+    /*
+    *   Volley for netwerk
+    * */
+    compile 'com.android.volley:volley:1.0.0'
 
     testCompile 'junit:junit:4.12'
 }

@@ -43,11 +43,7 @@ import java.util.regex.Pattern;
  */
 
 
-
-
 public class SynchJobService extends JobService{
-
-    private static final String ip = "54.69.169.144";
 
     private final static String TAG = SynchJobService.class.getSimpleName();
 
@@ -63,18 +59,11 @@ public class SynchJobService extends JobService{
             return false;
         }
         switch (job.getTag()){
-            case CustomContentProvider.synchJob: //Automatisk synching av statistikk.
+            //Automatisk oppsett av synchronisering for statistikken.
+            case CustomContentProvider.synchJob:
                 Log.d(TAG,"Schedulerer starter job: "+job.toString());
-                //TODO: Gjør synchronisering med serveren på en tråd, eller på main siden vi står i ladning og har wifi.
-                //TODO: Sjekk at automatisk synching er satt.
-                if(SQLiteHelper.getInstance(getApplicationContext()).checkDataInStatisticsTable()){
-                    postStatisticsAsThread();
-                }
 
-                SQLiteHelper sqLiteHelper = SQLiteHelper.getInstance(getApplicationContext());
-                ArrayList<ContentValues> list = sqLiteHelper.getAllStatistics();
-                for (ContentValues contentValue : list) {
-                    PostStatistics(contentValue);
+                if(SQLiteHelper.getInstance(getApplicationContext()).checkDataInStatisticsTable()){
                 }
                break;
 
@@ -84,16 +73,13 @@ public class SynchJobService extends JobService{
                 Log.d(TAG,"starter job "+AdminPanelActivity.synchStatisticsJob);
                 if(SQLiteHelper.getInstance(getApplicationContext()).checkDataInStatisticsTable()) {
                     //Gjør jobben...
-                    postStatisticsAsThread();
-                    PreferenceUtils.updatePrefLastSynchronizeGeofence(getApplicationContext());
                 }
                 break;
             case AdminPanelActivity.synchGeofenceJob:
                 Log.d(TAG,"starter job"+ AdminPanelActivity.synchGeofenceJob);
                 String URLRequest = PreferenceUtils.getSynchGeofenceUrl(getApplicationContext());
                 Log.d(TAG, URLRequest);
-                new DownloadGeofencesFromURL().execute(URLRequest);
-                //TODO: synch geofencene ned fra databasen
+                new DownloadGeofencesFromURL().execute(URLRequest); //henter geofence og gjør jobben.
 
                 break;
         }
@@ -106,175 +92,64 @@ public class SynchJobService extends JobService{
         return false;
     }
 
-    private void postStatisticsAsThread(){
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                SQLiteHelper sqLiteHelper = SQLiteHelper.getInstance(getApplicationContext());
-                ArrayList<ContentValues> list = sqLiteHelper.getAllStatistics();
+    private class UploadStatisticsFromURL extends AsyncTask<String, Void, String> {
+        @Override
+        protected String doInBackground(String... params) {
+            if(AppUtils.checkIfNetwork(getApplicationContext())) {
+                    try {
+                        URL url = new URL(params[0]);
 
-                for (ContentValues contentValue : list) {
-                    Log.d(TAG,contentValue.toString());
+                        SQLiteHelper sqLiteHelper = SQLiteHelper.getInstance(getApplicationContext());
+                        ArrayList<ContentValues> list = sqLiteHelper.getAllStatistics();
 
-                    PostStatistics(contentValue);
-                }
+                        //TODO: send hele listen med statistikker.
+                        URLConnection connection = url.openConnection();
+
+                        for (ContentValues contentValue: list) {
+                            String monument = contentValue.getAsString(StatisticsTable.COLUMN_MONUMENT);
+                            String visitor = contentValue.getAsString(StatisticsTable.COLUMN_VISITOR_ID);
+                            String date = contentValue.getAsString(StatisticsTable.COLUMN_DATE);
+                            String time = contentValue.getAsString(StatisticsTable.COLUMN_TIME);
+
+                            String data = URLEncoder.encode("navn", "UTF-8")
+                                    + "=" + URLEncoder.encode(monument, "UTF-8");
+
+                            data += "&" + URLEncoder.encode("besoksId", "UTF-8")
+                                    + "=" + URLEncoder.encode(visitor, "UTF-8");
+
+                            data += "&" + URLEncoder.encode("dato", "UTF-8")
+                                    + "=" + URLEncoder.encode(date, "UTF-8");
+
+                            data += "&" + URLEncoder.encode("tid", "UTF-8")
+                                    + "=" + URLEncoder.encode(time, "UTF-8");
+                        }
+
+
+
+                    } catch (MalformedURLException e) {
+                        Log.e(TAG, e.getMessage());
+                    } catch (IOException e){
+                        Log.e(TAG, e.getMessage());
+                    }
             }
-        }).run();
-    }
-
-    public void PostStatistics(ContentValues contentValues){
-        String monument = contentValues.getAsString(StatisticsTable.COLUMN_MONUMENT);
-        String visitor = contentValues.getAsString(StatisticsTable.COLUMN_VISITOR_ID);
-        String date = contentValues.getAsString(StatisticsTable.COLUMN_DATE);
-        String time = contentValues.getAsString(StatisticsTable.COLUMN_TIME);
-
-        String text = "";
-        BufferedReader reader = null;
-        try {
-            String data = URLEncoder.encode("navn", "UTF-8")
-                    + "=" + URLEncoder.encode(monument, "UTF-8");
-
-            data += "&" + URLEncoder.encode("besoksId", "UTF-8")
-                    + "=" + URLEncoder.encode(visitor, "UTF-8");
-
-            data += "&" + URLEncoder.encode("dato", "UTF-8")
-                    + "=" + URLEncoder.encode(date, "UTF-8");
-
-            data += "&" + URLEncoder.encode("tid", "UTF-8")
-                    + "=" + URLEncoder.encode(time, "UTF-8");
-
-            Log.d(TAG,"data: "+data);
-            //send data
-            //URL url = new URL(ip+"/statistikk.php");
-            URL url = new URL(PreferenceUtils.getSynchStatisticsUrl(getApplicationContext()));
-            Log.d(TAG, url.toString());
-            //send post
-            sendStatistics(data,url);
-            /*
-            URLConnection conn = url.openConnection();
-            Log.d(TAG,conn.toString() );
-
-            Log.d(TAG,"1" );
-            //Sets the value of the doOutput field for this URLConnection to the specified value.
-            conn.setDoOutput(true);
-            Log.d(TAG,"2" );
-            //endoder dataene med en Outputstream til connectionen.
-            //conn.getOutputStream(): Returns an output stream that writes to this connection.
-            OutputStream outputStream = conn.getOutputStream();
-            //conn.connect();
-            Log.d(TAG, outputStream.toString());
-            Log.d(TAG,"2.5" );
-            OutputStreamWriter wr = new OutputStreamWriter(outputStream);
-            Log.d(TAG,"3" );
-            Log.d(TAG, wr.toString());
-            //Skriver inn data.
-            Log.d(TAG,"4" );
-            wr.write( data );
-            wr.flush();
-            Log.d(TAG,"5" );
-            //server response    getOutputStream(): Returns an input stream that reads from this open connection
-            reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-
-            StringBuilder sb = new StringBuilder();
-            String line = null;
-            Log.d(TAG,"6" );
-            // Read Server Response
-            while((line = reader.readLine()) != null)
-            {
-                // Append server response in string
-                sb.append(line + "\n");
-            }
-            */
-
-            //text = sb.toString();
-            Log.d(TAG,"Respons: "+text);
-            if(text.equalsIgnoreCase("OK")){
-
-                //TODO: slett statistikk
-
-            }else{
-
-            }
-
-            //TODO: update last synchronize.
-
-        }catch (IOException e){
-            Log.d(TAG,e.getLocalizedMessage());
-        }
-        catch(Exception ex) {
-            Log.e(TAG,ex.getMessage());
-        }
-        finally
-        {
-            try
-            {
-                if(reader != null) {
-
-                  reader.close();
-                }
-            }
-
-            catch(Exception e) {
-                Log.e(TAG,e.getMessage());
-            }
+            String s = "test";
+            return s;
         }
 
-        // Show response on activity
-        Toast.makeText(getApplicationContext(),text,Toast.LENGTH_SHORT).show();
-    }
 
-    public void sendStatistics(String data, URL url){
-    try {
-
-
-        URLConnection connection = url.openConnection();
-        Log.d(TAG,"1");
-        connection.setDoOutput(true);
-        Log.d(TAG,"2");
-        OutputStreamWriter out = new OutputStreamWriter(
-                connection.getOutputStream());
-        Log.d(TAG,"3");
-        out.write(data);
-        Log.d(TAG,"4");
-        out.close();
-        Log.d(TAG,"5");
-        BufferedReader in = new BufferedReader(
-                new InputStreamReader(
-                        connection.getInputStream()));
-        Log.d(TAG,"6");
-        String decodedString;
-        while ((decodedString = in.readLine()) != null) {
-            Log.d(TAG,decodedString);
-            //System.out.println(decodedString);
-        }
-
-        in.close();
-    }catch (Exception e){
-        Log.e(TAG, e.getMessage());
-    }
-
-    }
-
-    private void getGeofencesWithThread(){
-        Thread backgroundThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-
-                try{
-                    URL url = new URL(ip+"/geofence.php");
-                }catch (Throwable t){
-
-                }
-
+        @Override
+        protected void onPostExecute(String s) {
+            if(s == "Okay") {
+                PreferenceUtils.updatePrefLastSynchronizeGeofence(getApplicationContext());
             }
-        });
-
+            super.onPostExecute(s);
+        }
     }
 
-    class DownloadGeofencesFromURL extends AsyncTask<String, String, String> {
+   private class DownloadGeofencesFromURL extends AsyncTask<String, String, String> {
 
-        public final String dTag = DownloadGeofencesFromURL.class.getSimpleName();
+        private final String dTag = DownloadGeofencesFromURL.class.getSimpleName();
 
         @Override
         protected String doInBackground(String... params) {

@@ -336,15 +336,18 @@ public class CustomContentProvider extends ContentProvider {
         long id = 0; //Default error verdi.
         switch (URI_MATCHER.match(uri)) {
             case STATISTIKK_LIST: //Bruker denne for å legge til en rad.
-
+                //Legg inn data.
                 id = databaseWritable.insert(
                         StatisticsTable.TABLE_NAME,
                         null,
                         values);
+                //Lukk databasen.
                 databaseWritable.close();
-
+                    //Sjekk om vi la til velykket inn i databasen.
                 if(id > 0){
+                    //sjekker om vi har satt på Automatisk Synching.
                     if(PreferenceUtils.getSynchronizeAutomatically(getContext())){
+                        //Sett opp en Synch job.
                         scheduleSyncJob();
                     }
                 }
@@ -431,9 +434,9 @@ public class CustomContentProvider extends ContentProvider {
                 // constraints that need to be satisfied for the job to run
                 .setConstraints(
                         // only run on an unmetered network, i vårt tilfelle Ikke mobilnett som koster penger.
-                        Constraint.ON_UNMETERED_NETWORK
+                        Constraint.ON_UNMETERED_NETWORK,
                         // only run when the device is charging
-                        //Constraint.DEVICE_CHARGING
+                        Constraint.DEVICE_CHARGING
                 )
                 .build();
 

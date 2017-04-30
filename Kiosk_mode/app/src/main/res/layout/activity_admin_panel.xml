@@ -149,12 +149,6 @@
         android:layout_centerHorizontal="true"
         android:layout="@layout/empt_geofences_list"/>
 
-    <TextView
-        android:id="@+id/text_view_content_provider_test"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="bla bla masse tekst...."
-        android:visibility="gone"/>
 
     <Button
         android:layout_below="@id/list_view_geofences"
@@ -162,7 +156,7 @@
         android:id="@+id/button_admin_panel_insertData"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:visibility="visible"
+        android:visibility="gone"
         android:onClick="insertDataTest"
         android:layout_centerHorizontal="true"/>
 
