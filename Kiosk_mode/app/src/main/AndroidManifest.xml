@@ -52,7 +52,7 @@
 
    </application>
     -->
-
+    <!-- For å sende data over nett, trengs det netverk tilgang. -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <!-- For å kunne disable Recent apps button. -->
     <uses-permission android:name="android.permission.REORDER_TASKS" />
@@ -85,6 +85,7 @@
 
     <!--     <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE"/> -->
     <application
+        android:name="com.sondreweb.kiosk_mode_alpha.application.ApplicationController"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"

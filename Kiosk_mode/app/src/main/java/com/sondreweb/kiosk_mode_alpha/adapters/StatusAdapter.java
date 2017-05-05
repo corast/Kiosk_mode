@@ -99,7 +99,7 @@ public class StatusAdapter extends ArrayAdapter<StatusInfo>{
                 viewHolder.rLayout.setBackgroundResource(R.color.redWard);
             }
 
-            viewHolder.icon.setImageResource(status.getImageDrawable());
+            viewHolder.icon.setImageResource(status.getImageDrawable(getContext()));
             viewHolder.label.setText(status.getName());
             viewHolder.info.setText(status.getInfo());
         }

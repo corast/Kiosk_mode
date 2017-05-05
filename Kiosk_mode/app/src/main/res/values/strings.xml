@@ -82,9 +82,9 @@
 
     <string name="admin_panel_synchronize_empty_database">Nothing to synchronze, database is empty</string>
 
-    <string name="admin_panel_synchronize_scheduled">Synchronize scheduled when WIFI is next available.</string>
+    <string name="admin_panel_synchronize_scheduled">Schedule synchronize of Statistics</string>
 
-    <string name="admin_panel_synchronize_scheduled_geofences">Schedule synchronize of geofences</string>
+    <string name="admin_panel_synchronize_scheduled_geofences">Schedule synchronize of Geofences</string>
 
     <string name="admin_panel_list_geofence_emtpy">No Geofences in storage</string>
 

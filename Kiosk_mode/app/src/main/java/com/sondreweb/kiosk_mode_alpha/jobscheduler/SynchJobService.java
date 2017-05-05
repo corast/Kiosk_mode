@@ -93,60 +93,6 @@ public class SynchJobService extends JobService{
     }
 
 
-    private class UploadStatisticsFromURL extends AsyncTask<String, Void, String> {
-        @Override
-        protected String doInBackground(String... params) {
-            if(AppUtils.checkIfNetwork(getApplicationContext())) {
-                    try {
-                        URL url = new URL(params[0]);
-
-                        SQLiteHelper sqLiteHelper = SQLiteHelper.getInstance(getApplicationContext());
-                        ArrayList<ContentValues> list = sqLiteHelper.getAllStatistics();
-
-                        //TODO: send hele listen med statistikker.
-                        URLConnection connection = url.openConnection();
-
-                        for (ContentValues contentValue: list) {
-                            String monument = contentValue.getAsString(StatisticsTable.COLUMN_MONUMENT);
-                            String visitor = contentValue.getAsString(StatisticsTable.COLUMN_VISITOR_ID);
-                            String date = contentValue.getAsString(StatisticsTable.COLUMN_DATE);
-                            String time = contentValue.getAsString(StatisticsTable.COLUMN_TIME);
-
-                            String data = URLEncoder.encode("navn", "UTF-8")
-                                    + "=" + URLEncoder.encode(monument, "UTF-8");
-
-                            data += "&" + URLEncoder.encode("besoksId", "UTF-8")
-                                    + "=" + URLEncoder.encode(visitor, "UTF-8");
-
-                            data += "&" + URLEncoder.encode("dato", "UTF-8")
-                                    + "=" + URLEncoder.encode(date, "UTF-8");
-
-                            data += "&" + URLEncoder.encode("tid", "UTF-8")
-                                    + "=" + URLEncoder.encode(time, "UTF-8");
-                        }
-
-
-
-                    } catch (MalformedURLException e) {
-                        Log.e(TAG, e.getMessage());
-                    } catch (IOException e){
-                        Log.e(TAG, e.getMessage());
-                    }
-            }
-            String s = "test";
-            return s;
-        }
-
-
-        @Override
-        protected void onPostExecute(String s) {
-            if(s == "Okay") {
-                PreferenceUtils.updatePrefLastSynchronizeGeofence(getApplicationContext());
-            }
-            super.onPostExecute(s);
-        }
-    }
-
    private class DownloadGeofencesFromURL extends AsyncTask<String, String, String> {
 
         private final String dTag = DownloadGeofencesFromURL.class.getSimpleName();
@@ -214,5 +160,5 @@ public class SynchJobService extends JobService{
             super.onPostExecute(s);
             //TODO: be AdminPanelet oppdatere seg.
         }
-    }
+   }
 }

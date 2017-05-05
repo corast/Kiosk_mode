@@ -59,6 +59,13 @@ public class AppsFragment extends ListFragment implements LoaderManager.LoaderCa
         getLoaderManager().initLoader(0, null, this);
     }
 
+    @Override
+    public void onStart() {
+        //Dersom vi bytter koisk applikasjon underveis, så må vi oppdatere Fragmentet med dette.
+        adapter.notifyDataSetChanged();
+        super.onStart();
+    }
+
     /**
      *
      * Hva som skjer når vi klikker på et Item i listen vår.
@@ -150,15 +157,6 @@ public class AppsFragment extends ListFragment implements LoaderManager.LoaderCa
         }else
         {
             setListShownNoAnimation(true);
-        }
-    }
-        //TODO: Bruke en App object istedet, litt tryggere på errors.
-    public void StartActivity(String packageName){
-        Log.d(TAG,"StartApp: "+packageName);
-        Intent intent = getActivity().getPackageManager().getLaunchIntentForPackage(packageName);
-
-        if(intent != null ){
-            startActivity(intent);
         }
     }
 

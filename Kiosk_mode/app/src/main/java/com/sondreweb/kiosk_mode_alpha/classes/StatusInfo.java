@@ -1,5 +1,6 @@
 package com.sondreweb.kiosk_mode_alpha.classes;
 
+import android.content.Context;
 import android.graphics.drawable.Drawable;
 
 import com.sondreweb.kiosk_mode_alpha.R;
@@ -18,15 +19,37 @@ public class StatusInfo {
     //Navn på statusen
     private String name;
 
+    //Holder på infoen til statusen.
     private String info = null;
 
-    //Hvor vi kan sende brukeren for å skru på dette, dersom det er mulig.
-    private String settingInfo;
-    
+    //Holder på hva slags icon som skal vises på statusen.
+    private String imageName = null;
+
+    //Konstruktør
     public StatusInfo(String name){
+        info = null;
+        imageName = null;
         this.name = name;
     }
 
+    /*
+    *   Set
+    * */
+    public void setInfo(String info){
+        this.info = info;
+    }
+
+    public void setStatus(boolean status){
+        this.status = status;
+    }
+
+    public void setImageName(String imageName){
+        this.imageName = imageName;
+    }
+
+    /*
+    *   Get
+    * */
     public boolean getStatus(){
         return status;
     }
@@ -35,14 +58,6 @@ public class StatusInfo {
         return this.name;
     }
 
-    public void setStatus(boolean status){
-            this.status = status;
-    }
-
-    //setter Infoen.
-    public void setInfo(String info){
-        this.info = info;
-    }
     public String getInfo(){
         if(info != null){
             return info;
@@ -51,26 +66,17 @@ public class StatusInfo {
 
     }
 
-    //TODO: koble opp alle statuser til egne iconer. Som battery til Battery icon osv.
     //returnerer Image resource value.
-    public int getImageDrawable(){
-        try {
-            return R.drawable.common_google_signin_btn_icon_dark;
-        }catch (NullPointerException e){
-            return R.drawable.visible_50;
+    public int getImageDrawable(Context context) {
+        if (imageName == null) {
+            try {
+                return R.drawable.common_google_signin_btn_icon_dark;
+            } catch (NullPointerException e) {
+                return R.drawable.visible_50;
+            }
+        } else {
+            return context.getResources().getIdentifier(imageName, "drawable", context.getPackageName());
         }
-    }
-
-    /**
-     *
-     * Basert på hva det er, så skal denne oppdatere statusen. Vi kan se alle statuser fra AppUtils.
-     */
-
-    public boolean updateStatus(){
-        return false;
-    }
-
-    public static void testing(){
 
     }
 

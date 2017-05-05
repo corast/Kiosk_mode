@@ -45,14 +45,14 @@
 
     <Button
         android:layout_below="@id/grid_status_view"
-        android:id="@+id/button_start_map"
+        android:id="@+id/button_admin_panel_quick"
         android:layout_width="wrap_content"
-        android:layout_height="40dp"
+        android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:text="Gå til Admin panel"
+        android:layout_alignParentEnd="true"
+        android:text="Admin panel"
         android:layout_alignWithParentIfMissing="true"
-        android:onClick="startAdminPanel"
-        android:visibility="gone"/>
+        android:onClick="startAdminPanel" />
 
     <fragment
         android:layout_marginTop="20dp"

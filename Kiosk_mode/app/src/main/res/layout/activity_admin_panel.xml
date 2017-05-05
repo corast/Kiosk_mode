@@ -129,9 +129,11 @@
             android:layout_weight="1"
             android:textAlignment="center"/>
     </LinearLayout>
+
     <ListView
         android:id="@+id/list_view_geofences"
         android:layout_below="@id/table_colums"
+        android:layout_above="@+id/button_admin_panel_kiosk_mode"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
     </ListView>
@@ -148,7 +150,6 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout="@layout/empt_geofences_list"/>
-
 
     <Button
         android:layout_below="@id/list_view_geofences"

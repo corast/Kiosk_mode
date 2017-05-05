@@ -219,7 +219,7 @@ public class GeofenceTransitionService extends Service implements
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
-        Log.d(TAG,"onStartCommand: intentAction: "+ intent.getAction()+" ##################################################");
+        //Log.d(TAG,"onStartCommand: intentAction: "+ intent.getAction()+" ##################################################");
 
         // we can also check wheter the action is from the GeofenceClass or simply starting up the service again.
          //dersom vi starter servicen med hensikt å starte lokasjons håndtering
@@ -483,9 +483,9 @@ public class GeofenceTransitionService extends Service implements
 
     }
 
-/*
-*   Geofence funksjoner
-* */
+    /*
+    *   Geofence funksjoner
+    * */
         //lager et geofence, og returnere det. Men ble heller gjordt direkte i SQLitehelperen.
     private Geofence createGeofence(LatLng latLng, float radius){
         return new Geofence.Builder()
@@ -668,20 +668,17 @@ public class GeofenceTransitionService extends Service implements
             notificationBuilder.addAction(R.drawable.unlock_50, "Stop Kioks Mode",pendingStopKiosk);
         }
 
-        //TODO: koble opp mot Innlogging, gjøres ved å ta ibruk
-        //notificationBuilder.setContentIntent(pendingIntent);
-        notificationBuilder.addAction(R.drawable.login_48, "Log Inn", pendingInlogging );
-
-        //PendingIntent resultPendingIntent = PendingIntent.getActivities(context, 0, logginIntent, 0);
+        //Lager Knappen på notifikasjonen, som gir oss tilgang til å logge inn.
+        notificationBuilder.addAction(R.drawable.login_48, "Log In", pendingInlogging );
 
         startForeground(mId, notificationBuilder.build()); //Start showing the notification on the (Action)/task bar.
     }
 
     private int getNotificationIcon(){//Versjons kontroll på hvilket bilde å bruke.
-        boolean useWhiteIcon = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
-        //return useWhiteIcon ? R.drawable.visible_64 : R.drawable.visible_50;
-        return
-                R.drawable.visible_50;
+        //Dersom vi trenger å gjøre iconet mer synelig på forskjelige versjoner kan dette utdypes, ellers kan man legge til egne iconer for hver versjon i Drawables.
+        //boolean useWhiteIcon = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
+
+        return R.drawable.visible_50;
 
     }
 

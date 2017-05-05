@@ -102,10 +102,11 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
         }
 
         setContentView(R.layout.activity_login_admin);
-        setTitle("Sign inn screen");
-        // Set up the login form.
+        //Legger til tittel på Titlebaren.
+        setTitle("Sign in as Admin");
+
         //mNameView = (AutoCompleteTextView) findViewById(R.id.email);
-        //populateAutoComplete();
+        //populateAutoComplete(); Dersom vi ønsker Autocomplete på noen av tekstboksene, men foreløpig ikke.
 
         mPasswordView = (EditText) findViewById(R.id.password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -198,7 +199,7 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
     @Override
     protected void onResume() {
         super.onResume();
-        //hideSystemUiTest();
+        //hideSystemUi();
     }
 
     /**

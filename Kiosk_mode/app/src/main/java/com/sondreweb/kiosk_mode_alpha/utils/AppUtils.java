@@ -45,7 +45,7 @@ public class AppUtils{
 
     private static final String TAG = AppUtils.class.getSimpleName()+"_custom";
 
-    public static final boolean DEBUG = true;
+    public static final boolean DEBUG = false;
 
     public final static int REQ_PERMISSION = 200;
 

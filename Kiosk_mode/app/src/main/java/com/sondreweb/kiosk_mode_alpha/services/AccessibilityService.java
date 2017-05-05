@@ -115,7 +115,7 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
                 Log.d(TAG,"event: "+event.toString());
                 Log.d(TAG,"Event classname: "+event.getClassName());
                 Log.d(TAG,"Event packagename: "+event.getPackageName());
-                checkIfOkayWindowState(event);
+                //checkIfOkayWindowState(event);
             }
         }
     }
@@ -140,7 +140,12 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
         }
         else if(event.getClassName().equals("android.widget.FrameLayout") && event.getPackageName().equals("com.android.systemui")){
             Log.d(TAG,"Denne Appen er grei");
-        }else{
+
+        }else if(checkIfKeyboard(event)){ //Keyboard har mange navn, men felles for de har de ingen PackageName eller Classname.
+            Log.d(TAG,"Keyboard er greit...");
+        }
+        else{
+
             if(PreferenceUtils.isKioskModeActivated(getApplicationContext())){
                 //Må gjøre noe med vinduet, 2 spesial tilfeller.
                 if(event.getClassName().equals(ResolverActivity)){
@@ -159,6 +164,14 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
         Log.d(TAG,"---------------------------------------------");
     }
 
+    public boolean checkIfKeyboard(AccessibilityEvent event){
+        try{
+            return event.getPackageName().toString().equalsIgnoreCase("");
+        }catch (NullPointerException e){
+            return true;
+        }
+    }
+
 
     public void checkIfOkState(AccessibilityEvent event){
         if(event.getPackageName().equals(PreferenceUtils.getPrefkioskModeApp(getApplicationContext()))){ //sjekker at vi er innefor Packages som er godkjent, som er MonumentVandring elns.
@@ -175,6 +188,10 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
         Log.d(TAG,"---------------------------------------------");
     }
 
+
+    public boolean isKeyboard(AccessibilityEvent event){
+       return true;
+    }
 
     public void gammeKodeTesting(AccessibilityEvent event){
         if(event.getEventType() == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED){
@@ -317,7 +334,6 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
 
     @Override
     public void onInterrupt() {}
-
 
     public boolean checkIfWhiteListedPackage(CharSequence packageName){
         for( String packageToCheck : WhiteListPackages){

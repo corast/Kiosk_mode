@@ -101,17 +101,18 @@ public class AdminPanelActivity extends AppCompatActivity implements Response.Li
     public static final String synchStatisticsJob = "sync_statistics_to_database";
     public static final String synchGeofenceJob = "sync_geofences_with_database";
 
-    Toolbar toolbar;
 
-    EditText edit_text_pref_kiosk;
-    Button kiosk_button;
+    Toolbar toolbar; //Toolbar
 
-    Button button_schedule_sync_statistics;
-    Button button_schedule_sync_geofence;
+    EditText edit_text_pref_kiosk; //EditText for hvilken app vi velger
+    Button kiosk_button; //Knappen som hører mer
 
-    TextView statistics_text;
-    TextView textView_schedule_geofence;
-    TextView textView_schedule_sync;
+    Button button_schedule_sync_statistics; //Synching av statistics
+    Button button_schedule_sync_geofence; //Synching av geofencene
+
+    //TextView statistics_text; //
+    TextView textView_schedule_geofence; //
+    TextView textView_schedule_sync; //
 
     TableLayout tableLayout;
     ListView geofenceListView;
@@ -197,15 +198,13 @@ public class AdminPanelActivity extends AppCompatActivity implements Response.Li
         textView_schedule_geofence.setText(textLastGeoSync);
     }
 
-    @Override
+    @Override//Når vi lager menuen så legger vi til vår custom toolbar.
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.admin_panel_toolbar,menu);
-
-
         return super.onCreateOptionsMenu(menu);
     }
 
-    @Override
+    @Override //For valg av menuItemene, gå til tilsvarende Setting eller activitet.
     public boolean onOptionsItemSelected(MenuItem item) {
         int mId = item.getItemId();
         switch (mId){
@@ -238,7 +237,7 @@ public class AdminPanelActivity extends AppCompatActivity implements Response.Li
 
     public void updateGui(){
         edit_text_pref_kiosk.setText(PreferenceUtils.getPrefkioskModeApp(getApplicationContext()));
-        //bytter tekst på knapper osv.
+        //bytter tekst og slikt på Knappen for KioskMode, slik at den ikke er lik hele tiden.
         if(PreferenceUtils.isKioskModeActivated(getApplicationContext())){
             //True vill si at vi gjøre slik at knappen ikke er trykkbar.
             kiosk_button.setText(getResources().getString(R.string.admin_panel_kiosk_button_off));
@@ -250,6 +249,7 @@ public class AdminPanelActivity extends AppCompatActivity implements Response.Li
             kiosk_button.setAlpha(0.4f);
         }
 
+        //Gjør brukergrensnittet mot Statistics Synk bedre. Ikke klikkbar når vi ikke har noe data tilgjengelig.
         if(SQLiteHelper.getInstance(getApplicationContext()).checkDataInStatisticsTable()){
             //Det er noe å synchronizere, aktiver knappen.
             button_schedule_sync_statistics.setText(getResources().getString(R.string.admin_panel_synchronize_scheduled));
@@ -262,15 +262,20 @@ public class AdminPanelActivity extends AppCompatActivity implements Response.Li
 
     }
 
+    //Når vi velger å skru av Kiosk mode, utføres det en rekke ting.
     public void turnOffKioskMode(View view){
         //Setter dette til false.
-        PreferenceUtils.setKioskModeActive(getApplicationContext(),false);
+        PreferenceUtils.setKioskModeActive(getApplicationContext(),false); //Forandre instillingene på systemet.
+
         Intent geofence_intent = new Intent(getApplicationContext(),GeofenceTransitionService.class);
         geofence_intent.setAction(GeofenceTransitionService.STOP_GEOFENCE_MONITORING);
-        startService(geofence_intent);
-        updateGui();
-    }
+        startService(geofence_intent);//Starter servicen med Action STOP_GEOFENCE_MONITORING. Som gjør hva navnet tilsier.
 
+        updateGui();//Oppdatere Gui på knappen.
+    }
+/*
+*   Knappen som vi bruker for å legge til en ny Kiosk Applikasjon.
+* */
     public void changeKioskApplication(View view){
         String app = null;
         try{
@@ -280,39 +285,45 @@ public class AdminPanelActivity extends AppCompatActivity implements Response.Li
         }
 
         if(app != null){
+            //Sjekker om appen er innstalert.
             if(AppUtils.isAppInstalled(getApplicationContext(),app)){
-                Toast.makeText(getApplicationContext(),app + " Settes nå som kiosk mode appliasjon", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(),app + "now used as kiosk application", Toast.LENGTH_SHORT).show();
                 PreferenceUtils.setPrefkioskModeApp(app,getApplicationContext());
-
             }else{
-                Toast.makeText(getApplicationContext(),app + " er ikke innstallert", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(),app + " not installed", Toast.LENGTH_SHORT).show();
             }
+        }else{
+            Toast.makeText(getApplicationContext(),app + "No appliction found", Toast.LENGTH_SHORT).show();
         }
     }
 
-   static List geofenceListS = null;
+   static List geofenceListS = null; //statis liste over Geofencene våre.
 
+    //Oppdatere tabellen med Geofence fra databasen.
     public void updateGeofenceTable(){
 
         if(!geofenceAdapter.isEmpty()){
-            geofenceAdapter.clear();
+            geofenceAdapter.clear(); //Tømmer gamle elementer
         }
 
+        //Henter alle Geofence fra databasen.
         geofenceListS = SQLiteHelper.getInstance(getApplicationContext()).getAllGeofencesClass();
         if(AppUtils.DEBUG){
             Log.d(TAG, geofenceListS.toString());
         }
-        //TODO gå gjennom hele listen og skriv ut til tabell.
+        //Legger til alle disse i ListViewet vårt(tabellen)
         geofenceAdapter.addAll(geofenceListS);
     }
 
+    //Statist oppdatere tabellen med geofencene fra databasen.
     public static void staticUpdateGeofenceTable(Context context){
         if(geofenceListS != null) {
-            geofenceListS.clear();
-            geofenceListS = SQLiteHelper.getInstance(context).getAllGeofencesClass();
+            geofenceListS.clear(); //Tømmer listen.
+            geofenceListS = SQLiteHelper.getInstance(context).getAllGeofencesClass(); //Henter alle Geofence fra databasen.
 
-            geofenceAdapter = new GeofenceAdapter(context);
+            geofenceAdapter = new GeofenceAdapter(context);//tømmer gammelt adapter.
             geofenceAdapter.setData(geofenceListS);
+
             geofenceAdapter.notifyDataSetChanged();
         }
     }
@@ -336,22 +347,25 @@ public class AdminPanelActivity extends AppCompatActivity implements Response.Li
         }else{
             Toast.makeText(getApplicationContext(),PreferenceUtils.getSynchGeofenceUrl(getApplicationContext())+"\n Not an valid URL",Toast.LENGTH_LONG);
         }
-
     }
-
 
     public void postStatistics(){
 
-        final String URLRequest = PreferenceUtils.getSynchStatisticsUrl(getApplicationContext());
+        ApplicationController controller = new ApplicationController(); //Lager en instance av controlleren vår.
 
+        final String URLRequest = PreferenceUtils.getSynchStatisticsUrl(getApplicationContext());
+        //Henter all statistikk fra databasen.
         SQLiteHelper sqLiteHelper = SQLiteHelper.getInstance(getApplicationContext());
         ArrayList<ContentValues> list = sqLiteHelper.getAllStatistics();
+        if(list.isEmpty()){//Kan bare returnere
+            return;
+        }
 
         //Lager Json objectet fra dette.
-        JSONObject statistics = new JSONObject();
-        JSONArray statisticsArray = new JSONArray();
+        final JSONObject statistics = new JSONObject();
+        final JSONArray statisticsArray = new JSONArray();
         JSONObject object = new JSONObject();
-        for (ContentValues contentValue:list) {
+        for (ContentValues contentValue:list) { //dersom listen er tom, kjører denne aldri.
             try {
                 object = new JSONObject();
                 object.put("navn", contentValue.getAsString(KioskDbContract.Statistics.COLUMN_MONUMENT));
@@ -363,32 +377,86 @@ public class AdminPanelActivity extends AppCompatActivity implements Response.Li
                 Log.e(TAG,e.getMessage());
             }
         }
+
         try {
             statistics.put("statistics", statisticsArray);
         }catch (JSONException e){
             Log.e(TAG,e.getMessage());
         }
-
-        Log.d(TAG, statistics.toString());
+        //Lager OBjectet.
+        Log.d(TAG, "Statistics.toSTring: "+statistics.toString());
 
         final JsonObjectRequest req = new JsonObjectRequest(URLRequest, statistics,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
                         try {
-                            Log.d(TAG, response.toString());
+                            Log.d(TAG,"onRespons()");
+                            //Log.d(TAG, response.getJSONObject("resposn").toString());
                             VolleyLog.v("Response:%n %s", response.toString(4));
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
                     }
                 }, new Response.ErrorListener() {
+
             @Override
             public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
                 Log.e(TAG,error.toString());
                 VolleyLog.e("Error: ", error.getMessage());
             }
+            /**
+             * Passing some request headers
+             * */
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                HashMap<String, String> headers = new HashMap<String, String>();
+                headers.put("Content-Type", "application/json; charset=utf-8");
+                return headers;
+            }
         });
+
+        //ApplicationController.getInstance().addToRequestQueue(req);
+
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, URLRequest,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        // Display the first 500 characters of the response string.
+                        Log.e(TAG, "Successfully signed in : " + response.toString());
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+                Log.e(TAG, "Error at sign in : " + error.getMessage());
+            }
+        }) {
+            @Override
+            public Map<String, String> getParams() {
+                HashMap<String, String> params = new HashMap<String, String>();
+                //TODO: putt passord osv dersom det er nødvendig her. Men disse kommer over nettet i klartest!
+                params.put("statistics",statisticsArray.toString());
+
+                Log.d(TAG,"getParams:" + params.toString());
+                return params;
+            }
+
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                HashMap<String, String> headers = new HashMap<String, String>();
+                headers.put("Content-Type", "application/json; charset=utf-8");
+                return headers;
+            }
+
+            @Override
+            public byte[] getBody() throws AuthFailureError {
+                Log.d(TAG,"getBody: "+getParams().toString().getBytes());
+                return getParams().toString().getBytes();
+            }
+        };
+
+        ApplicationController.getInstance().addToRequestQueue(stringRequest);
 
 
         //RequestQueue queue = Volley.newRequestQueue(this);
@@ -409,7 +477,6 @@ public class AdminPanelActivity extends AppCompatActivity implements Response.Li
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-
                 Log.e(TAG,"statusCode:"+ error.networkResponse.statusCode);
                 VolleyLog.e("Error: ", error.getMessage());
             }
@@ -421,6 +488,7 @@ public class AdminPanelActivity extends AppCompatActivity implements Response.Li
 
         //Response r = new Response.Listener<>()
         RequestQueue requestQueue = Volley.newRequestQueue(this);
+
         CustomRequest jsObjRequest = new CustomRequest(Request.Method.POST, URLRequest, statistics, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
@@ -433,7 +501,7 @@ public class AdminPanelActivity extends AppCompatActivity implements Response.Li
             }
         });
 
-        requestQueue.add(jsObjRequest);
+        //requestQueue.add(jsObjRequest);
 
         /*
        JsonArrayRequest request =  new JsonArrayRequest(Request.Method.POST,URLRequest,
@@ -531,7 +599,6 @@ public class AdminPanelActivity extends AppCompatActivity implements Response.Li
         }
     }
 
-
     /*
     *   Starter når vi trykker på Schedune Synch Geofence knappen.
     * */
@@ -541,10 +608,11 @@ public class AdminPanelActivity extends AppCompatActivity implements Response.Li
         if(Patterns.WEB_URL.matcher(PreferenceUtils.getSynchGeofenceUrl(getApplicationContext())).matches()){
             scheduleSynchGeofencesJobNow();
         }else{
-            Toast.makeText(getApplicationContext(),PreferenceUtils.getSynchGeofenceUrl(getApplicationContext())+"\n Not an valid URL",Toast.LENGTH_LONG);
+            Toast.makeText(getApplicationContext(),PreferenceUtils.getSynchGeofenceUrl(getApplicationContext())+"\n Not an valid URL",Toast.LENGTH_LONG).show();
         }
     }
 
+    //sett opp en synkroniserings jobb nå, som kjører så raskt som mulig.
     private void scheduleSynchStatisticsJobNow(){
         //TODO: schedule synchronize. Krever forsatt wifi, men trenger ikke å være ladd.
         FirebaseJobDispatcher dispatcher = new FirebaseJobDispatcher(new GooglePlayDriver(getApplicationContext()));
@@ -697,14 +765,14 @@ public class AdminPanelActivity extends AppCompatActivity implements Response.Li
 
         Cursor cursor = getContentResolver().query(uri, projection, null,null,null);
 
-        statistics_text.setText("");
+       // statistics_text.setText("");
         if (cursor.moveToFirst()) {
             do {
                 int monument_id = cursor.getInt(cursor.getColumnIndex(KioskDbContract.Statistics.COLUMN_MONUMENT));
                 int visit_id = cursor.getInt(cursor.getColumnIndex(KioskDbContract.Statistics.COLUMN_VISITOR_ID));
                 int date = cursor.getInt(cursor.getColumnIndex(KioskDbContract.Statistics.COLUMN_DATE));
                 int time = cursor.getInt(cursor.getColumnIndex(KioskDbContract.Statistics.COLUMN_TIME));
-                statistics_text.append("monumentId: " + monument_id + ", visitId: " + visit_id + ", date: " + date + ", time" + time + "\n");
+               // statistics_text.append("monumentId: " + monument_id + ", visitId: " + visit_id + ", date: " + date + ", time" + time + "\n");
             } while (cursor.moveToNext());
         }
         cursor.close(); //Lukker cursoren etter bruk.
