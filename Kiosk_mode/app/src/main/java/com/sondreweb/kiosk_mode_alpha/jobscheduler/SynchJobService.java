@@ -8,12 +8,18 @@ import android.util.Log;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.firebase.jobdispatcher.JobParameters;
 import com.firebase.jobdispatcher.JobService;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.maps.model.LatLng;
 import com.sondreweb.kiosk_mode_alpha.R;
 import com.sondreweb.kiosk_mode_alpha.activities.AdminPanelActivity;
+import com.sondreweb.kiosk_mode_alpha.application.ApplicationController;
 import com.sondreweb.kiosk_mode_alpha.classes.GeofenceClass;
 import com.sondreweb.kiosk_mode_alpha.storage.CustomContentProvider;
 import com.sondreweb.kiosk_mode_alpha.storage.GeofenceTable;
@@ -22,6 +28,10 @@ import com.sondreweb.kiosk_mode_alpha.storage.SQLiteHelper;
 import com.sondreweb.kiosk_mode_alpha.storage.StatisticsTable;
 import com.sondreweb.kiosk_mode_alpha.utils.AppUtils;
 import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -33,6 +43,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
@@ -72,7 +84,7 @@ public class SynchJobService extends JobService{
                 //TODO: sync statistikken nå. Egentlig samme job som automatiske versjonen.
                 Log.d(TAG,"starter job "+AdminPanelActivity.synchStatisticsJob);
                 if(SQLiteHelper.getInstance(getApplicationContext()).checkDataInStatisticsTable()) {
-                    //Gjør jobben...
+                    synchStatisticsNow();
                 }
                 break;
             case AdminPanelActivity.synchGeofenceJob:
@@ -86,13 +98,91 @@ public class SynchJobService extends JobService{
         return false; //Trenger ikke fullføre arbeidet på en tråd, vi kan fikse dette selv.
     }
 
+    private void synchStatisticsNow() {
+
+        ApplicationController controller = new ApplicationController(); //Lager en instance av controlleren vår.
+        final String URLRequest = PreferenceUtils.getSynchStatisticsUrl(getApplicationContext());
+
+        SQLiteHelper sqLiteHelper = SQLiteHelper.getInstance(getApplicationContext());
+        ArrayList<ContentValues> list = sqLiteHelper.getAllStatistics();
+        if(list.isEmpty()){//Kan bare returnere
+            return;
+        }
+
+        final JSONObject statistics = new JSONObject(); //JSON objectet vi sender
+
+        final JSONArray statisticsArray = new JSONArray();//JSON Array for statistikken.
+
+        JSONObject object;//Brukes for å holde på verdiene og lage hver rad i jsonArrayet.
+        for (ContentValues contentValue:list) { //dersom listen er tom, kjører denne aldri.
+            try {
+                object = new JSONObject();
+                object.put("navn", contentValue.getAsString(KioskDbContract.Statistics.COLUMN_MONUMENT));
+                object.put("besokId", contentValue.getAsString(KioskDbContract.Statistics.COLUMN_VISITOR_ID));
+                object.put("dato", contentValue.getAsString(KioskDbContract.Statistics.COLUMN_DATE));
+                object.put("tid", contentValue.getAsString(KioskDbContract.Statistics.COLUMN_TIME));
+                statisticsArray.put(object);
+            }catch (JSONException e){
+                Log.e(TAG,e.getMessage());
+            }
+        }
+
+        try {
+            statistics.put("statistics", statisticsArray);
+        }catch (JSONException e){
+            Log.e(TAG,e.getMessage());
+        }
+
+        /*Lager et JsonRequest fra Volley biblioteket. Hvor vi sender et JSONobject og motar et JSONobject fra server.
+        *  statistics: JSONobjectet vi sender med, URLRequest serveren sin URL med script eller hva det nå er som tar imot.
+        * */
+        final JsonObjectRequest req = new JsonObjectRequest(URLRequest, statistics,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        //TODO: Håndtere success respons og tømme data fra enheten.
+                        try {
+                            Log.d(TAG,"onRespons()");
+                            Log.d(TAG,"getString Stat:"+response.getString("stat"));
+                            //Log.d(TAG, response.getJSONObject("resposn").toString());
+                            VolleyLog.v("Response:%n %s", response.toString(4));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+                Log.e(TAG,error.toString());
+                VolleyLog.e("Error: ", error.getMessage());
+            }
+            /**
+             * Passing some request headers
+             * */
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                HashMap<String, String> headers = new HashMap<String, String>();
+                headers.put("Content-Type", "application/json; charset=utf-8");
+                return headers;
+            }
+        });
+
+        //Bruker controlleren og legger Requesten vi lagde for å sende til servern i køen på systemet.
+        ApplicationController.getInstance().addToRequestQueue(req);
+    }
+
     //skal aldri stoppe en Job uansett. Men noen tilfeller kan det være greit å stoppe en job som er i gang.
     @Override
     public boolean onStopJob(JobParameters job) {
         return false;
     }
 
-
+/*
+*   Gamle metoden for nettverkskommunikasjon, ble lagd før vi implementerte Volley, men funger forsatt så.
+*
+*   Seperat tråd som laster ned innhold fra en server og laster inn i databasen vår for Geofence.
+* */
    private class DownloadGeofencesFromURL extends AsyncTask<String, String, String> {
 
         private final String dTag = DownloadGeofencesFromURL.class.getSimpleName();
@@ -119,7 +209,7 @@ public class SynchJobService extends JobService{
                         //Bare noe tomme linjer som kan ha kommet med.
                         if(list.length == 4){
                              /*
-                             * vi bryr oss ikke om list[0]
+                             * vi bryr oss ikke om list[0] side vi lager vår egen med SQLite tabellen.
                              * 2:59.1191633:11.398382:219
                              * nr:lat:long:radius
                              * */
@@ -136,16 +226,17 @@ public class SynchJobService extends JobService{
                     Log.e(dTag,"IOException: "+e.getMessage());
                 }
             }
-            if(AppUtils.DEBUG){
+
+            if(AppUtils.DEBUG){//Debugg kode for testing.
                 Log.d(TAG,"contentValues:"+ contentValues.toString());
             }
             //TODO: da skal contenValues være full med geofence.
 
             //Vi skal da bytte ut alle geofence med disse dersom vi faktisk fikk tilbake noen.
             if(!contentValues.isEmpty()){
-                Log.d(TAG,"contentValues ikke tom");
+                //Oppdatere sist synk tid, slik av vi kan se senere når vi faktisk gjorde denne synkroniseringen.
                 PreferenceUtils.updatePrefLastSynchronizeGeofence(getApplicationContext());
-
+                //Erstatter alle Geofencene med disse nye vi mottok.
                 SQLiteHelper.getInstance(getApplicationContext()).replaceGeofences(contentValues);
 
             }

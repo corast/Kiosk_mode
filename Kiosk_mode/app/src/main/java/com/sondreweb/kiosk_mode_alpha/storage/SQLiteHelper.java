@@ -136,7 +136,6 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     /*
     *   Metode for å legge til et nytt Geofence til Listen
     * */
-
     public long addGeofence(LatLng latLng, float radius){ //vi må sørge for at disse sammenlagt ikke er like.
 
         SQLiteDatabase db = this.getWritableDatabase();
@@ -170,18 +169,19 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
     //TODO sjekk gamel versjon av databasen, for om den trenger syncing eller ikke.
 
-    //For syncing av databasen.
+    //For syncing av databasen, Erstatt alle geofence i tabellen vår med disse nye vi får inn.
     public boolean replaceGeofences(List<ContentValues> geofences){
         SQLiteDatabase db = this.getWritableDatabase();
-        //TODO lagre en kopi av gamel data også
 
         //Slette all data fra databasen.
         db.execSQL("DELETE FROM "+GeofenceTable.TABLE_NAME); //tømmer databasen.
 
         for (ContentValues geofence:
                 geofences) {
+            addGeofence(
+                    new LatLng(geofence.getAsDouble(GeofenceTable.COLUMN_LATITUDE),geofence.getAsDouble(GeofenceTable.COLUMN_LONGITUDE)),
+                    geofence.getAsInteger(GeofenceTable.COLUMN_RADIUS));
 
-            addGeofence(new LatLng(geofence.getAsDouble(GeofenceTable.COLUMN_LATITUDE),geofence.getAsDouble(GeofenceTable.COLUMN_LONGITUDE)),geofence.getAsInteger(GeofenceTable.COLUMN_RADIUS));
             //Legger til alle Geofence objektene.
             //addGeofence(geofence.getLatLng(), geofence.getRadius());
         }

@@ -336,10 +336,8 @@ public class AdminPanelActivity extends AppCompatActivity implements Response.Li
 
         if(Patterns.WEB_URL.matcher(PreferenceUtils.getSynchStatisticsUrl(getApplicationContext())).matches()){
             if(SQLiteHelper.getInstance(getApplicationContext()).checkDataInStatisticsTable()){
-                postStatistics();
-                //startStatisticsSync();
-                //scheduleSynchStatisticsJobNow();
-                //TODO: forandre på teksten på knappen?
+                //schedule synch job.
+                scheduleSynchStatisticsJobNow();
                 Toast.makeText(getApplicationContext(), getResources().getString(R.string.admin_panel_synchronize_scheduled), Toast.LENGTH_SHORT).show();
             }else{
                 Toast.makeText(getApplicationContext(), getResources().getString(R.string.admin_panel_synchronize_empty_database), Toast.LENGTH_SHORT).show();
@@ -349,6 +347,9 @@ public class AdminPanelActivity extends AppCompatActivity implements Response.Li
         }
     }
 
+    /*
+    * Kunn for testing formål, ulike metoder å sende data på til server.
+    * */
     public void postStatistics(){
 
         ApplicationController controller = new ApplicationController(); //Lager en instance av controlleren vår.
@@ -392,6 +393,7 @@ public class AdminPanelActivity extends AppCompatActivity implements Response.Li
                     public void onResponse(JSONObject response) {
                         try {
                             Log.d(TAG,"onRespons()");
+                            Log.d(TAG,"getString Stat:"+response.getString("stat"));
                             //Log.d(TAG, response.getJSONObject("resposn").toString());
                             VolleyLog.v("Response:%n %s", response.toString(4));
                         } catch (JSONException e) {
@@ -416,7 +418,7 @@ public class AdminPanelActivity extends AppCompatActivity implements Response.Li
             }
         });
 
-        //ApplicationController.getInstance().addToRequestQueue(req);
+        ApplicationController.getInstance().addToRequestQueue(req);
 
         StringRequest stringRequest = new StringRequest(Request.Method.POST, URLRequest,
                 new Response.Listener<String>() {
@@ -456,8 +458,7 @@ public class AdminPanelActivity extends AppCompatActivity implements Response.Li
             }
         };
 
-        ApplicationController.getInstance().addToRequestQueue(stringRequest);
-
+        //ApplicationController.getInstance().addToRequestQueue(stringRequest);
 
         //RequestQueue queue = Volley.newRequestQueue(this);
 
@@ -542,61 +543,6 @@ public class AdminPanelActivity extends AppCompatActivity implements Response.Li
 
 // add the request object to the queue to be executed
 
-    }
-
-    //Test funksjon, som ikke fungerer.
-    private void PostStatistics(ContentValues contentValues){
-        contentValues.toString();
-        HttpURLConnection urlConnection = null; // Will do the connection
-        BufferedReader reader;                  // Will receive the data from web
-        String strJsonOut;                      // JSON to send to server
-        try {
-            //HttpURLConnection
-            //HttpClient httpClient = new DefaultHttpClient();
-            //(URL url = new URL(buildUri.toString().trim());
-            URL url = new URL(PreferenceUtils.getSynchStatisticsUrl(getApplicationContext()));
-            urlConnection = (HttpURLConnection) url.openConnection();
-            urlConnection.setReadTimeout(0);
-            urlConnection.setConnectTimeout(1500); // timeout of connection
-            urlConnection.setRequestProperty("Content-Type", "text/plain; charset=utf-8"); // what format will you send
-            urlConnection.setRequestMethod("POST");
-            urlConnection.setDoInput(true); // will receive
-            urlConnection.setDoOutput(true); // will send
-            urlConnection.connect();
-            OutputStream outputStream = urlConnection.getOutputStream();
-            OutputStreamWriter ow = new OutputStreamWriter(outputStream);
-            //PHPObject
-            JSONObject objLogin = new JSONObject();
-            objLogin.put("navn",contentValues.getAsString(StatisticsTable.COLUMN_MONUMENT));
-            objLogin.put("besoksId",contentValues.getAsString(StatisticsTable.COLUMN_VISITOR_ID));
-            objLogin.put("dato",contentValues.getAsString(StatisticsTable.COLUMN_DATE));
-            objLogin.put("tid",contentValues.getAsString(StatisticsTable.COLUMN_TIME));
-            ow.write(objLogin.toString());
-            ow.close();
-
-            //information sent by server
-            InputStream inputStream = urlConnection.getInputStream();
-            StringBuffer buffer = new StringBuffer();
-            if (inputStream == null) {
-
-                // response is empty, do someting
-                return;
-            }
-            reader = new BufferedReader(new InputStreamReader(inputStream));
-            String strJsonServer = buffer.toString();
-            JSONObject objServerResponse = new JSONObject(strJsonServer);
-            boolean status = objServerResponse.getBoolean("status");
-
-            //return status; // Your response, do what you want.
-
-        }catch (IOException e){
-            Log.e(TAG, e.getMessage());
-        }
-        catch (JSONException e)
-        {
-            Log.e(TAG, e.getMessage());
-            // error on the conversion or connection
-        }
     }
 
     /*
