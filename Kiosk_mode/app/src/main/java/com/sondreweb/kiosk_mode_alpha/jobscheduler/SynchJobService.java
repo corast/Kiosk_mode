@@ -48,8 +48,6 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
- * Created by sondre on 11-Apr-17.
- *
  * Ansvar for å starte Syncing ved riktig tidspunkt til serveren.
  * Slik at vi kan synce opp data når vi vet at enheten har tilstrekkelig med tid.
  */
@@ -140,8 +138,15 @@ public class SynchJobService extends JobService{
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        //TODO: Håndtere success respons og tømme data fra enheten.
                         try {
+                            if(response.getString("stat").equalsIgnoreCase("ok")){
+                                //Dersom responsn er ok, så har vi vellykket sent data opp til databasen og den har lagret det unna.
+                                //Vi kan dermed tømme vår middeltidlige lager her på enheten.
+                                //TODO: kunn slette innhold som er over en uke gammelt fra idag, ved hjelp av TID kolonnen.
+                                SQLiteHelper.getInstance(getApplicationContext()).emptyStatisticsTable();
+                            }else{
+                                Log.e(TAG,"Error");
+                            }
                             Log.d(TAG,"onRespons()");
                             Log.d(TAG,"getString Stat:"+response.getString("stat"));
                             //Log.d(TAG, response.getJSONObject("resposn").toString());
@@ -182,6 +187,8 @@ public class SynchJobService extends JobService{
 *   Gamle metoden for nettverkskommunikasjon, ble lagd før vi implementerte Volley, men funger forsatt så.
 *
 *   Seperat tråd som laster ned innhold fra en server og laster inn i databasen vår for Geofence.
+*
+*   TODO: Bytte denne med Volley kode, slik at den er raskere.
 * */
    private class DownloadGeofencesFromURL extends AsyncTask<String, String, String> {
 

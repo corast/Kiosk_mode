@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * Created by sondre on 23-Mar-17.
+ * Adapter for hvordan hvert grid(felt) i GridViewet fra HomeAcitivity skal fylle inn hver av statusene.
  */
 
 public class StatusAdapter extends ArrayAdapter<StatusInfo>{

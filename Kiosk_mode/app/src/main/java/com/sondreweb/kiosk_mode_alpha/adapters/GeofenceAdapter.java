@@ -23,7 +23,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Created by sondre on 21-Apr-17.
+ * Adapter for hvordan hver rad med geofence skal vises i en liste.
  */
 
 public class GeofenceAdapter extends ArrayAdapter<GeofenceClass> {

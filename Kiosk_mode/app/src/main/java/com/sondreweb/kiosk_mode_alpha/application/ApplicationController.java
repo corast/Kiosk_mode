@@ -8,9 +8,10 @@ import com.android.volley.RequestQueue;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.Volley;
 
-/**  http://arnab.ch/blog/2013/08/asynchronous-http-requests-in-android-using-volley/
+/** Hentet fra.
+ * http://arnab.ch/blog/2013/08/asynchronous-http-requests-in-android-using-volley/
  *
- *   Ansvar for å centralisere køen.
+ *   Ansvar for å sentralisere køen.
  */
 
 public class ApplicationController extends Application {

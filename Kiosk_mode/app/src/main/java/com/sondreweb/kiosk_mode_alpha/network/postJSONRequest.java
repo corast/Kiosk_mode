@@ -11,7 +11,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by sondre on 30-Apr-17.
+ * Ikke i bruk.
+ *
+ * Forsøk på å lage en JSONRequest som kunne sende et Array istedet for et object. Men igjen, fungerte ikke etter planen.
  */
 
 public class postJSONRequest extends JsonArrayRequest {

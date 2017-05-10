@@ -6,8 +6,7 @@ import android.view.MotionEvent;
 import android.view.ViewGroup;
 
 /**
- * Created by sondre on 09-Mar-17.
- * Sørger for at vi kan
+ * Et View som ikke kan trykkes på, som ikke gjør noe med TouchEventene det mottar.
  */
 
 public class CustomView extends ViewGroup {
@@ -28,4 +27,5 @@ public class CustomView extends ViewGroup {
         Log.v(TAG,"***INTERCEPTET TOUCH EVENT****");
         return true;
     }
+
 }

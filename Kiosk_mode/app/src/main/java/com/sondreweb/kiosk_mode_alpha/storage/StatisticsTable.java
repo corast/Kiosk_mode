@@ -5,7 +5,7 @@ import android.net.Uri;
 import android.util.Log;
 
 /**
- * Created by sondre on 11-Apr-17.
+ * Ansvar for å lage Tabellen og holde oversikt over radene for Statistics.
  */
 
 public class StatisticsTable {

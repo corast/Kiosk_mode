@@ -17,12 +17,13 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 
 import com.sondreweb.kiosk_mode_alpha.adapters.AppAdapter;
+import com.sondreweb.kiosk_mode_alpha.classes.AppModel;
 import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
 
 import java.util.ArrayList;
 
 /**
- * Created by sondre on 17-Feb-17.
+ * Custom ListFragment for å holde på Appen vår.
  */
 
 public class AppsFragment extends ListFragment implements LoaderManager.LoaderCallbacks<ArrayList<AppModel>>{
@@ -61,8 +62,9 @@ public class AppsFragment extends ListFragment implements LoaderManager.LoaderCa
 
     @Override
     public void onStart() {
+        //TODO: finne ut om det forsatt er samme og om vi faktisk har byttet ut appen, for ellers er ikke dette nødvendig.
         //Dersom vi bytter koisk applikasjon underveis, så må vi oppdatere Fragmentet med dette.
-        adapter.notifyDataSetChanged();
+        adapter.notifyDataSetChanged();//Notifiserer Adapteret på at vi har byttet innhold på dataen den bruker.
         super.onStart();
     }
 

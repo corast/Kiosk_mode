@@ -36,19 +36,16 @@ import com.sondreweb.kiosk_mode_alpha.activities.AdminPanelActivity;
 import java.util.List;
 
 /**
+ * Settings activitetene.
+ *
  * A {@link PreferenceActivity} that presents a set of application settings. On
  * handset devices, settings are presented as a single list. On tablets,
  * settings are split by category, with category headers shown to the left of
  * the list of settings.
- * <p>
- * See <a href="http://developer.android.com/design/patterns/settings.html">
- * Android Design: Settings</a> for design guidelines and the <a
- * href="http://developer.android.com/guide/topics/ui/settings.html">Settings
- * API Guide</a> for more information on developing a Settings UI.
+ *
+ * Eneste problemet: Ikke helt omtimal navigering tilbake. Navigere forskjell basert på hvor lagt inn i settings vi går, dette kommer av "no histry" for aktivitetene.
  */
 public class AdminSettingsActivity extends AppCompatPreferenceActivity {
-
-    public static final String KEY_PREF_GEOFENCE_OVERLAY = "security_enable_geofence_overlay";
 
     @Override
     public void onBackPressed() {
@@ -287,7 +284,6 @@ public class AdminSettingsActivity extends AppCompatPreferenceActivity {
             setHasOptionsMenu(true);
 
             ((AdminSettingsActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
             // Bind the summaries of EditText/List/Dialog/Ringtone preferences
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
@@ -322,7 +318,6 @@ public class AdminSettingsActivity extends AppCompatPreferenceActivity {
         @Override
         public boolean onOptionsItemSelected(MenuItem item) {
             if(item.getItemId() == android.R.id.home){
-                Log.d(TAG, "Going home");
                 NavUtils.navigateUpFromSameTask(this.getActivity());
                 startActivity(new Intent(getActivity(), AdminSettingsActivity.class));
                 return true;

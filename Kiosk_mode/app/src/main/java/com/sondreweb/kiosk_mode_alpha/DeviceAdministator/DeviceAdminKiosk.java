@@ -9,11 +9,9 @@ import android.widget.Toast;
 import com.sondreweb.kiosk_mode_alpha.activities.HomeActivity;
 import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
 
-//import com.sondreweb.kiosk_mode_alpha.utils.AppUtils;
-//import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
-
 /**
- * Created by sondre on 24-Feb-17.
+ * Device admin for applikasjonen, var tenk å bruke denne for å låse ned enheten,
+ * men siden det ikke vare noen metode for å låse opp igjen gjennom denne, så var dette ubrukelig.
  */
 
 public class DeviceAdminKiosk extends DeviceAdminReceiver{
@@ -40,7 +38,6 @@ public class DeviceAdminKiosk extends DeviceAdminReceiver{
 
     @Override
     public CharSequence onDisableRequested(Context context, Intent intent) {
-        //TODO Intercept med passord?
         //Tester med å gå tilbake til home
         /* Intent homeActivity = new Intent(Intent.ACTION_MAIN);
         homeActivity.addCategory(Intent.CATEGORY_ALTERNATIVE);
@@ -52,7 +49,6 @@ public class DeviceAdminKiosk extends DeviceAdminReceiver{
 
     @Override //Callback for når vi ikke er Device Administrator
     public void onDisabled(Context context, Intent intent) {
-        showToast(context,"onDisabled i DeviceAdmin");
         PreferenceUtils.setPrefAdminDevice(false,context);
         super.onDisabled(context, intent);
     }

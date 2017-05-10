@@ -13,7 +13,9 @@ import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
 /**
- * Created by sondre on 01-May-17.
+ * Ikke i bruk.
+ *
+ * Forsøk på å lage egen JSONrequest som kunne ta imot en String som respons, men fungerte ikke som forventent.
  */
 
 public class CustomRequest extends Request<JSONObject> {

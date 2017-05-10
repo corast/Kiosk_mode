@@ -10,15 +10,15 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.sondreweb.kiosk_mode_alpha.AppModel;
+import com.sondreweb.kiosk_mode_alpha.classes.AppModel;
 import com.sondreweb.kiosk_mode_alpha.R;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * Created by sondre on 17-Feb-17.
- * Addapter for hvordan hver item i listen skal ligge i fragmentent.
+ *
+ * Addapter for hvordan hver item i listen skal ligge i fragmentent i HomeActivity.
  */
 
 public class AppAdapter extends ArrayAdapter<AppModel> {

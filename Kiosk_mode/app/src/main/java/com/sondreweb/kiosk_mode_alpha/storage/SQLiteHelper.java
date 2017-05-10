@@ -19,7 +19,8 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Created by sondre on 30-Mar-17.
+ * Hjelpe klasse for databasen.
+ * Lager databasene, og har metoder for å nå tabellene i databasen.
  */
 
 public class SQLiteHelper extends SQLiteOpenHelper {
@@ -166,24 +167,20 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     }
 
 
-
     //TODO sjekk gamel versjon av databasen, for om den trenger syncing eller ikke.
-
     //For syncing av databasen, Erstatt alle geofence i tabellen vår med disse nye vi får inn.
     public boolean replaceGeofences(List<ContentValues> geofences){
         SQLiteDatabase db = this.getWritableDatabase();
 
         //Slette all data fra databasen.
         db.execSQL("DELETE FROM "+GeofenceTable.TABLE_NAME); //tømmer databasen.
-
+        //Legger inn de vi fikk inn.
         for (ContentValues geofence:
                 geofences) {
             addGeofence(
                     new LatLng(geofence.getAsDouble(GeofenceTable.COLUMN_LATITUDE),geofence.getAsDouble(GeofenceTable.COLUMN_LONGITUDE)),
                     geofence.getAsInteger(GeofenceTable.COLUMN_RADIUS));
 
-            //Legger til alle Geofence objektene.
-            //addGeofence(geofence.getLatLng(), geofence.getRadius());
         }
         return true;
     }
@@ -204,10 +201,10 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
         if(cursor.moveToFirst()){
             if(cursor.getInt(0) > 0){ //Sjekker om antall rader er mer enn 0.
-                return true; //er data
+                return true; //inneholder data
             }
         }
-        return false; //er ikke data.
+        return false; //inneholder ikke data.
     }
 
     public Cursor getStatistics(String id, String[] projection, String selection, String[] selectionArgs, String sortOrder){
@@ -239,7 +236,6 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     *       nullColumnHack,
     *       values);
     * */
-
     /*
     *   Legg til en statistikk rad.
     * */

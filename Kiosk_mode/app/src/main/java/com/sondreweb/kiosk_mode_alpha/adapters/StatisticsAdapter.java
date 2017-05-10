@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * Created by sondre on 27-Apr-17.
+ * Adapter for hvordan hver statistik rad skal vises i en liste.
  */
 
 public class StatisticsAdapter extends ArrayAdapter<ContentValues>{

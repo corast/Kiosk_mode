@@ -1,4 +1,4 @@
-package com.sondreweb.kiosk_mode_alpha;
+package com.sondreweb.kiosk_mode_alpha.classes;
 
 import android.content.Context;
 import android.content.pm.ApplicationInfo;

@@ -3,8 +3,7 @@ package com.sondreweb.kiosk_mode_alpha.classes;
 import com.google.android.gms.location.Geofence;
 
 /**
- * Created by sondre on 06-Apr-17.
- * Trenger ikke denne!
+ * Holder på status til hvert av Geofencene.
  */
 
 //Holder på et Geofence og en status. Som bare er Int verdien.

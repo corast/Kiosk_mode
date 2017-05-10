@@ -5,9 +5,9 @@ import com.google.android.gms.maps.model.LatLng;
 import java.util.List;
 
 /**
- * Created by sondre on 30-Mar-17.
  *
- * Tror ikke det er behov for denne
+ * Tilfelle vi måtte lage vår eget GeofenceObject istedet for med den fra GooglePlayServices Apiet.
+ *
  */
 
 public class GeofenceClass {
@@ -15,8 +15,6 @@ public class GeofenceClass {
     //TODO Lag Objecter som holder på kordinater osv til et GeofenceClass, slik at vi enkelt kan lage flere.
 
     //Class for creating geoLocation objects, which will be responsible for holding information about Geofences which we might need.
-
-    private static List<GeofenceClass> geofenceList;
 
     String requestId; //ID to diffentiate the geofences.
     double latitude; //Placement in Lat

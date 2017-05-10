@@ -6,7 +6,7 @@ import android.graphics.drawable.Drawable;
 import com.sondreweb.kiosk_mode_alpha.R;
 
 /**
- * Created by sondre on 23-Mar-17.
+ * Classe for hver av statusene som vises i HomeActivity.
  */
 
 //TODO: fiks onclick listenern, slik at vi kan sende brukeren til riktig sted i settings nør det er nødvendig.

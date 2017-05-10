@@ -4,7 +4,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 /**
- * Created by sondre on 30-Mar-17.
+ * Ansvar for å lage Tabellen og holde oversikt over radene for Geofencer.
  */
 
 public class GeofenceTable{

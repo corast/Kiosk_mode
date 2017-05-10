@@ -86,6 +86,7 @@ import java.util.Random;
  *              med enklere betingelser som kunn er WIFI. slik at vi kan sende med en gang WIFI er tilgjengelig.
  *          Skru av Kiosk mode på enheten, slik at vi kan bruke den til alminelig bruk igjen.
  *          Velge hvilken applikasjon som vi skal låse enheten til.
+ *          Vise tingang til ekstra funsjoner, som å se Data som er tilgjengelig fra Vandringer, samt instillings paneler.
  */
 
 
@@ -105,16 +106,14 @@ public class AdminPanelActivity extends AppCompatActivity implements Response.Li
     Toolbar toolbar; //Toolbar
 
     EditText edit_text_pref_kiosk; //EditText for hvilken app vi velger
-    Button kiosk_button; //Knappen som hører mer
+    Button kiosk_button; //Knappen som hører med
 
     Button button_schedule_sync_statistics; //Synching av statistics
     Button button_schedule_sync_geofence; //Synching av geofencene
 
-    //TextView statistics_text; //
-    TextView textView_schedule_geofence; //
-    TextView textView_schedule_sync; //
+    TextView textView_schedule_geofence; //TekstBoks for å vise sist synkronisering av Geofence
+    TextView textView_schedule_sync; //TekstBoks for å vise sist synkronisering av statistikken.
 
-    TableLayout tableLayout;
     ListView geofenceListView;
     public static GeofenceAdapter geofenceAdapter;
 
@@ -154,8 +153,6 @@ public class AdminPanelActivity extends AppCompatActivity implements Response.Li
             getSupportActionBar().setTitle(R.string.admin_panel_toolbar_title);
             getSupportActionBar().setDisplayHomeAsUpEnabled(false);
             getSupportActionBar().setDisplayShowHomeEnabled(false);
-            //toolbar.setTitleTextColor(ContextCompat.getColor(getApplicationContext(),R.color.redWard));
-
         }
 
         ViewStub stub = (ViewStub) findViewById(R.id.vs_continue_empty);
@@ -164,7 +161,6 @@ public class AdminPanelActivity extends AppCompatActivity implements Response.Li
         geofenceListView.setAdapter(geofenceAdapter);
 
         updateGui();
-
     }
 
     @Override

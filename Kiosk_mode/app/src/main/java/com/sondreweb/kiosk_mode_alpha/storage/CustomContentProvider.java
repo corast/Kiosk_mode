@@ -38,9 +38,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
- * Created by sondre on 10-Apr-17.
- * Skal ha ansvar for å lagre data til en database eller hva nå enn vi skal lagrde.
- * Denne skal brukes for å lagre statistikken vi har
+ * Ansvar for å dele databasen for lagring av statistikk for applikasjoner/prosesser utenom vår egen.
  */
 
 public class CustomContentProvider extends ContentProvider {
@@ -86,11 +84,7 @@ public class CustomContentProvider extends ContentProvider {
     static final UriMatcher URI_MATCHER;
     static{
         URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
-        /*
-        URI_MATCHER.addURI(KioskDbContract.AUTHORITY,
-                "statistikk",+
-                        STATISTIKK_ID);
-        */
+
         //Når vi skal ha tak i kunn ett element med en ID.
 
         URI_MATCHER.addURI(
@@ -119,22 +113,16 @@ public class CustomContentProvider extends ContentProvider {
     public boolean onCreate() {
         //initialisere databasen vår.
 
-        sqLiteHelper = SQLiteHelper.getInstance(getContext()); //lager databasen dersom det ikke er gjordt.
+        sqLiteHelper = SQLiteHelper.getInstance(getContext()); //lager databasen(e) dersom det ikke er gjordt.
         sqLiteHelper.close();
-        /*
-        *   A content provider is created when its hosting process is created,
-        *   and remains around for as long as the process does, so there is no need to close the database --
-        *   it will get closed as part of the kernel cleaning up the process's resources when the process is killed.
-        *    -En eller annen Engineer fra Google.
-        * */
         return true;
     }
 
     @Override
     public void onLowMemory() {
-        //Når vi har lite med minne, hva gjør vi da?
         /*
         *   Ved lite minne, må vi be brukeren gå tilbake til Resepsjonen og bytte ut enheten, siden denne må restartet slik at Cashe kan cleares kanskje?
+        *   Ikke satt opp noe så lenge.
         * */
         super.onLowMemory();
     }
@@ -146,41 +134,25 @@ public class CustomContentProvider extends ContentProvider {
     @Nullable
     @Override
     public String getType(@NonNull Uri uri) {
-        // FIXME: 14-Apr-17
-        Log.d(TAG,"getType: "+uri);
+        if(AppUtils.DEBUG) {
+            Log.d(TAG, "getType: " + uri);
+        }
         switch (URI_MATCHER.match(uri)){
             case STATISTIKK_ID:
-                Log.d(TAG,"getType: case: "+STATISTIKK_ID);
                 return Statistics.CONTENT_ITEM_TYPE;
             case STATISTIKK_LIST:
-                Log.d(TAG,"getType: case: "+STATISTIKK_LIST);
                 return Statistics.CONTENT_TYPE;
             default:
                 throw new IllegalArgumentException("Unsupported URI "+uri);
         }
-
-        /*
-        switch (URI_MATCHER.match(uri)){
-            case STATISTIKK_LIST ://dersom vi skal ha tak i en eller flere rader i tabellen.
-                /*  CURSOR_DIR_BASE_TYPE= vnd.android.cursor.dir
-                //   "vnd.android.cursor.dir/com.sondreweb.kiosk_mode_alpha.storage.statisticsItems"
-                //   "vnd.android.cursor.dir/vnd.com.androidcontentproviderdemo.androidcontentprovider.provider.images";
-                //return StatisticsItems.CONTENT_TYPE;
-            case STATISTIKK_ID: //Dersom vi skal ha tak i en rad
-                /*  CURSOR_ITEM_BASE_TYPE= vnd.android.cursor.item
-                  // "vnd.android.cursor.item/com.sondreweb.kiosk_mode_alpha.storage.statisticsItems
-
-                //return StatisticsItems.CONTENT_ITEM_TYPE;
-            default:
-                throw new IllegalArgumentException("Unsupported URI "+uri);
-        } */
     }
 
     //Sjekker at vi fikk lagt til i databasen riktig, og returnere Uri adressen på denne.
     private Uri getUriForId(long id, Uri uri){
         if(id > 0) {
             Uri itemUri = ContentUris.withAppendedId(uri,id);
-            if(!isInBatchMode()){
+            if(!isInBatchMode()){ //sjekker om vi er i bactchMode, altså om vi skal utføre flere opperasjoner sammtidig.
+                                    //Men brukes ikke foreløpig.
                 getContext()
                         .getContentResolver().notifyChange(itemUri, null);
             }
@@ -196,7 +168,7 @@ public class CustomContentProvider extends ContentProvider {
     }
 
         /*
-        *   Modifies data, men dett skal vi ikke gjøre med statistikken uansett.
+        *   Update setninger, men vi tillater ingen.
         * */
     @Override
     public int update(@NonNull Uri uri, @Nullable ContentValues values, @Nullable String selection, @Nullable String[] selectionArgs) {
@@ -204,7 +176,7 @@ public class CustomContentProvider extends ContentProvider {
     }
 
     /*
-    *   Return records based on selection criteria
+    *   Return records based on selection criteria, kunn brukt for å teste. Men kan egentlig sløyfes.
     * */
     @Nullable
     @Override
@@ -226,10 +198,8 @@ public class CustomContentProvider extends ContentProvider {
 
             //DENNE ER IKKE I BRUK. Ikke lagt til som URI engang.
             case STATISTIKK_ID: //Vill si at vi skal lage en cursor hvor vi skal ha tilbake kunn et element.
-                //Denne er ikke teste ut, så fungere mest sannsynlig ikke som forventet.
-                //TODO: Finn ut hvordan vi velger hvilket case som skal gjøres.
+
                 queryBuilder.setTables(StatisticsTable.TABLE_NAME);
-                //TODO: Finn ut hvordan vi best kan finne bare en data, siden dette ikke er unikt.
                 //uri.getLastPathSegment() er det som kommer etter /# så altså hva som står i #, et tall for primary key eller string. Tror jeg ivetfall.
                 //queryBuilder.appendWhere(StatisticsTable.COLUMN_VISITOR_ID + " = " + uri.getLastPathSegment());
                 //Vi må da sende inn de tre verdiene vi trenger å sjekke imot for å finne den uniqe raden.
@@ -256,27 +226,13 @@ public class CustomContentProvider extends ContentProvider {
         }catch (NullPointerException e){
             Log.e(TAG,e.getLocalizedMessage());
         }
-        /*
-        // if we want to be notified of any changes to database:
-        if (useAuthorityUri) {
-            cursor.setNotificationUri(getContext().getContentResolver(), KioskDbContract.CONTENT_URI);
-        }
-        else {
-            cursor.setNotificationUri(getContext().getContentResolver(), uri);
-        } */
+
         databaseReadable.close();
         return cursor;
+    }
 
     /*
-        String id = null;
-        if(URI_MATCHER.match(uri) == STATISTIKK_ID){
-            id = uri.getPathSegments().get(1);
-        }
-        return sqLiteHelper.getStatistics(id,projection,selection,selectionArgs,sortOrder);
-        */
-    }
-    /*
-    * Rett fra grokkingandroid sin kode
+    * Rett fra grokkingandroid sin kode som har blitt justert på.
     * https://bitbucket.org/grokkingandroid/cpsample/src/c75f7d61f80cf41f009aca8ad346eddf6b3a13e7/src/com/grokkingandroid/sampleapp/samples/data/contentprovider/provider/LentItemsProvider.java?at=master&fileviewer=file-view-default
     * */
 
@@ -387,7 +343,7 @@ public class CustomContentProvider extends ContentProvider {
 
                 }
                 if(numberInserted > 0){ //sjekker at det ble lagt til minst en rad
-                    if(PreferenceUtils.getSynchronizeAutomatically(getContext())){//sjekker at settigen er på.
+                    if(PreferenceUtils.getSynchronizeAutomatically(getContext())){//sjekker at settigen er på for å synkronisere automatisk.
                         scheduleSyncJob();//starter synching når vi har WIFI.
                     }
                 }
@@ -400,7 +356,7 @@ public class CustomContentProvider extends ContentProvider {
 
 
 /*  ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤JOB SCHEDULER¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤
-    *   JobScheduling av Syncing.
+    *   JobScheduling av Syncing automatisk fra denne..
     * */
 
     public final static String synchJob = "sync_statistics_to_database_automatic";

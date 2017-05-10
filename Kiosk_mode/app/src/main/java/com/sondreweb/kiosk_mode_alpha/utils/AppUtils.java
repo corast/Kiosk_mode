@@ -35,8 +35,6 @@ import java.io.File;
 import java.util.ArrayList;
 
 /**
- * Created by sondre on 03-Mar-17.
- *
  * Globale funksjoner som kan brukes flere steder i systemet.
  * Noen krever kunn en Context mens andre trenger tillatelse for å tegne på skjermen og trenger og dermen en Activity.
  */
@@ -45,7 +43,7 @@ public class AppUtils{
 
     private static final String TAG = AppUtils.class.getSimpleName()+"_custom";
 
-    public static final boolean DEBUG = false;
+    public static final boolean DEBUG = false; //Bestemmer om vi skal vise ekstra knapper, og logge ut mye innhold.
 
     public final static int REQ_PERMISSION = 200;
 
@@ -111,11 +109,10 @@ public class AppUtils{
         }
         return resultCode == ConnectionResult.SUCCESS; //returnere kunn true dersom ConnectionResult.SECCESS som o
     }
-
     /*
     *   ConnectionResult.SUCCESS vill si vi koblet oss velykket til. '
     *   Merk at dette tar ikke i betraktning om vi trenger en oppdatering av Google Play Services.
-    *       men viss det er SUCCESS så er versjonen god nok.
+    *       men viss det er SUCCESS så er versjonen god nok til bruk.
     * */
 
     public static boolean isGooglePlayServicesAvailable(Context context){

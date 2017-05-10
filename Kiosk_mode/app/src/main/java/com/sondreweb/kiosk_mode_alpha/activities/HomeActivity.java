@@ -57,10 +57,9 @@ import java.util.List;
 
 /**
  * Created by sondre on 16-Feb-17.
- *
- * Home screen appen, denne har ansvar for å vise  tilgjengelige applikasjoner.
- * TODO: Lag en knapp som starter Kiosk mode(altså starter opp monumentvandringen, vi har ikke lov å gå ut av denne.
- * TODO: Ta i bruk SettingsApi, ved å først koble til Google Api Client.
+ * Home screen appen, denne har ansvar for å vise tilgjengelige satt Applikasjon(til Kiosk Mode).
+ * Vise Statusen på de ulike kravene som må være infridd før utlån.
+ * Brukergrenssnitt for å starte opp Kiosk Mode med satt applikasjon.
  */
 public class HomeActivity extends FragmentActivity implements
         ActivityCompat.OnRequestPermissionsResultCallback {
@@ -633,16 +632,16 @@ public class HomeActivity extends FragmentActivity implements
             WindowManager manager = ((WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE));
             WindowManager.LayoutParams localLayoutParams = new WindowManager.LayoutParams();
             localLayoutParams.type = WindowManager.LayoutParams.TYPE_SYSTEM_ERROR;
-            localLayoutParams.gravity = Gravity.TOP | Gravity.RIGHT; //Oppe til høyre vill denne komme opp
+            localLayoutParams.gravity = Gravity.TOP | Gravity.END; //Oppe til høyre vill denne komme opp, Byttet fra RIGHT til END 8-mai.
 
             localLayoutParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
                     //Window flag: even when this window is focusable (its FLAG_NOT_FOCUSABLE is not set), allow any pointer events outside of the window to be sent to the windows behind it.
                     WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
 
-                    //Window flag: place the window within the entire screen, ignoring decorations around the border (such as the status bar).
                     WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
+                    //Window flag: place the window within the entire screen, ignoring decorations around the border (such as the status bar).
             localLayoutParams.width = 960; //halvparten av sjermBredde, siden vi forsatt vill ha touch event-ene til notifikasjonene
-            localLayoutParams.height = (int) (40 * getResources().getDisplayMetrics().scaledDensity); //Stod 50, så får se hvordan det går.
+            localLayoutParams.height = (int) (40 * getResources().getDisplayMetrics().scaledDensity); //Høyde som skal dekke område for å swipe ned quick settings.
             localLayoutParams.format = PixelFormat.TRANSLUCENT; //litt gjennomsiktig. PixelFormat.TRANSLUCENT;
             CustomView view = new CustomView(this);
             if(AppUtils.DEBUG) {

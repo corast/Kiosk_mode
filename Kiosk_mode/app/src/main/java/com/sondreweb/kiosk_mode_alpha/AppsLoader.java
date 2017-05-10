@@ -5,21 +5,17 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.support.v4.content.AsyncTaskLoader;
-import android.support.v4.content.Loader;
 import android.util.Log;
 
+import com.sondreweb.kiosk_mode_alpha.classes.AppModel;
 import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
 
-import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 /**
- * Created by sondre on 17-Feb-17.
  * Custom loader, som loader alle innstallerte applikasjoner i en bakgrunnstråd, slik at UI(Main) tråden er ledig til andre ting.
- * TODO: Kunn legg til de vi ønsker at bruken kan ha tilgang til, som Monumentvandrings appen, og (kanskje) custom settings?
  *
  * source https://developer.android.com/reference/android/content/AsyncTaskLoader.html Under AppListLoader
  */

@@ -44,7 +44,8 @@ import java.util.List;
 import static android.Manifest.permission.READ_CONTACTS;
 
 /**
- * A login screen that offers login via email/password.
+ * Logg inn skjerm som tillater oss å logge inn til AdminPanelet.
+ * En tilbake knapp for brukere som havner her med et uhell.
  */
 public class LoginAdminActivity extends AppCompatActivity implements LoaderCallbacks<Cursor> {
 
@@ -54,14 +55,6 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
      * Id to identity READ_CONTACTS permission request.
      */
     private static final int REQUEST_READ_CONTACTS = 0;
-
-    /**
-     * A dummy authentication store containing known user names and passwords.
-     * TODO: remove after connecting to a real authentication system.
-     */
-    private static final String[] DUMMY_CREDENTIALS = new String[]{
-            "foo@example.com:hello", "bar@example.com:world"
-    };
 
     @Override
     protected void onPause() {
@@ -75,6 +68,7 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
         super.onPause();
     }
 
+    //Strenger som brukes for passord som vi kan logge inn med, men denne bør byttes ut.
     private static final String[] DYMMY_CREDENTUALS_PASSWORDS = new String[]{
       "passord123","FORGOTPASSWORD","password","12345"
     };
@@ -370,12 +364,13 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
         protected Boolean doInBackground(Void... params) {
             // TODO: attempt authentication against a network service.
 
-            try {
+            /*try {
+
                 // Simulate network access.
                 Thread.sleep(2000);
             } catch (InterruptedException e) {
                 return false;
-            }
+            }*/
 
             //Looper gjennom alle passord, og ser at de stemmer.
             for (String credential : DYMMY_CREDENTUALS_PASSWORDS) {

@@ -64,28 +64,18 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Created by sondre on 26-Jan-17.
  * Servicen skal kjøre i bakgrunn.
  *
+ * Holder koblingen til GooglePlayServices Apiet med en GoogleApiClient.
  *
+ * hente lokasjon via GPS evt. WIFI ved angitte intervaller.
  *
- * The Service that will run in the background on a seperate thread(mostly)
- *  and do the work it is tasked with.
- *  Run events when the users reacts with a GeofenceClass.
- *  Lock the device if the user exits the Geofences.
- *  Must be efficient enught, ie not draw all the battery power afther an hour etc.
+ * Oppsetter Geofencene vi trenger
  *
- *  Must be able to start itself up again when the system reboots, starts.
- *  Tasked with keeping the system only usable within the parameters(geofence).
- *  Tasked with Warning the user if he is almost exiting an GeofenceClass. (need different GeofenceClass levels).
+ * Tar imot all respons fra Geofencene når de Triggeres(sender event tilbake hit).
+ * Tegner et Overlay på skjermen basert på respons fra Geofencene.
  *
- *  Should be able to get the location with only GPS tracking.(this needs more reasearch).
- *
- * Servicen som skal gå i bakgrunn og har som oppgave
- * Oppgave:
- *      : Holde styr på mobilens posisjon.
- *      : Låse enheten viss grensene oversteges.
- *      : Gi beskjed til bruker om grensene(advarsler osl)
+ * Holde skjermen våken.
  */
 
 /**
@@ -95,25 +85,13 @@ import java.util.List;
 *   View.postDelayed(Runnable, long)
 * */
 
-    /**
-     * Steg som må gjennomføres for å starte opp GeofenceMonitorering.
-     *  1. Request permission til å bruke Location
-     *  2. Konfigurer Google Play Services.
-     *      a) Configurer Library dependencies.
-     *      b) Setup & Call googleApiClient( Connect til Google Api Clienten når den er lagd.)
-     *  3. Start location monitorering.
-     *      a) Lag LocationRequests.
-     *
-     *
-     *
-     *
+    /**Steg for å lage et Geofence.
      *  1. Lag GoogleApiClient.
      *  2. GoogleApiClient connect.
      *  3. Lag Geofencene vi trenger.
      *  4. Lag GeofenceRequest.
      *  5. sende dette GeofenceRequest  LocationServices.GeofencingApi.addGeofences(GeofenceRequest)
-     *  6.
-     *
+     *  6.Start monitorering av GeofenceRequestet.
      * **/
 
 public class GeofenceTransitionService extends Service implements
@@ -725,7 +703,7 @@ public class GeofenceTransitionService extends Service implements
 /*
 *   BroadcastReciever
 *   Mottar Broadcast om ACTION_SCREEN_OFF.
-*   Vekker enheten derskom dette mottas, slik at skjermen ikke skrus av.
+*   Vekker enheten derskom dette mottas, slik at skjermen ikke skrus av under bruk.
 * */
     public class ServiceBroadcastReceiver extends BroadcastReceiver {
 

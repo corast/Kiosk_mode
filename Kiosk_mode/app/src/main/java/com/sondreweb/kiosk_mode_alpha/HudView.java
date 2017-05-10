@@ -9,7 +9,9 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 /**
- * Created by sondre on 20-Apr-17.
+ * Ikke i bruk.
+ *
+ * Canvas hudview, men var ikke akkurat det jeg lette etter. Så ble heller ikke brukt utenom testing.
  */
 
 public class HudView extends ViewGroup {
@@ -46,7 +48,6 @@ public class HudView extends ViewGroup {
     public boolean onTouchEvent(MotionEvent event) {
         //return super.onTouchEvent(event);
         Toast.makeText(getContext(),"onTouchEvent", Toast.LENGTH_LONG).show();
-        Log.d("HudView","onTouchEvent blabla");
         return super.onTouchEvent(event);
     }
 

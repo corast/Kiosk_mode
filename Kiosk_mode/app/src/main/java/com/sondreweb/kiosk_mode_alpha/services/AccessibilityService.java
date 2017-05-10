@@ -12,13 +12,14 @@ import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.Toast;
 
+import com.sondreweb.kiosk_mode_alpha.utils.AppUtils;
 import com.sondreweb.kiosk_mode_alpha.utils.PreferenceUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
- * Created by sondre on 23-Feb-17.
+ * Ansvar for å monitorere vindu på systemt og navigere tilbake til Home dersom dette ikke er etter ønske.
  */
 
 public class AccessibilityService extends android.accessibilityservice.AccessibilityService {
@@ -27,7 +28,8 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
     protected final String GeofencingApp = "com.sondreweb.geofencingAlpha";
     //Kan ikke whiteliste denne, siden det er mulighet for å gå tilbake her.
     protected final String LauncherApp = "com.sondreweb.kiosk_mode_alpha";
-    //Keyboard kan være problematisk, litt for vag i noen tilfeller.
+
+    //Keyboard kan være problematisk, litt for vag i noen tilfeller, men på simulatoren så er det som oftest kunn denne.
     protected final String Keyboard = "com.google.android.inputmethod.latin";
 
     //WHITELISTED CLASSNAMES:
@@ -70,7 +72,9 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
     * */
     @Override
     protected void onServiceConnected() {
-        Log.d(TAG,TAG+" started  €€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€");
+        if(AppUtils.DEBUG) {
+            Log.d(TAG, TAG + " onServiceConnected() ");
+        }
         AccessibilityServiceInfo info = new AccessibilityServiceInfo();
         //initiateWhitelist();
             //Vi er på utkikk etter alle eventer som har med å forandre Window state
@@ -83,7 +87,7 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
         info.flags = AccessibilityServiceInfo.DEFAULT;
             //The timeout after the most recent event of a given type before an AccessibilityService is notified.
             //Delay før vi får inn Eventet som har skjedd.
-        info.notificationTimeout = 10; //0.1 sekunder er nok for bruken til å se hva som har skjedd, men ikke nok tid til å faktisk gjøre noe.
+        info.notificationTimeout = 10; //0.01 sekunder er nok for bruken til å se hva som har skjedd, men ikke nok tid til å faktisk gjøre noe.
 
         setServiceInfo(info);
 
@@ -92,9 +96,6 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
         WhiteListPackages.add(PreferenceUtils.getPrefkioskModeApp(getApplicationContext()));
     }
 
-        //TODO: fiks google søk
-
-    //TODO: Fiks på Whitelisten, og kanskje noe blacklisting, slik at vi er sikker på at alt uønsket ikke kan framkomme underveis, samtidig så er Packagename litt universel for flere Classnames.
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
 
@@ -102,31 +103,27 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
         if( event != null && event.getPackageName()!= null && event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ){
 
             if(PreferenceUtils.isKioskModeActivated(getApplicationContext())){
-                Log.d(TAG,"---------------------------------------------");
-                Log.d(TAG,"Kiosk mode: True");
-                Log.d(TAG,"event: "+event.toString());
-                Log.d(TAG,"Event classname: "+event.getClassName());
-                Log.d(TAG,"Event packagename: "+event.getPackageName());
+                if(AppUtils.DEBUG) {//Mye logging av hver event.
+                    Log.d(TAG, "---------------------------------------------");
+                    Log.d(TAG, "Kiosk mode: True");
+                    Log.d(TAG, "event: " + event.toString());
+                    Log.d(TAG, "Event classname: " + event.getClassName());
+                    Log.d(TAG, "Event packagename: " + event.getPackageName());
+                }
 
                 checkIfOkayWindowState(event);
+                //TODO: Gjør en ny sjekk på hva som ligger i fokus på hvinduet. Siden det kan vøre tilfeller hvor vi ikke byttet til korrekt vindu.
             }else {
-                Log.d(TAG,"---------------------------------------------");
-                Log.d(TAG,"Event triggered, men KioskMode er Off/False !!!!!!!!!!!!!!!!!!!!!!");
-                Log.d(TAG,"event: "+event.toString());
-                Log.d(TAG,"Event classname: "+event.getClassName());
-                Log.d(TAG,"Event packagename: "+event.getPackageName());
-                //checkIfOkayWindowState(event);
+                if(AppUtils.DEBUG) {//Mye logging av hver event.
+                    Log.d(TAG, "---------------------------------------------");
+                    Log.d(TAG, "Event triggered, men KioskMode er Off");
+                    Log.d(TAG, "event: " + event.toString());
+                    Log.d(TAG, "Event classname: " + event.getClassName());
+                    Log.d(TAG, "Event packagename: " + event.getPackageName());
+                }
             }
         }
     }
-
-    /*
-    *   Denne skal fungere på denne måten:
-    *       Dersom appen er godkjent så skal vi ikke gjøre noe.
-    *           Så vi må sjekke om packageName er godkjent og at classname er godkjent på visse apper.
-    *       Dersom appen ikke er godkjent
-    *           Så må vi sjekke om det er spesial tilfeller hvor vi må gå Home istedetfor Back.
-    * */
 
     public void checkIfOkayWindowState(AccessibilityEvent event){
 
@@ -134,9 +131,9 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
             Log.d(TAG,"Kiosk mode appen er grei");
         }
         else if(checkIfWhiteListedPackage(event.getPackageName())) {
-            Log.d(TAG,"Denne Appen er grei"); //TODO: finn ut om packagename gjelder for hele appen min, og ikke hver aktivitet.
+            Log.d(TAG,"Denne Appen er grei");
         }else if(checkIfWhiteListedClass(event.getClassName())){
-            Log.d(TAG,"Denne Appen er grei"); //TODO: finn ut om packagename gjelder for hele appen min, og ikke hver aktivitet.
+            Log.d(TAG,"Denne Appen er grei");
         }
         else if(event.getClassName().equals("android.widget.FrameLayout") && event.getPackageName().equals("com.android.systemui")){
             Log.d(TAG,"Denne Appen er grei");
@@ -153,25 +150,30 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
                 }else if(event.getPackageName().equals(DefaultLauncher)){
                     this.performGlobalAction(GLOBAL_ACTION_HOME);
                 }else{
-                    Log.d(TAG,"Global_action_back <<<<<<<<<<<<<<<<<<<<");
+                    if(AppUtils.DEBUG) {
+                        Log.d(TAG, "Global_action_back <BACK>");
+                    }
                     this.performGlobalAction(GLOBAL_ACTION_HOME);
                 }
-                Toast.makeText(this.getApplicationContext(), "Venligst ikke bytt Applikasjon", Toast.LENGTH_SHORT).show();
+                //Gir en beskjed til bruken om å ikke bytte applikasjon.
+                Toast.makeText(this.getApplicationContext(), "Venligst ikke bytt Applikasjon.\nPlease do not change Application.", Toast.LENGTH_SHORT).show();
             }
-
-            Log.d(TAG,"denne Appen er Ikke grei");
+            if(AppUtils.DEBUG) {
+                Log.d(TAG, "denne Appen er Ikke grei");
+            }
         }
-        Log.d(TAG,"---------------------------------------------");
+        if(AppUtils.DEBUG) {
+            Log.d(TAG, "---------------------------------------------");
+        }
     }
 
     public boolean checkIfKeyboard(AccessibilityEvent event){
         try{
-            return event.getPackageName().toString().equalsIgnoreCase("");
+            return event.getPackageName().toString().equalsIgnoreCase("");//False dersom ikke tom
         }catch (NullPointerException e){
-            return true;
+            return true;//true dersom det er null eller "".
         }
     }
-
 
     public void checkIfOkState(AccessibilityEvent event){
         if(event.getPackageName().equals(PreferenceUtils.getPrefkioskModeApp(getApplicationContext()))){ //sjekker at vi er innefor Packages som er godkjent, som er MonumentVandring elns.
@@ -186,11 +188,6 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
 
         }
         Log.d(TAG,"---------------------------------------------");
-    }
-
-
-    public boolean isKeyboard(AccessibilityEvent event){
-       return true;
     }
 
     public void gammeKodeTesting(AccessibilityEvent event){
@@ -277,60 +274,6 @@ public class AccessibilityService extends android.accessibilityservice.Accessibi
             }
         }
     }
-
-
-    /*      GAMMEL KODE
-    *       /*
-                if(event.getPackageName().toString().equalsIgnoreCase(Settings)){
-                    //Log.d(TAG,"ActivityManager "+getActivityManager().toString());
-                    //getActivityManager().killBackgroundProcesses(event.getPackageName().toString());
-                    //getActivityManager().killBackgroundProcesses(event.getPackageName().toString());
-                    //HomeActivity.KillProcess(event.getPackageName().toString());
-                    //TODO: Finn ut hvordan vi forhinder noen aktiviter å starte. Muligens vi bare kontrollerer menuen med passord innlogging for å starte blackListed Aplications.
-                    Log.d(TAG, "stop Settings test");
-                    //Intent stopIntent = new Intent("com.android.settings");
-                    //stopIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                    //stopIntent.setFlags(Intent.FLAG_RECEIVER_REPLACE_PENDING);
-                    //startActivity(stopIntent);
-                    //(stopIntent);
-                    Intent app = new Intent("com.sondreweb.kiosk_mode_alpha.activities.MapsActivity");
-                    //startActivity(app);
-                    WindowManager windowManager;
-                    this.performGlobalAction(GLOBAL_ACTION_BACK);
-                    //1this.performGlobalAction(GLOBAL_ACTION_HOME);
-
-                    }
-                    else if(event.getClassName().equals("com.android.systemui.recent.RecentsActivity")){
-                    */
-
-                    /*
-                    *   Siden vi ikke tillater Recent button å bli clikket, må vi disable denne "appen".
-                    *   Dersom vi går GLOBAL_ACTION_BACK her så havner vi i default launcheren, og ut av vår egen.
-                    *   Må dermed passe på at denne går tilbake til HOME.
-                    * */
-
-                    /*
-                        this.performGlobalAction(GLOBAL_ACTION_HOME);
-                    }
-                    else{
-                            Log.d(TAG, "Ikke en godkjent event:");
-
-
-                            if(event.getPackageName().toString().equalsIgnoreCase("com.android.keyguard")){
-                                Log.d(TAG,"com.android.keyguard prøver å gjøre noe");
-                                this.performGlobalAction(GLOBAL_ACTION_BACK);
-                            }else if(event.getPackageName().toString().equalsIgnoreCase("android")){ //tar alt fra systemet.
-                                Log.d(TAG,"android prøver å gjøre noe");
-                                this.performGlobalAction(GLOBAL_ACTION_BACK);
-                            }else if(event.getClassName().equals("android.widget.FrameLayout") && event.getPackageName().equals("com.android.keyguard")){
-                                this.performGlobalAction(GLOBAL_ACTION_BACK);
-                            }else if(event.getClassName().equals("com.android.launcher")){
-                                this.performGlobalAction(GLOBAL_ACTION_HOME);
-                            }
-
-                        }
-                    } */
-
 
     @Override
     public void onInterrupt() {}

@@ -24,7 +24,7 @@ import com.sondreweb.kiosk_mode_alpha.utils.AppUtils;
 import java.util.ArrayList;
 
 /**
- * Created by sondre on 25-Apr-17.
+ * Ansvar for å vise all data som er lagret unna på databasen(internt) i en tabell.
  */
 
 public class StatisticsActivity extends AppCompatActivity {

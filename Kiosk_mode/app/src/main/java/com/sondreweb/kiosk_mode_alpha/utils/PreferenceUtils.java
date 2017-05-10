@@ -14,9 +14,8 @@ import com.sondreweb.kiosk_mode_alpha.R;
 import com.sondreweb.kiosk_mode_alpha.services.GeofenceTransitionService;
 
 /**
- * Created by sondre on 24-Feb-17.
- * Ansvar for å holde oversikt over vi faktisk skal være i MonumentVandrings modus eller ikke, samt å lagre
- * om vi skal eller ikke.
+ * Globale funskjoner som brukes rundt om i hele appen for å hente ut eller legge til data i SharedPreferences for appen.
+ *
  */
 
 public class PreferenceUtils {

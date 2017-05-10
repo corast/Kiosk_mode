@@ -4,7 +4,8 @@ import android.content.ContentResolver;
 import android.net.Uri;
 
 /**
- * Created by sondre on 11-Apr-17.
+ * Nødvendig Stringer for å bruke ContentProvideren.
+ * Er anbefalt å lage en egen fil for disse, slik at eksterne applikasjoner kan enkelt hente det de trenger fra denne.
  */
 
 public final class KioskDbContract {
