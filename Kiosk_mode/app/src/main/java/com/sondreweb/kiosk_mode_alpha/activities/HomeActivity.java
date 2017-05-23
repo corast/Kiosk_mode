@@ -685,7 +685,10 @@ public class HomeActivity extends FragmentActivity implements
     }
 
     public void toogleTouchView() {
-
+        //Sperrer slik at vi kan skru toggle Quick settigns restriksjoner når enheten er satt i Kiosk Mode.
+        if(PreferenceUtils.isKioskModeActivated(getApplicationContext())){
+            return;
+        }
         try{
             //Sjekker at touchViewet vårt ikke er tomt.
             if (touchView != null) {
