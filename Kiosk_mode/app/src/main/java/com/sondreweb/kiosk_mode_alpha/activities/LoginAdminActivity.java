@@ -224,8 +224,6 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
             mPasswordView.setError(getString(R.string.error_invalid_password));
             focusView = mPasswordView;
             cancel = true;
-            Log.d(TAG,"password Invalid: true");
-            Log.d(TAG,"isPassordValid: "+isPasswordValid(password));
         }
 
         /*
@@ -398,6 +396,9 @@ public class LoginAdminActivity extends AppCompatActivity implements LoaderCallb
                 Intent intent = new Intent(getApplicationContext(), AdminPanelActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);
+                //Skrur av kiosk mode, siden noen ganger er det problemer med main vindu som legger seg over alt annet.
+
+
                 finish();
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));

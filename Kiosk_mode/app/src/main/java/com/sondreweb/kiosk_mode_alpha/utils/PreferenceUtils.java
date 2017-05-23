@@ -34,7 +34,7 @@ public class PreferenceUtils {
     public static final int ONE_SECOND_IN_MILLIS = 1000;
     public static final int THIRTY_SECONDS_IN_MILLIS = ONE_SECOND_IN_MILLIS *30;
 
-    private static final int DEFAULT_PREF_GEOFENCE_UPDATE_INTERVAL = ONE_SECOND_IN_MILLIS; //2 minutter
+    private static final int DEFAULT_PREF_GEOFENCE_UPDATE_INTERVAL = ONE_SECOND_IN_MILLIS;
     public static final int DEFAULT_GEOFENCE_FASTEST_UPDATE_INTERVAL = 10*ONE_SECOND_IN_MILLIS; //10 sekunder
 
     /*

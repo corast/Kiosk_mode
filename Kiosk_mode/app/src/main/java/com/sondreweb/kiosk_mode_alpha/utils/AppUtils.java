@@ -63,8 +63,6 @@ public class AppUtils{
         return false;
     }
 
-
-
     public static boolean isGooglePlayServicesAvailableAndPoll(Context context, Activity activity){
         Log.d(TAG,"isGooglePlayServicesAvaliable");
         GoogleApiAvailability googleApiAvailbility = GoogleApiAvailability.getInstance();

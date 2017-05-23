@@ -705,8 +705,6 @@ public class HomeActivity extends FragmentActivity implements
             Log.e(TAG, e.getMessage());
         }
 
-
-
     }
 
     @Override //Når vi holder inne Power Button, så kjører denne.
@@ -818,9 +816,10 @@ public class HomeActivity extends FragmentActivity implements
                         //TODO: start KioskMode.
                         setKioskMode(true);
 
+                        /*Starter opp geofence monitorering*/
                         Intent startGeofenceIntent = new Intent(getApplicationContext(),GeofenceTransitionService.class);
                         startGeofenceIntent.setAction(GeofenceTransitionService.START_GEOFENCE);
-                        //startService(startGeofenceIntent); //Starter Geofencet.
+                        startService(startGeofenceIntent); //Starter Geofencet.
 
                         if (startPrefKioskModeApp()) {
                         } else {
@@ -869,7 +868,6 @@ public class HomeActivity extends FragmentActivity implements
         return true;
     }
 
-
     /*
     *   Callback for når vi requester permission for å hente ut lokasjon.
     * */
@@ -879,9 +877,8 @@ public class HomeActivity extends FragmentActivity implements
         switch (requestCode) {
             case AppUtils.REQ_PERMISSION: {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    //getLastKnowLocation();
+
                 } else {
-                    //permissionDenied();
                     //Siden vi ikke har permission til å bruke Location, så kan vi heller ikke starte monument vandring eller GeofenceClass etc.
                     //TODO: stop app her.
                 }
@@ -889,7 +886,6 @@ public class HomeActivity extends FragmentActivity implements
             }
         }
     }
-
 
     //Kun for Debugging hensikter. TEST overlay fra servicen. Skal bare vise et testFelt.
     public void toogleViewService(View view){
@@ -951,7 +947,7 @@ public class HomeActivity extends FragmentActivity implements
             //TODO: update status listen.
         }
     }
-
+    //Debugging knapp for å legge til Geofence og starte opp monitorering.
    public void testGeofence(View view){
 
        if(! AppUtils.isGooglePlayServicesAvailable(getApplicationContext())){
@@ -986,11 +982,12 @@ public class HomeActivity extends FragmentActivity implements
        //sqLiteHelper.addGeofence();
 
        //Må legge geofence inn i databasen vår.
-
+       //Starter opp alt vi trenger.
+       PreferenceUtils.setKioskModeActive(context, true);
        Intent geofence_intent = new Intent(context,GeofenceTransitionService.class);
        geofence_intent.setAction(GeofenceTransitionService.START_GEOFENCE);
        startService(geofence_intent);
-       PreferenceUtils.setKioskModeActive(context, true);
+
        Toast.makeText(context,"Starter Geofence monitorering testing",Toast.LENGTH_SHORT).show();
    }
 

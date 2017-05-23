@@ -366,7 +366,6 @@ public class GeofenceTransitionService extends Service implements
                 if(PreferenceUtils.getVibrateSettings(getContext())){
                     vibratePhone(500);
                     //kan virbrere telefonen her, men er bedre om aktivitetn i vindu gjør dette for oss.
-
                 }
 
                 if(PreferenceUtils.getPrefOverlayOn(getApplicationContext())){//Kjapp sjekk på om vi faktisk har på Overlay.
@@ -377,15 +376,27 @@ public class GeofenceTransitionService extends Service implements
             //Brukeren er innfor minst ett Geofence.
         }else{
             //må sjekke om vi driver med normal oppdatering av lokasjon
-            if(fastLocationUpdates){ //dersom denne er false, vill det si at vi er innefor geofencene, og at vi er på riktig intervalltid.
+            if(!fastLocationUpdates){ //dersom denne er false, vill det si at vi er innefor geofencene, og at vi er på riktig intervalltid.
+                if(AppUtils.DEBUG){
+                    Log.d(TAG,"fastLocationIpdets == true");
+                }
                 //Trenger ikke gjøre noe her.
             }else{ //Betyr at brukeren nettop gikk tilbake innenfor geofencene.
                 //Går tilbake til trengere intervall.
+                if(AppUtils.DEBUG){
+                    Log.d(TAG,"fastLocationIpdets == false");
+                }
                 setLocationUpdateChange(false);
                 try {
+                    if(AppUtils.DEBUG){
+                        Log.d(TAG, "Prøver å fjerne overlay");
+                    }
                     if(overLayTextview != null) { //Dersom den er initialisert, vill det si at vi har brukt den.
                         //Fjerner overlayViewet fra winduet, siden vi er innefor Geofencene igjen.
                         windowManager.removeView(overLayTextview);
+                        if(AppUtils.DEBUG){
+                            Log.d(TAG, "overLayTextView != null true");
+                        }
                     }
                 }catch (IllegalArgumentException e){
                     //Feilhåndtering, dersom det er noe med overLayTextview som tilsier at vi ikke kan remove det.
@@ -446,8 +457,14 @@ public class GeofenceTransitionService extends Service implements
             //geofenceStatus returnere true dersom siste trigger er ENTER på geofencet.
             if(geofenceStatus.getInsideStatus()){
                 //geofenceStatus.getInsideStatus  returner en bool på om
+                if(AppUtils.DEBUG){
+                    Log.d(TAG, "checkIfInsidegeofence:" + true);
+                }
                 return true;
             }
+        }
+        if(AppUtils.DEBUG){
+            Log.d(TAG, "checkIfInsidegeofence:" + false);
         }
         return false;
     }
@@ -784,17 +801,27 @@ public class GeofenceTransitionService extends Service implements
         * */
         //Vi drev med normal lokasjons intervall, men må bytte til raskere intervall
         if(! fastLocationUpdates && fastUpdate){ // Vi driver med normal lokasjons intervall
+            if(AppUtils.DEBUG){
+                Log.d(TAG,"Vi driver med normal lokasjons intervall");
+            }
             LocationServices.FusedLocationApi.removeLocationUpdates(getGoogleApiClient(), this); //fjerne oppdatering fra cliente.
             startFastLocationUpdates();
         }else if(fastLocationUpdates && !fastUpdate){ //Vi drev med raskt intervall, men må bytte til tregere intervall
+            if(AppUtils.DEBUG){
+                Log.d(TAG,"Vi driver med raskt intrervall, men bytter til normal hastighet");
+            }
             //Siden vi bytter locationUpdate metode, må vi stoppe oppdatering på lokasjon.
             LocationServices.FusedLocationApi.removeLocationUpdates(getGoogleApiClient(), this); //fjerne oppdatering fra cliente.
             startLocationUpdates(getContext());
         }else{ //vi skal ikke gjøre noe her. Siden vi drev alerede med normal oppdatering og skal heller ikke bytte til fastUpdate.
-
+            if(AppUtils.DEBUG){
+                Log.d(TAG,"Vi skal ikke gjøre noe");
+            }
         }
         fastLocationUpdates = fastUpdate; //oppdatere verdien.
     }
+
+
     //Bytter hastighet vi henter ut lokasjonen via GPS.
     private void startFastLocationUpdates(){
         fastLocationRequest = LocationRequest.create()
@@ -859,6 +886,7 @@ public class GeofenceTransitionService extends Service implements
         if(AppUtils.DEBUG) {
             Log.d(TAG, "LocationChanged location: " + location.getLatitude() +", "+ location.getLongitude());
         }
+        Log.d(TAG, "LocationChanged location: " + location.getLatitude() +", "+ location.getLongitude());
     }
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
