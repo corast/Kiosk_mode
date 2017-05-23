@@ -259,6 +259,7 @@ public class GeofenceTransitionService extends Service implements
                 //tellUserToGoInsideButtonToggle();
                 //tellUserToGoInsideGeofence();
                 stopGeofenceMonitoring();
+                startInForeground();
                 break;
             case TEST_OVERLAY:
                 //Kunn til utvikling hensikt.
